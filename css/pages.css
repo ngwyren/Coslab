@@ -109,16 +109,17 @@
   height: 520px;
   border-radius: var(--r-xl);
   border: 1px solid var(--border);
-  background: var(--surface);
+  background: #ffffff;
   position: relative;
   overflow: hidden;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.03);
   display: grid;
   place-items: center;
-  transition: box-shadow 0.3s var(--ease);
+  transition: all 0.3s var(--ease);
 }
 .showcase-canvas-box:hover {
-  box-shadow: var(--shadow-md);
+  border-color: #d8d8d8;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
 }
 .showcase-hud-tag {
   position: absolute;

@@ -19,11 +19,11 @@
   function makeEnv(renderer) {
     const pm = new THREE.PMREMGenerator(renderer);
     const env = new THREE.Scene();
-    env.background = new THREE.Color(0xf6f4ef);
+    env.background = new THREE.Color(0xffffff);
 
     const box = new THREE.Mesh(
       new THREE.BoxGeometry(30, 30, 30),
-      new THREE.MeshBasicMaterial({ color: 0xded8cc, side: THREE.BackSide })
+      new THREE.MeshBasicMaterial({ color: 0xfafafa, side: THREE.BackSide })
     );
     env.add(box);
 
@@ -101,10 +101,10 @@
       this.rotX = 0.08;
 
       // K-Beauty Studio Lights
-      const hemi = new THREE.HemisphereLight(0xfffaf0, 0xded8cc, 0.6);
+      const hemi = new THREE.HemisphereLight(0xffffff, 0xf5f5f5, 0.75);
       this.scene.add(hemi);
 
-      const key = new THREE.DirectionalLight(0xffffff, 1.2);
+      const key = new THREE.DirectionalLight(0xffffff, 1.25);
       key.position.set(-4, 9, 6);
       key.castShadow = true;
       key.shadow.mapSize.set(1024, 1024);
@@ -115,12 +115,12 @@
       key.shadow.radius = 5;
       this.scene.add(key);
 
-      const rim = new THREE.DirectionalLight(0xffffff, 0.65);
+      const rim = new THREE.DirectionalLight(0xffffff, 0.7);
       rim.position.set(5, 5, -5);
       this.scene.add(rim);
 
       // Studio Pedestal / Ground
-      const ground = new THREE.Mesh(new THREE.PlaneGeometry(30, 30), new THREE.ShadowMaterial({ opacity: 0.14 }));
+      const ground = new THREE.Mesh(new THREE.PlaneGeometry(30, 30), new THREE.ShadowMaterial({ opacity: 0.08 }));
       ground.rotation.x = -Math.PI / 2;
       ground.position.y = 0;
       ground.receiveShadow = true;
