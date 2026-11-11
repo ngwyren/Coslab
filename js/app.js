@@ -9,6 +9,7 @@
 
   const ROUTES = {
     '': { page: 'home', nav: 'home' },
+    works: { page: 'home', nav: 'home', anchor: 'worksSection' },
     about: { page: 'home', nav: 'home', anchor: 'about' },
     media: { page: 'home', nav: 'home', anchor: 'media' },
     design: { page: 'design', nav: 'design' },
