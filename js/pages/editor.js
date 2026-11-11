@@ -330,19 +330,52 @@
       function renderColorsTab() {
         const sec = CL.h('div.sidebar-section');
 
-        const partSelect = CL.h('select.select', null,
-          ['cap', 'base', 'ring'].map((p) =>
-            CL.h('option', { value: p, selected: p === activePart, text: p === 'cap' ? t('editor.upPart') : p === 'base' ? t('editor.btnPart') : 'Khớp viền (Ring)' })
-          )
+        // Part Selector (Segmented 3-Way Tabs with live color indicator)
+        const partTabs = CL.h('div.part-selector-segmented', null,
+          [
+            { id: 'base', label: t('editor.btnPart') },
+            { id: 'cap', label: t('editor.upPart') },
+            { id: 'ring', label: t('editor.parts.ring') || 'Ring' },
+          ].map((p) => {
+            const pData = design.parts[p.id] || { fill: { type: 'solid', color: '#171615' } };
+            const pColor = pData.fill && pData.fill.type === 'linear' ? (pData.fill.stops[0]?.c || '#b85c66') : (pData.fill?.color || '#b85c66');
+            return CL.h('button.part-tab-btn' + (p.id === activePart ? '.is-active' : ''), {
+              type: 'button',
+              html: `<span class="part-tab-dot" style="background: ${pColor};"></span><span>${p.label}</span>`,
+              onclick: () => {
+                activePart = p.id;
+                renderColorsTab();
+              },
+            });
+          })
         );
-        partSelect.addEventListener('change', () => {
-          activePart = partSelect.value;
-          renderColorsTab();
-        });
 
         const curPart = design.parts[activePart] || { fill: { type: 'solid', color: '#171615' }, finish: 'matte' };
-
         const isGrad = curPart.fill && curPart.fill.type === 'linear';
+
+        // 2x2 Finish & Material Grid
+        const FINISH_META = [
+          { id: 'matte', icon: '◐', name: t('editor.colors.matte') },
+          { id: 'gloss', icon: '✧', name: t('editor.colors.gloss') },
+          { id: 'satin', icon: '◯', name: t('editor.colors.satin') },
+          { id: 'metallic', icon: '◈', name: t('editor.colors.metallic') },
+        ];
+        const finishGrid = CL.h('div.finish-grid', null,
+          FINISH_META.map((f) =>
+            CL.h('button.finish-card-btn' + (curPart.finish === f.id ? '.is-active' : ''), {
+              type: 'button',
+              html: `<span class="finish-icon-badge">${f.icon}</span><span>${f.name}</span>`,
+              onclick: () => {
+                curPart.finish = f.id;
+                pushHistory();
+                render2DCanvas();
+                renderColorsTab();
+              },
+            })
+          )
+        );
+
+        // Fill Type (Solid vs Dual Gradient)
         const fillToggle = CL.h('div.segmented.block', null,
           CL.h('button' + (!isGrad ? '.is-active' : ''), {
             text: t('editor.colors.solid'),
@@ -363,20 +396,6 @@
               renderColorsTab();
             },
           })
-        );
-
-        const finishWrap = CL.h('div.chips', null,
-          ['matte', 'satin', 'gloss', 'metallic'].map((fin) =>
-            CL.h('button.chip' + (curPart.finish === fin ? '.is-active' : ''), {
-              text: t('editor.colors.' + fin),
-              onclick: () => {
-                curPart.finish = fin;
-                pushHistory();
-                render2DCanvas();
-                renderColorsTab();
-              },
-            })
-          )
         );
 
         const activeColor = isGrad ? curPart.fill.stops[0].c : curPart.fill.color;
@@ -420,12 +439,12 @@
 
         sec.append(
           CL.h('div.sidebar-section-title', { text: t('editor.colors.partSelect') }),
-          partSelect,
-          CL.h('div.sidebar-section-title', { text: t('editor.colors.fillType'), style: { marginTop: '10px' } }),
+          partTabs,
+          CL.h('div.sidebar-section-title', { text: t('editor.colors.finish'), style: { marginTop: '12px' } }),
+          finishGrid,
+          CL.h('div.sidebar-section-title', { text: t('editor.colors.fillType'), style: { marginTop: '12px' } }),
           fillToggle,
-          CL.h('div.sidebar-section-title', { text: t('editor.colors.finish'), style: { marginTop: '10px' } }),
-          finishWrap,
-          CL.h('div.sidebar-section-title', { text: t('editor.colors.title'), style: { marginTop: '10px' } }),
+          CL.h('div.sidebar-section-title', { text: t('editor.colors.title'), style: { marginTop: '12px' } }),
           picker,
           gradControls || document.createDocumentFragment()
         );
