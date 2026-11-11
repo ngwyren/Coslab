@@ -1,0 +1,127 @@
+/* ==========================================================
+   Design setup page: Choose Model & Choose Template
+   ========================================================== */
+(function (CL) {
+  CL.pages = CL.pages || {};
+
+  CL.pages.design = {
+    titleKey: 'nav.design',
+    appMode: false,
+
+    render(container) {
+      let selectedModel = 'classic';
+      let selectedTemplate = 'noir';
+
+      const root = CL.h('div.page.container', { style: { paddingBottom: '60px' } });
+
+      // Page Head
+      const head = CL.h('div.page-head', null,
+        CL.h('span.eyebrow', { text: 'COSLAB Studio' }),
+        CL.h('h1', { text: t('design.title') }),
+        CL.h('p', { text: t('design.subtitle') })
+      );
+
+      // Step 1: Choose Model
+      const step1 = CL.h('div.setup-step', null,
+        CL.h('div.setup-step-head', null,
+          CL.h('div.setup-step-title', null,
+            CL.h('span.badge.badge-dark', { text: 'Step 1' }),
+            CL.h('span', { text: t('design.step1') })
+          )
+        ),
+        CL.h('div.setup-grid#modelGrid')
+      );
+
+      // Step 2: Choose Template
+      const step2 = CL.h('div.setup-step', null,
+        CL.h('div.setup-step-head', null,
+          CL.h('div.setup-step-title', null,
+            CL.h('span.badge.badge-dark', { text: 'Step 2' }),
+            CL.h('span', { text: t('design.step2') })
+          )
+        ),
+        CL.h('div.setup-grid#templateGrid')
+      );
+
+      // Floating proceed bar
+      const floatBar = CL.h('div.setup-floating-bar', null,
+        CL.h('div', null,
+          CL.h('div', { id: 'summaryText', style: { fontWeight: '600', fontSize: '14px' } }),
+          CL.h('div.muted', { text: 'Customise caps, engraving & formulas in the editor', style: { fontSize: '12px' } })
+        ),
+        CL.h('button.btn.btn-primary#btnProceed', {
+          html: `<span>${t('design.proceed')}</span>` + CL.icon('arrowRight'),
+          onclick: () => {
+            const dsn = CL.templates.createDesign(selectedTemplate, selectedModel);
+            CL.store.saveDraft(dsn);
+            CL.go('#/editor');
+          },
+        })
+      );
+
+      root.append(head, step1, step2, floatBar);
+      container.appendChild(root);
+
+      function updateSummary() {
+        const mName = t('models.' + selectedModel);
+        const tName = t('templates.' + selectedTemplate);
+        document.getElementById('summaryText').textContent = `${mName}  ·  ${tName}`;
+      }
+
+      // Render Models
+      const mGrid = document.getElementById('modelGrid');
+      CL.models.MODELS.forEach((m) => {
+        const card = CL.h('div.card-choice', {
+          'data-model': m.id,
+          class: m.id === selectedModel ? 'is-selected' : '',
+          onclick: () => {
+            selectedModel = m.id;
+            mGrid.querySelectorAll('.card-choice').forEach((c) => c.classList.toggle('is-selected', c.dataset.model === m.id));
+            renderTemplates();
+            updateSummary();
+          },
+        },
+          CL.h('div.choice-preview-box', {
+            html: CL.render.renderSVG(CL.templates.createDesign('noir', m.id), { width: 140, height: 180, shadow: false }),
+          }),
+          CL.h('div.choice-info', null,
+            CL.h('h4', { text: t('models.' + m.id) }),
+            CL.h('p', { text: t('models.' + m.id + 'Desc') })
+          )
+        );
+        mGrid.appendChild(card);
+      });
+
+      // Render Templates
+      const tGrid = document.getElementById('templateGrid');
+      function renderTemplates() {
+        tGrid.innerHTML = '';
+        CL.templates.TEMPLATES.forEach((tpl) => {
+          const card = CL.h('div.card-choice', {
+            'data-template': tpl.templateId,
+            class: tpl.templateId === selectedTemplate ? 'is-selected' : '',
+            onclick: () => {
+              selectedTemplate = tpl.templateId;
+              tGrid.querySelectorAll('.card-choice').forEach((c) => c.classList.toggle('is-selected', c.dataset.template === tpl.templateId));
+              updateSummary();
+            },
+          },
+            CL.h('div.choice-preview-box', {
+              html: CL.render.renderSVG(CL.templates.createDesign(tpl.templateId, selectedModel), { width: 140, height: 180, shadow: false }),
+            }),
+            CL.h('div.choice-info', null,
+              CL.h('h4', { text: t('templates.' + tpl.templateId) }),
+              CL.h('p', { text: t('templates.' + tpl.templateId + 'Desc') })
+            )
+          );
+          tGrid.appendChild(card);
+        });
+      }
+
+      renderTemplates();
+      updateSummary();
+
+      return () => {};
+    },
+  };
+})(window.CL);

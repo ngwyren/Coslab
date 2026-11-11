@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="vi" dir="ltr" data-theme="light">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>COSLAB — Lipstick Design Studio</title>
+  <meta name="description" content="COSLAB lipstick factory — design your own lipstick online." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <!-- UI font + fonts offered in the editor -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Instrument+Serif:ital@0;1&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Montserrat:wght@400;600;800&family=Cormorant+Garamond:ital,wght@0,400;0,700;1,400&family=Bebas+Neue&family=Great+Vibes&family=Dancing+Script:wght@400;700&family=Noto+Sans+SC:wght@400;700&family=Noto+Sans+JP:wght@400;700&family=Noto+Sans+KR:wght@400;700&family=Noto+Naskh+Arabic:wght@400;700&display=swap" />
+
+  <link rel="stylesheet" href="css/tokens.css" />
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/layout.css" />
+  <link rel="stylesheet" href="css/pages.css" />
+  <link rel="stylesheet" href="css/editor.css" />
+</head>
+<body>
+  <a class="skip-link" href="#app" data-i18n="common.skip">Skip to content</a>
+
+  <header class="site-header" id="siteHeader">
+    <div class="container header-inner">
+      <a href="#/" class="brand" aria-label="COSLAB">
+        <span class="brand-mark"></span>
+        <span class="brand-word">COSLAB</span>
+      </a>
+      <nav class="main-nav" id="mainNav" aria-label="Main">
+        <a href="#/" data-route="home" data-i18n="nav.home">Home</a>
+        <a href="#/design" data-route="design" data-i18n="nav.design">Design</a>
+        <a href="#/gallery" data-route="gallery" data-i18n="nav.gallery">Gallery</a>
+        <a href="#/my-designs" data-route="my-designs" data-i18n="nav.myDesigns">My Design</a>
+        <a href="#/settings" data-route="settings" data-i18n="nav.settings">Setting</a>
+      </nav>
+      <div class="header-actions">
+        <div class="lang-switch" id="langSwitch"></div>
+        <a href="#/design" class="btn btn-primary btn-sm header-cta" data-i18n="nav.start">Start design</a>
+        <button class="icon-btn nav-toggle" id="navToggle" aria-label="Menu"></button>
+      </div>
+    </div>
+  </header>
+
+  <main id="app" tabindex="-1"></main>
+
+  <footer class="site-footer" id="siteFooter">
+    <div class="container footer-inner">
+      <div class="footer-brand">
+        <a href="#/" class="brand"><span class="brand-mark"></span><span class="brand-word">COSLAB</span></a>
+        <p class="muted" data-i18n="footer.tagline">Lipstick manufacturing &amp; custom design studio.</p>
+      </div>
+      <div class="footer-cols">
+        <div>
+          <h4 data-i18n="footer.explore">Explore</h4>
+          <a href="#/about" data-i18n="home.nav.about">About us</a>
+          <a href="#/media" data-i18n="home.nav.media">Images &amp; Video 3D</a>
+          <a href="#/gallery" data-i18n="nav.gallery">Gallery</a>
+        </div>
+        <div>
+          <h4 data-i18n="footer.studio">Studio</h4>
+          <a href="#/design" data-i18n="nav.start">Start design</a>
+          <a href="#/my-designs" data-i18n="nav.myDesigns">My Design</a>
+          <a href="#/settings" data-i18n="nav.settings">Setting</a>
+        </div>
+      </div>
+    </div>
+    <div class="container footer-bottom">
+      <span>© <span id="year"></span> COSLAB</span>
+      <span class="muted" data-i18n="footer.rights">All rights reserved.</span>
+    </div>
+  </footer>
+
+  <div class="toast-host" id="toastHost" aria-live="polite"></div>
+  <div class="modal-host" id="modalHost"></div>
+
+  <!-- Vendor -->
+  <script src="vendor/three.min.js"></script>
+  <script src="vendor/jspdf.umd.min.js"></script>
+
+  <!-- i18n -->
+  <script src="js/i18n/i18n.js"></script>
+  <script src="js/i18n/en.js"></script>
+  <script src="js/i18n/vi.js"></script>
+  <script src="js/i18n/zh.js"></script>
+  <script src="js/i18n/ko.js"></script>
+  <script src="js/i18n/ja.js"></script>
+  <script src="js/i18n/ar.js"></script>
+  <script src="js/i18n/fr.js"></script>
+  <script src="js/i18n/es.js"></script>
+
+  <!-- Core -->
+  <script src="js/core/utils.js"></script>
+  <script src="js/core/icons.js"></script>
+  <script src="js/core/store.js"></script>
+  <script src="js/core/ui.js"></script>
+  <script src="js/data/models.js"></script>
+  <script src="js/data/templates.js"></script>
+  <script src="js/render/lipstick-svg.js"></script>
+  <script src="js/render/exporter.js"></script>
+  <script src="js/render/preview3d.js"></script>
+  <script src="js/components/color-picker.js"></script>
+
+  <!-- Pages -->
+  <script src="js/pages/home.js"></script>
+  <script src="js/pages/design.js"></script>
+  <script src="js/pages/editor.js"></script>
+  <script src="js/pages/gallery.js"></script>
+  <script src="js/pages/my-designs.js"></script>
+  <script src="js/pages/settings.js"></script>
+
+  <script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,81 @@
+/* ==========================================================
+   COSLAB — Design tokens
+   Phase 1: monochrome (black / white / greys), light theme.
+   Brand colours will be filled in later by overriding the
+   --accent-* tokens only.
+   ========================================================== */
+:root,
+[data-theme="light"] {
+  /* Surfaces */
+  --bg: #ffffff;
+  --bg-soft: #f7f7f7;
+  --surface: #ffffff;
+  --surface-2: #f3f3f3;
+  --surface-3: #ebebeb;
+  --canvas-bg: #f1f1f1;
+
+  /* Lines */
+  --border: #e7e7e7;
+  --border-strong: #d2d2d2;
+
+  /* Text */
+  --text: #0b0b0b;
+  --text-2: #3a3a3a;
+  --muted: #777777;
+  --muted-2: #a3a3a3;
+  --on-accent: #ffffff;
+
+  /* Accent (monochrome for now — replace in colour phase) */
+  --accent: #0b0b0b;
+  --accent-hover: #2a2a2a;
+  --accent-soft: #f0f0f0;
+  --focus: #0b0b0b;
+
+  /* Status (kept greyscale-friendly) */
+  --danger: #1a1a1a;
+  --success: #1a1a1a;
+
+  /* Radius */
+  --r-xs: 6px;
+  --r-sm: 10px;
+  --r-md: 14px;
+  --r-lg: 20px;
+  --r-xl: 28px;
+  --r-pill: 999px;
+
+  /* Shadows */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, .05);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, .06);
+  --shadow-md: 0 10px 30px rgba(0, 0, 0, .08);
+  --shadow-lg: 0 24px 60px rgba(0, 0, 0, .12);
+
+  /* Typography */
+  --font-ui: "Inter", "Noto Sans SC", "Noto Sans JP", "Noto Sans KR", "Noto Naskh Arabic", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: "Instrument Serif", "Playfair Display", "Noto Sans SC", "Noto Sans JP", "Noto Sans KR", "Noto Naskh Arabic", Georgia, serif;
+
+  /* Layout */
+  --container: 1240px;
+  --header-h: 68px;
+  --ease: cubic-bezier(.2, .7, .2, 1);
+}
+
+/* Placeholder for the upcoming dark theme (not enabled yet). */
+[data-theme="dark"] {
+  --bg: #0b0b0b;
+  --bg-soft: #121212;
+  --surface: #151515;
+  --surface-2: #1d1d1d;
+  --surface-3: #262626;
+  --canvas-bg: #101010;
+  --border: #262626;
+  --border-strong: #3a3a3a;
+  --text: #f5f5f5;
+  --text-2: #d0d0d0;
+  --muted: #9a9a9a;
+  --muted-2: #6d6d6d;
+  --on-accent: #0b0b0b;
+  --accent: #f5f5f5;
+  --accent-hover: #d9d9d9;
+  --accent-soft: #1f1f1f;
+  --focus: #f5f5f5;
+}
