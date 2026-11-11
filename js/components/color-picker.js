@@ -1,5 +1,5 @@
 /* ==========================================================
-   COSLAB — Luxury Atelier Color Picker
+   COSLAB — Luxury Atelier Color Picker (Compact & Minimalist)
    Curated K-Beauty MLBB Shades & Packaging Metals + Custom Precision Spectrum
    ========================================================== */
 (function (CL) {
@@ -55,65 +55,51 @@
   CL.ColorPicker = function ({ value = '#b85c66', onChange, showSwatches = true, compact = false }) {
     let hsv = CL.color.rgbToHsv(CL.color.hexToRgb(value));
     let hex = CL.color.normalize(value);
-    let currentMode = compact ? 'spectrum' : 'palette';
-    let currentCat = 'tints';
+    let activeView = compact ? 'spectrum' : 'tints'; // 'tints' | 'pack' | 'spectrum'
 
     const root = CL.h('div.cp' + (compact ? '.cp-compact' : ''));
 
-    // Top Segmented Mode Switcher (Palette vs Custom Spectrum)
-    let modeSwitch = null;
+    // 1 Single Compact Category Bar (3 tabs: MLBB Tint, Packaging, Spectrum)
+    let navBar = null;
     if (!compact && showSwatches) {
-      modeSwitch = CL.h('div.cp-mode-switch', null,
-        CL.h('button.cp-mode-btn' + (currentMode === 'palette' ? '.is-active' : ''), {
+      navBar = CL.h('div.cp-nav-bar', null,
+        CL.h('button.cp-nav-btn' + (activeView === 'tints' ? '.is-active' : ''), {
           type: 'button',
-          text: 'K-Beauty Palettes',
-          onclick: () => switchMode('palette'),
+          text: 'MLBB Tint',
+          onclick: () => setView('tints'),
         }),
-        CL.h('button.cp-mode-btn' + (currentMode === 'spectrum' ? '.is-active' : ''), {
+        CL.h('button.cp-nav-btn' + (activeView === 'pack' ? '.is-active' : ''), {
           type: 'button',
-          text: 'Custom Spectrum',
-          onclick: () => switchMode('spectrum'),
+          text: 'Packaging',
+          onclick: () => setView('pack'),
+        }),
+        CL.h('button.cp-nav-btn' + (activeView === 'spectrum' ? '.is-active' : ''), {
+          type: 'button',
+          text: 'Spectrum',
+          onclick: () => setView('spectrum'),
         })
       );
-      root.appendChild(modeSwitch);
+      root.appendChild(navBar);
     }
 
-    // 1. Palette View Container
-    const paletteContainer = CL.h('div.cp-palette-view', { style: { display: currentMode === 'palette' ? 'grid' : 'none' } });
-
-    // Category Selector (MLBB / Packaging / Recent)
-    const catSelector = CL.h('div.cp-cat-selector', null,
-      CL.h('button.cp-cat-btn' + (currentCat === 'tints' ? '.is-active' : ''), {
-        type: 'button',
-        text: 'MLBB Tint',
-        onclick: () => switchCat('tints'),
-      }),
-      CL.h('button.cp-cat-btn' + (currentCat === 'pack' ? '.is-active' : ''), {
-        type: 'button',
-        text: 'Packaging',
-        onclick: () => switchCat('pack'),
-      }),
-      CL.h('button.cp-cat-btn' + (currentCat === 'recent' ? '.is-active' : ''), {
-        type: 'button',
-        text: 'Recent',
-        onclick: () => switchCat('recent'),
-      })
-    );
-    paletteContainer.appendChild(catSelector);
-
-    // Swatches Grid
+    // Swatches Container (for 'tints' and 'pack')
+    const swatchesContainer = CL.h('div.cp-swatches-view', {
+      style: { display: activeView !== 'spectrum' ? 'block' : 'none' }
+    });
     const swatchesGrid = CL.h('div.cp-cosmetic-grid');
-    paletteContainer.appendChild(swatchesGrid);
-    root.appendChild(paletteContainer);
+    swatchesContainer.appendChild(swatchesGrid);
+    root.appendChild(swatchesContainer);
 
-    // 2. Custom Spectrum Container
-    const spectrumContainer = CL.h('div.cp-spectrum-view', { style: { display: currentMode === 'spectrum' ? 'grid' : 'none' } });
+    // Spectrum Container (for 'spectrum')
+    const spectrumContainer = CL.h('div.cp-spectrum-view', {
+      style: { display: activeView === 'spectrum' ? 'grid' : 'none' }
+    });
     const sv = CL.h('div.cp-sv', null, CL.h('div.cp-sv-knob'));
     const hue = CL.h('div.cp-hue', null, CL.h('div.cp-hue-knob'));
     spectrumContainer.append(sv, hue);
     root.appendChild(spectrumContainer);
 
-    // 3. Bottom Control Row (Shared across both modes)
+    // Bottom Bar (Swatch + HEX + Eyedropper)
     const preview = CL.h('span.cp-preview');
     const hexIn = CL.h('input.input.input-sm.cp-hex', {
       value: hex.toUpperCase(),
@@ -124,7 +110,7 @@
     const dropBtn = CL.h('button.icon-btn.sm.cp-eyedropper', {
       type: 'button',
       html: CL.icon('pipette'),
-      title: 'Pick Color from Screen'
+      title: 'Pick Color'
     });
     if (!('EyeDropper' in window)) dropBtn.disabled = true;
 
@@ -135,36 +121,21 @@
     );
     root.appendChild(bottomRow);
 
-    function switchMode(m) {
-      currentMode = m;
-      if (modeSwitch) {
-        modeSwitch.querySelectorAll('.cp-mode-btn').forEach((b, i) =>
-          b.classList.toggle('is-active', (i === 0 && m === 'palette') || (i === 1 && m === 'spectrum'))
-        );
+    function setView(v) {
+      activeView = v;
+      if (navBar) {
+        navBar.querySelectorAll('.cp-nav-btn').forEach((b, i) => {
+          b.classList.toggle('is-active', (i === 0 && v === 'tints') || (i === 1 && v === 'pack') || (i === 2 && v === 'spectrum'));
+        });
       }
-      paletteContainer.style.display = m === 'palette' ? 'grid' : 'none';
-      spectrumContainer.style.display = m === 'spectrum' ? 'grid' : 'none';
-    }
-
-    function switchCat(cat) {
-      currentCat = cat;
-      catSelector.querySelectorAll('.cp-cat-btn').forEach((b) => {
-        const text = b.textContent.toLowerCase();
-        b.classList.toggle('is-active', text.includes(cat === 'tints' ? 'mlbb' : cat === 'pack' ? 'pack' : 'rec'));
-      });
-      renderSwatches();
+      swatchesContainer.style.display = v !== 'spectrum' ? 'block' : 'none';
+      spectrumContainer.style.display = v === 'spectrum' ? 'grid' : 'none';
+      if (v !== 'spectrum') renderSwatches();
     }
 
     function renderSwatches() {
       swatchesGrid.innerHTML = '';
-      let list = [];
-      if (currentCat === 'tints') list = K_TINTS;
-      else if (currentCat === 'pack') list = K_PACK;
-      else if (currentCat === 'recent') {
-        const rec = getRecent();
-        list = rec.length ? rec.map((c) => ({ c, n: c.toUpperCase() })) : [{ c: '#b85c66', n: 'Default Rosé' }];
-      }
-
+      const list = activeView === 'pack' ? K_PACK : K_TINTS;
       list.forEach((item) => {
         const sw = CL.h('button.cp-cosmetic-sw' + (item.c.toLowerCase() === hex.toLowerCase() ? '.is-active' : ''), {
           type: 'button',
@@ -199,15 +170,8 @@
     function emit(final) {
       onChange && onChange(hex, final);
       clearTimeout(commitT);
-      if (final) {
-        pushRecent(hex);
-        if (currentCat === 'recent') renderSwatches();
-      } else {
-        commitT = setTimeout(() => {
-          pushRecent(hex);
-          if (currentCat === 'recent') renderSwatches();
-        }, 1200);
-      }
+      if (final) pushRecent(hex);
+      else commitT = setTimeout(() => pushRecent(hex), 1200);
     }
 
     function set(v, final) {

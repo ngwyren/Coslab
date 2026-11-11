@@ -7,7 +7,7 @@
       next: 'Tiếp', apply: 'Áp dụng', search: 'Tìm kiếm...', all: 'Tất cả', loading: 'Đang tải...', actions: 'Thao tác',
     },
     nav: {
-      home: 'Atelier', design: 'Design', gallery: 'Archive', myDesigns: 'Vault', settings: 'Setting', start: 'Start Studio',
+      home: 'Atelier', design: 'Design', gallery: 'Archive', myDesigns: 'Vault', settings: 'Setting', start: 'Start Design',
     },
     footer: {
       tagline: 'Xưởng gia công son tint cao cấp OEM / ODM. Nghiên cứu tại Seoul, dung sai 0.1mm chuẩn xưởng mỹ phẩm quốc tế.',
@@ -112,13 +112,15 @@
       exportFailed: 'Lỗi xuất file.', saved: 'Đã lưu vào kho!',
       quotaWarning: 'Bộ nhớ trình duyệt gần đầy.',
       parts: { cap: 'Up Liptint (Nắp)', base: 'Button Liptint (Thân)', ring: 'Khớp viền' },
-      tabs: { model: 'Dáng', colors: 'Màu', text: 'Chữ', graphics: 'Logo & AI', layers: 'Layers' },
+      partsShort: { base: 'Thân', cap: 'Nắp', ring: 'Viền' },
+      finishesShort: { matte: 'Velvet', gloss: 'Dewy', satin: 'Satin', metallic: 'Chrome' },
+      tabs: { model: 'Dáng', colors: 'Màu', text: 'Chữ', graphics: 'Logo', layers: 'Lớp' },
       colors: {
-        title: 'Màu & Gradient', sub: 'Chọn màu trực quan như Adobe Illustrator.',
-        partSelect: 'Vị trí tô màu', fillType: 'Kiểu tô',
+        title: 'Màu sắc (Color)', sub: 'Bảng màu son tint MLBB Hàn Quốc & Vỏ.',
+        partSelect: 'Vị trí (Component)', fillType: 'Kiểu tô',
         solid: 'Đơn sắc', gradient: 'Gradient',
-        finish: 'Chất liệu bề mặt', matte: 'Mờ nhung lì (Velvet)', satin: 'Satin mượt', gloss: 'Pha lê bóng (Glass)', metallic: 'Tráng gương (Chrome)',
-        angle: 'Góc', recent: 'Gần đây', shades: 'Tone MLBB Hàn Quốc', packaging: 'Màu vỏ & Kim loại', eyedropper: 'Hút màu',
+        finish: 'Chất liệu (Finish)', matte: 'Velvet', satin: 'Satin', gloss: 'Dewy', metallic: 'Chrome',
+        angle: 'Góc', recent: 'Gần đây', shades: 'Tone MLBB', packaging: 'Vỏ & Kim loại', eyedropper: 'Hút màu',
       },
       text: {
         title: 'Văn bản', addBtn: '+ Thêm chữ', inputPh: 'Nhập chữ...',

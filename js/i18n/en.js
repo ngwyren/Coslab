@@ -7,7 +7,7 @@
       next: 'Next', apply: 'Apply', search: 'Search...', all: 'All', loading: 'Loading...', actions: 'Actions',
     },
     nav: {
-      home: 'Atelier', design: 'Design', gallery: 'Archive', myDesigns: 'Vault', settings: 'Setting', start: 'Start Studio',
+      home: 'Atelier', design: 'Design', gallery: 'Archive', myDesigns: 'Vault', settings: 'Setting', start: 'Start Design',
     },
     footer: {
       tagline: 'Bespoke Lip Tint OEM & ODM Engineering Studio. Formulated in Seoul, engineered for global cosmetic houses.',
@@ -112,13 +112,15 @@
       exportFailed: 'Export failed.', saved: 'Saved to vault!',
       quotaWarning: 'Storage space low.',
       parts: { cap: 'Up Liptint (Cap)', base: 'Button Liptint (Body)', ring: 'Divider Ring' },
-      tabs: { model: 'Model', colors: 'Color', text: 'Type', graphics: 'Logo & AI', layers: 'Layers' },
+      partsShort: { base: 'Body', cap: 'Cap', ring: 'Ring' },
+      finishesShort: { matte: 'Velvet', gloss: 'Dewy', satin: 'Satin', metallic: 'Chrome' },
+      tabs: { model: 'Model', colors: 'Color', text: 'Type', graphics: 'Logo', layers: 'Layers' },
       colors: {
-        title: 'Colors & Gradients', sub: 'Interactive palette inspired by Adobe Illustrator.',
+        title: 'Color', sub: 'Curated Korean MLBB tints and packaging shades.',
         partSelect: 'Component', fillType: 'Fill',
         solid: 'Solid', gradient: 'Gradient',
-        finish: 'Finish', matte: 'Velvet Matte', satin: 'Satin', gloss: 'Dewy Glass', metallic: 'Cold Chrome',
-        angle: 'Angle', recent: 'Recent', shades: 'Korean MLBB Tones', packaging: 'Packaging Finishes', eyedropper: 'Pick Color',
+        finish: 'Finish', matte: 'Velvet', satin: 'Satin', gloss: 'Dewy', metallic: 'Chrome',
+        angle: 'Angle', recent: 'Recent', shades: 'MLBB Shades', packaging: 'Packaging', eyedropper: 'Eyedropper',
       },
       text: {
         title: 'Typography', addBtn: '+ Add Text', inputPh: 'Enter text...',
