@@ -78,10 +78,28 @@
     const header = document.getElementById('siteHeader');
     window.addEventListener('scroll', () => header.classList.toggle('scrolled', window.scrollY > 4), { passive: true });
 
-    document.documentElement.setAttribute('data-theme', 'light'); // light only for now
+    document.documentElement.setAttribute('data-theme', 'light');
     I18N.onChange(() => { buildLangSwitch(); render({ rerender: true }); });
     I18N.setLang(CL.store.settings.lang || 'vi');
     window.addEventListener('hashchange', () => render());
+
+    // Scroll reveal observer (Framer motion style)
+    if ('IntersectionObserver' in window) {
+      const obs = new IntersectionObserver((entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) {
+            e.target.classList.add('reveal-up');
+            obs.unobserve(e.target);
+          }
+        });
+      }, { threshold: 0.1 });
+
+      const observeAll = () => {
+        document.querySelectorAll('.motion-reveal').forEach((el) => obs.observe(el));
+      };
+      window.addEventListener('hashchange', () => setTimeout(observeAll, 60));
+      setTimeout(observeAll, 100);
+    }
     if (!I18N.LANGS.length) return;
     buildLangSwitch();
     render();

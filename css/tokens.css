@@ -1,88 +1,86 @@
 /* ==========================================================
-   COSLAB — Design tokens
-   Elevated Korean Beauty Atelier (K-Beauty Luxury Vibe)
-   Inspired by Tamburins, Gentle Monster, Hera, Sulwhasoo, Nonfiction
-   High-end porcelain monochrome palette with warm undertones.
+   COSLAB — Design tokens (Orchard & Laconic Studio Minimalist Aesthetic)
+   Minimal text, high negative space, hairline borders, fluid motion curves.
    ========================================================== */
 :root,
 [data-theme="light"] {
-  /* Surfaces: Korean Warm Porcelain & Minimalist Milk Glass */
+  /* Surfaces: Crisp Architectural Porcelain & Milk White */
   --bg: #faf9f6;
-  --bg-soft: #f4f1ea;
+  --bg-soft: #f4f2ec;
   --bg-card: #ffffff;
   --surface: #ffffff;
-  --surface-2: #f3efe6;
-  --surface-3: #e9e4d8;
-  --surface-warm: #fcfbf9;
-  --canvas-bg: #f2eee5;
+  --surface-2: #f2eee6;
+  --surface-3: #e8e3d8;
+  --canvas-bg: #ece7dc;
 
-  /* Lines & Delicate Framing */
-  --border: #e8e3d8;
-  --border-strong: #c8c2b5;
-  --border-subtle: rgba(28, 25, 23, 0.06);
+  /* Hairline Lines & Minimalist Grid Rules (Laconic style) */
+  --border: #e6e2d8;
+  --border-strong: #171615;
+  --border-subtle: rgba(23, 22, 21, 0.07);
 
-  /* Typography: Sophisticated Charcoal & Rich Espresso Black */
+  /* Typography: Rich Ebony & Muted Charcoal */
   --text: #171615;
-  --text-2: #383531;
-  --muted: #736e65;
-  --muted-2: #a19b8f;
+  --text-2: #403d38;
+  --muted: #827c73;
+  --muted-2: #aba498;
   --on-accent: #ffffff;
 
-  /* Korean Atelier Accents */
+  /* Accents */
   --accent: #171615;
-  --accent-hover: #2e2b27;
-  --accent-soft: #ede8dc;
-  --accent-gold: #c5a367;
+  --accent-hover: #000000;
+  --accent-soft: #ede9df;
   --focus: #171615;
 
-  /* Status */
-  --danger: #9c2e35;
-  --success: #285437;
-
-  /* Radius: Soft, pebble-like luxury curves */
-  --r-xs: 6px;
-  --r-sm: 10px;
-  --r-md: 16px;
-  --r-lg: 24px;
-  --r-xl: 32px;
+  /* Radius: Refined architectural radii */
+  --r-xs: 4px;
+  --r-sm: 8px;
+  --r-md: 14px;
+  --r-lg: 20px;
+  --r-xl: 28px;
   --r-pill: 9999px;
 
-  /* Shadows: Diffused editorial lighting */
-  --shadow-xs: 0 1px 3px rgba(23, 22, 21, 0.04);
-  --shadow-sm: 0 4px 12px rgba(23, 22, 21, 0.05);
-  --shadow-md: 0 12px 32px rgba(23, 22, 21, 0.07);
-  --shadow-lg: 0 24px 64px rgba(23, 22, 21, 0.10);
-  --shadow-float: 0 20px 50px rgba(23, 22, 21, 0.12), 0 0 1px rgba(23, 22, 21, 0.2);
+  /* Shadows: Soft diffused ambient light */
+  --shadow-xs: 0 1px 2px rgba(23, 22, 21, 0.04);
+  --shadow-sm: 0 4px 16px rgba(23, 22, 21, 0.06);
+  --shadow-md: 0 16px 40px rgba(23, 22, 21, 0.08);
+  --shadow-lg: 0 30px 80px rgba(23, 22, 21, 0.12);
 
-  /* Typography */
-  --font-ui: "Plus Jakarta Sans", "Noto Sans KR", system-ui, -apple-system, sans-serif;
-  --font-display: "Cinzel", "Italiana", "Instrument Serif", "Noto Serif KR", Georgia, serif;
-  --font-serif: "Cormorant Garamond", "Playfair Display", "Noto Serif KR", Georgia, serif;
+  /* Typography: Modern Grotesque Sans (Switzer / Plus Jakarta Sans style) */
+  --font-ui: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "SF Mono", "Consolas", "Roboto Mono", monospace;
+  --font-display: "Plus Jakarta Sans", sans-serif;
+  --font-serif: "Italiana", "Cinzel", Georgia, serif;
 
   /* Layout */
-  --container: 1280px;
-  --header-h: 70px;
+  --container: 1320px;
+  --header-h: 72px;
+
+  /* Motion & Framer Curves */
   --ease: cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --transition-fast: 0.18s var(--ease);
+  --transition-base: 0.32s var(--ease);
+  --transition-slow: 0.6s var(--ease);
 }
 
 [data-theme="dark"] {
-  --bg: #0f0e0d;
-  --bg-soft: #171614;
-  --bg-card: #1c1b18;
-  --surface: #1a1917;
-  --surface-2: #24221f;
-  --surface-3: #2e2b26;
-  --canvas-bg: #141311;
-  --border: #2e2b26;
-  --border-strong: #45413a;
-  --text: #f5f2ec;
-  --text-2: #ded9cf;
-  --muted: #969085;
-  --muted-2: #6b665c;
-  --on-accent: #0f0e0d;
-  --accent: #f5f2ec;
+  --bg: #0d0d0c;
+  --bg-soft: #141413;
+  --bg-card: #181817;
+  --surface: #171716;
+  --surface-2: #222220;
+  --surface-3: #2c2b28;
+  --canvas-bg: #121211;
+  --border: #262523;
+  --border-strong: #ffffff;
+  --text: #f6f5f2;
+  --text-2: #d8d5cd;
+  --muted: #8c877e;
+  --muted-2: #5c5851;
+  --on-accent: #0d0d0c;
+  --accent: #f6f5f2;
   --accent-hover: #ffffff;
-  --accent-soft: #24221f;
-  --focus: #f5f2ec;
+  --accent-soft: #222220;
+  --focus: #f6f5f2;
 }
