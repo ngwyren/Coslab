@@ -8,13 +8,56 @@
   const U = 90; // SVG units per 3D unit
 
   const FINISH = {
-    matte: { roughness: 0.82, metalness: 0.05, clearcoat: 0.04, clearcoatRoughness: 0.7 },
-    satin: { roughness: 0.44, metalness: 0.08, clearcoat: 0.35, clearcoatRoughness: 0.3 },
-    gloss: { roughness: 0.16, metalness: 0.05, clearcoat: 1.0, clearcoatRoughness: 0.03 },
-    metallic: { roughness: 0.22, metalness: 0.95, clearcoat: 0.4, clearcoatRoughness: 0.15 },
+    matte: {
+      roughness: 0.60,
+      metalness: 0.02,
+      clearcoat: 0.15,
+      clearcoatRoughness: 0.5,
+      sheen: 1.0,
+      sheenRoughness: 0.45,
+    },
+    satin: {
+      roughness: 0.30,
+      metalness: 0.05,
+      clearcoat: 0.45,
+      clearcoatRoughness: 0.2,
+      sheen: 0.5,
+    },
+    gloss: {
+      roughness: 0.06,
+      metalness: 0.02,
+      clearcoat: 1.0,
+      clearcoatRoughness: 0.03,
+      transmission: 0.25,
+      thickness: 0.9,
+      ior: 1.52,
+    },
+    metallic: {
+      roughness: 0.15,
+      metalness: 0.98,
+      clearcoat: 0.55,
+      clearcoatRoughness: 0.1,
+    },
   };
 
   const firstColor = (fill) => (fill && fill.type === 'linear' ? fill.stops[0].c : (fill && fill.color) || '#dedad2');
+
+  function makeContactShadowTexture() {
+    const c = document.createElement('canvas');
+    c.width = 512;
+    c.height = 512;
+    const ctx = c.getContext('2d');
+    const grad = ctx.createRadialGradient(256, 256, 20, 256, 256, 245);
+    grad.addColorStop(0, 'rgba(0, 0, 0, 0.35)');
+    grad.addColorStop(0.25, 'rgba(0, 0, 0, 0.20)');
+    grad.addColorStop(0.55, 'rgba(0, 0, 0, 0.08)');
+    grad.addColorStop(0.85, 'rgba(0, 0, 0, 0.02)');
+    grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, 512, 512);
+    const tx = new THREE.CanvasTexture(c);
+    return tx;
+  }
 
   function makeEnv(renderer) {
     const pm = new THREE.PMREMGenerator(renderer);
@@ -97,30 +140,56 @@
       this.camera = new THREE.PerspectiveCamera(26, 1, 0.1, 100);
       this.target = new THREE.Vector3(0, 2.8, 0);
       this.dist = 14;
+      this.targetDist = 14;
       this.rotY = -0.35;
       this.rotX = 0.08;
+      this.targetRotY = -0.35;
+      this.targetRotX = 0.08;
 
-      // K-Beauty Studio Lights
-      const hemi = new THREE.HemisphereLight(0xffffff, 0xf5f5f5, 0.75);
+      // K-Beauty Studio Lights & Softbox Highlights
+      const hemi = new THREE.HemisphereLight(0xffffff, 0xf6f6f6, 0.85);
       this.scene.add(hemi);
 
-      const key = new THREE.DirectionalLight(0xffffff, 1.25);
+      const key = new THREE.DirectionalLight(0xffffff, 1.35);
       key.position.set(-4, 9, 6);
       key.castShadow = true;
       key.shadow.mapSize.set(1024, 1024);
       key.shadow.camera.left = -5;
       key.shadow.camera.right = 5;
-      key.shadow.camera.top = 7;
+      key.shadow.camera.top = 8;
       key.shadow.camera.bottom = -2;
-      key.shadow.radius = 5;
+      key.shadow.radius = 4;
       this.scene.add(key);
 
-      const rim = new THREE.DirectionalLight(0xffffff, 0.7);
-      rim.position.set(5, 5, -5);
+      // Vertical softbox strip light (creates the iconic specular streak on tube curves)
+      const softbox = new THREE.DirectionalLight(0xffffff, 0.95);
+      softbox.position.set(6, 4, 3);
+      this.scene.add(softbox);
+
+      // Back rim light to separate the silhouette from the white background
+      const rim = new THREE.DirectionalLight(0xffffff, 0.75);
+      rim.position.set(0, 6, -7);
       this.scene.add(rim);
 
+      // Gentle floor bounce light
+      const bounce = new THREE.DirectionalLight(0xffffff, 0.35);
+      bounce.position.set(0, -3, 2);
+      this.scene.add(bounce);
+
+      // Realistic Soft Radial Contact Shadow
+      const shadowTex = makeContactShadowTexture();
+      const shadowMat = new THREE.MeshBasicMaterial({
+        map: shadowTex,
+        transparent: true,
+        depthWrite: false,
+      });
+      const shadowPlane = new THREE.Mesh(new THREE.PlaneGeometry(8, 8), shadowMat);
+      shadowPlane.rotation.x = -Math.PI / 2;
+      shadowPlane.position.y = 0.005;
+      this.scene.add(shadowPlane);
+
       // Studio Pedestal / Ground
-      const ground = new THREE.Mesh(new THREE.PlaneGeometry(30, 30), new THREE.ShadowMaterial({ opacity: 0.08 }));
+      const ground = new THREE.Mesh(new THREE.PlaneGeometry(30, 30), new THREE.ShadowMaterial({ opacity: 0.06 }));
       ground.rotation.x = -Math.PI / 2;
       ground.position.y = 0;
       ground.receiveShadow = true;
@@ -145,7 +214,7 @@
 
       let drag = null;
       el.addEventListener('pointerdown', (e) => {
-        drag = { x: e.clientX, y: e.clientY, ry: this.rotY, rx: this.rotX };
+        drag = { x: e.clientX, y: e.clientY, ry: this.targetRotY, rx: this.targetRotX };
         el.setPointerCapture(e.pointerId);
         this.idleAt = performance.now();
         el.classList.add('grabbing');
@@ -153,8 +222,8 @@
 
       el.addEventListener('pointermove', (e) => {
         if (!drag) return;
-        this.rotY = drag.ry + (e.clientX - drag.x) * 0.01;
-        this.rotX = CL.clamp(drag.rx + (e.clientY - drag.y) * 0.005, -0.35, 0.5);
+        this.targetRotY = drag.ry + (e.clientX - drag.x) * 0.008;
+        this.targetRotX = CL.clamp(drag.rx + (e.clientY - drag.y) * 0.004, -0.35, 0.5);
         this.idleAt = performance.now();
       });
 
@@ -168,7 +237,7 @@
 
       el.addEventListener('wheel', (e) => {
         e.preventDefault();
-        this.dist = CL.clamp(this.dist * (1 + Math.sign(e.deltaY) * 0.07), 7, 24);
+        this.targetDist = CL.clamp(this.targetDist * (1 + Math.sign(e.deltaY) * 0.08), 8, 22);
       }, { passive: false });
     }
 
@@ -183,9 +252,14 @@
 
     _loop(ts) {
       this._raf = requestAnimationFrame(this._loop);
-      if (this.opts.autoRotate && (!this.idleAt || ts - this.idleAt > 2000)) {
-        this.rotY += 0.0035;
+      if (this.opts.autoRotate && (!this.idleAt || ts - this.idleAt > 1800)) {
+        this.targetRotY += 0.0035;
       }
+
+      // Smooth PS5 inertia damping
+      this.rotY += (this.targetRotY - this.rotY) * 0.085;
+      this.rotX += (this.targetRotX - this.rotX) * 0.085;
+      this.dist += (this.targetDist - this.dist) * 0.1;
 
       const cx = Math.sin(this.rotY) * Math.cos(this.rotX) * this.dist;
       const cz = Math.cos(this.rotY) * Math.cos(this.rotX) * this.dist;
@@ -274,35 +348,54 @@
         return m;
       };
 
+      // 0. Studio Alabaster / Porcelain Pedestal Podium
+      const podRadius = Math.max(1.8, baseW * 1.35);
+      const podH = 0.28;
+      const podGeo = isSquare
+        ? new THREE.BoxGeometry(podRadius * 2, podH, podRadius * 2)
+        : new THREE.CylinderGeometry(podRadius, podRadius * 1.03, podH, 64);
+      const podMat = new THREE.MeshPhysicalMaterial({
+        color: 0xfcfcfc,
+        roughness: 0.28,
+        metalness: 0.02,
+        clearcoat: 0.4,
+        clearcoatRoughness: 0.3,
+      });
+      this.disposables.push(podMat);
+      add(podGeo, podMat, podH / 2);
+
+      const tubeY0 = podH;
+
       // 1. Bottom Tube: Button Liptint (Base)
       const baseSide = this._mat(P.base, tex.base);
       const basePlain = this._mat(P.base, null);
 
       if (isSquare) {
         const baseGeo = new THREE.BoxGeometry(baseW, baseH, baseW);
-        add(baseGeo, [basePlain, basePlain, basePlain, basePlain, baseSide, basePlain], baseH / 2);
+        add(baseGeo, [basePlain, basePlain, basePlain, basePlain, baseSide, basePlain], tubeY0 + baseH / 2);
       } else {
         const baseGeo = new THREE.CylinderGeometry(baseW / 2, baseW / 2, baseH, 128, 1, false, Math.PI, Math.PI * 2);
-        add(baseGeo, [baseSide, basePlain, basePlain], baseH / 2);
+        add(baseGeo, [baseSide, basePlain, basePlain], tubeY0 + baseH / 2);
       }
 
       // 2. Middle Divider Ring / Collar
       const ringGeo = isSquare
-        ? new THREE.BoxGeometry(baseW * 0.98, ringH, baseW * 0.98)
-        : new THREE.CylinderGeometry(baseW * 0.49, baseW * 0.49, ringH, 96);
+        ? new THREE.BoxGeometry(baseW * 0.985, ringH, baseW * 0.985)
+        : new THREE.CylinderGeometry(baseW * 0.495, baseW * 0.495, ringH, 96);
 
       const ringMat = new THREE.MeshPhysicalMaterial({
         color: new THREE.Color(firstColor(P.ring?.fill || { color: '#c5a367' })).convertSRGBToLinear(),
-        roughness: 0.22,
-        metalness: 0.9,
+        roughness: 0.16,
+        metalness: 0.98,
+        clearcoat: 0.6,
       });
       this.disposables.push(ringMat);
-      add(ringGeo, ringMat, baseH + ringH / 2);
+      add(ringGeo, ringMat, tubeY0 + baseH + ringH / 2);
 
       // 3. Top Tube: Up Liptint (Cap)
       const capSide = this._mat(P.cap, tex.cap);
       const capPlain = this._mat(P.cap, null);
-      const capY = baseH + ringH + capH / 2;
+      const capY = tubeY0 + baseH + ringH + capH / 2;
 
       if (isSquare) {
         const capGeo = new THREE.BoxGeometry(baseW, capH, baseW);
@@ -313,9 +406,10 @@
       }
 
       // Center camera target at the midpoint of the single tube
-      this.target.set(0, totalH / 2, 0);
+      this.target.set(0, (tubeY0 + totalH) / 2, 0);
       if (!this._framed) {
         this.dist = Math.max(12, totalH * 2.3);
+        this.targetDist = this.dist;
         this._framed = true;
       }
     }

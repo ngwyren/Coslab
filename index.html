@@ -43,29 +43,88 @@
   <main id="app" tabindex="-1"></main>
 
   <footer class="site-footer" id="siteFooter">
-    <div class="container footer-inner">
-      <div class="footer-brand">
-        <a href="#/" class="brand"><span class="brand-mark"></span><span class="brand-word">COSLAB</span></a>
-        <p class="muted" data-i18n="footer.tagline">Lipstick manufacturing &amp; custom design studio.</p>
-      </div>
-      <div class="footer-cols">
-        <div>
-          <h4 data-i18n="footer.explore">Explore</h4>
-          <a href="#/about" data-i18n="home.nav.about">About us</a>
-          <a href="#/media" data-i18n="home.nav.media">Images &amp; Video 3D</a>
-          <a href="#/gallery" data-i18n="nav.gallery">Gallery</a>
+    <div class="container">
+      <div class="footer-grid">
+        <!-- Col 1: Brand & Atelier Information -->
+        <div class="footer-brand-col">
+          <div class="footer-brand-header">
+            <a href="#/" class="brand">
+              <span class="brand-mark"></span>
+              <span class="brand-word">COSLAB</span>
+            </a>
+            <span class="pill-tag">SEOUL LAB</span>
+          </div>
+          <p class="footer-tagline" data-i18n="footer.tagline">
+            Bespoke Lip Tint OEM &amp; ODM Engineering Studio. Formulated in Seoul, engineered for global cosmetic houses.
+          </p>
+          <div class="footer-status-badge">
+            <span class="status-dot"></span>
+            <span>CGMP &amp; ISO 22716 LAB · ACTIVE</span>
+          </div>
+          <div class="footer-location mono muted">
+            SEOUL KST (GMT+9) · BESPOKE LIPTINT
+          </div>
         </div>
-        <div>
-          <h4 data-i18n="footer.studio">Studio</h4>
-          <a href="#/design" data-i18n="nav.start">Start design</a>
-          <a href="#/my-designs" data-i18n="nav.myDesigns">My Design</a>
-          <a href="#/settings" data-i18n="nav.settings">Setting</a>
+
+        <!-- Col 2: (01) PLATFORM -->
+        <div class="footer-col">
+          <div class="footer-col-header">
+            <span class="index-num">[ 01 ]</span>
+            <h4 data-i18n="footer.explore">Platform</h4>
+          </div>
+          <div class="footer-links">
+            <a href="#/">Atelier Home</a>
+            <a href="#/design" data-i18n="nav.design">Design</a>
+            <a href="#/gallery" data-i18n="nav.gallery">Archive</a>
+            <a href="#/my-designs" data-i18n="nav.myDesigns">Vault</a>
+          </div>
+        </div>
+
+        <!-- Col 3: (02) STUDIO -->
+        <div class="footer-col">
+          <div class="footer-col-header">
+            <span class="index-num">[ 02 ]</span>
+            <h4 data-i18n="footer.studio">Studio</h4>
+          </div>
+          <div class="footer-links">
+            <a href="#/design" data-i18n="nav.start">Start Studio</a>
+            <a href="#/editor">3D Tube Editor</a>
+            <a href="#/settings" data-i18n="nav.settings">Setting</a>
+            <a href="#/settings">Export Precision DPI</a>
+          </div>
+        </div>
+
+        <!-- Col 4: (03) MANUFACTURING -->
+        <div class="footer-col">
+          <div class="footer-col-header">
+            <span class="index-num">[ 03 ]</span>
+            <h4 data-i18n="footer.mfg">Manufacturing</h4>
+          </div>
+          <div class="footer-links">
+            <a href="#/design">Velvet &amp; Dewy Glass</a>
+            <a href="#/design">360° PBR WebGL</a>
+            <a href="#/settings">72h Rapid Specimen</a>
+            <a href="#/settings">PDF 1:1 Die-Cut Blueprint</a>
+          </div>
         </div>
       </div>
-    </div>
-    <div class="container footer-bottom">
-      <span>© <span id="year"></span> COSLAB</span>
-      <span class="muted" data-i18n="footer.rights">All rights reserved.</span>
+
+      <!-- Footer Bottom Bar -->
+      <div class="footer-bottom">
+        <div class="footer-bottom-left">
+          <span>© <span id="year">2026</span> COSLAB ATELIER.</span>
+          <span class="muted-dot">·</span>
+          <span class="muted" data-i18n="footer.rights">All rights reserved.</span>
+          <span class="muted-dot">·</span>
+          <span class="muted">KOREAN LIPTINT OEM / ODM FOUNDRY</span>
+        </div>
+        <div class="footer-bottom-right">
+          <button type="button" class="footer-back-to-top" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
+            <span data-i18n="footer.backToTop">BACK TO TOP</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15l-6-6-6 6"/></svg>
+          </button>
+        </div>
+      </div>
     </div>
   </footer>
 

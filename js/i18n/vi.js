@@ -10,8 +10,9 @@
       home: 'Atelier', design: 'Design', gallery: 'Archive', myDesigns: 'Vault', settings: 'Setting', start: 'Start Studio',
     },
     footer: {
-      tagline: 'COSLAB KOREA · Liptint Studio.',
-      explore: 'Khám phá', studio: 'Studio', rights: 'All rights reserved.',
+      tagline: 'Xưởng gia công son tint cao cấp OEM / ODM. Chuẩn CGMP & ISO 22716 Seoul.',
+      explore: 'Khám phá', studio: 'Studio', mfg: 'Sản xuất', rights: 'Toàn bộ quyền được bảo lưu.',
+      backToTop: 'VỀ ĐẦU TRANG',
     },
     home: {
       nav: { about: 'Atelier', media: '3D View' },

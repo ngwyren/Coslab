@@ -102,68 +102,178 @@
 .lang-btn svg { width: 14px; height: 14px; }
 .lang-switch .menu { inset-inline-end: 0; top: calc(100% + 6px); }
 
-/* Minimalist Footer */
+/* ==========================================================
+   COSLAB — Minimalist Korean Luxury Atelier Footer
+   Architectural 4-Column Grid, Live CGMP status, hairline borders
+   ========================================================== */
 .site-footer {
   border-top: 1px solid var(--border);
   background: var(--bg);
-  padding-block: 60px 32px;
+  padding-block: 72px 36px;
+  position: relative;
 }
+
 .footer-grid {
   display: grid;
-  grid-template-columns: 1.5fr repeat(2, 1fr);
-  gap: 48px;
-  margin-bottom: 48px;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 56px;
+  padding-bottom: 56px;
 }
-.footer-brand {
+
+.footer-brand-col {
   display: grid;
-  gap: 12px;
-  max-width: 320px;
+  gap: 16px;
+  align-content: start;
+  padding-inline-end: 24px;
 }
-.footer-brand p {
+.footer-brand-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.footer-tagline {
   font-size: 13px;
   color: var(--muted);
-  line-height: 1.5;
+  line-height: 1.6;
+  max-width: 360px;
+  text-wrap: pretty;
 }
-.footer-col {
-  display: grid;
-  gap: 10px;
-  align-content: start;
-}
-.footer-col h4 {
+.footer-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   font-family: var(--font-mono);
   font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--text-2);
+}
+.status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.7);
+  animation: ps5Pulse 2s ease-in-out infinite;
+}
+.footer-location {
+  font-size: 10px;
+  color: var(--muted-2);
+}
+
+.footer-col {
+  display: grid;
+  gap: 16px;
+  align-content: start;
+}
+.footer-col-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+.footer-col-header h4 {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--muted);
-  margin-bottom: 4px;
+  color: var(--text);
+  white-space: nowrap;
 }
-.footer-col a {
+.footer-links {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.footer-links a {
   font-size: 13px;
-  color: var(--text-2);
-  transition: color 0.15s;
+  color: var(--muted);
+  transition: color 0.2s var(--ease-ps5), transform 0.2s var(--ease-ps5);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  width: fit-content;
 }
-.footer-col a:hover { color: var(--text); }
+.footer-links a:hover {
+  color: var(--text);
+  transform: translateX(4px);
+}
+[dir="rtl"] .footer-links a:hover {
+  transform: translateX(-4px);
+}
 
 .footer-bottom {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
+  gap: 20px;
   border-top: 1px solid var(--border);
-  padding-top: 24px;
+  padding-top: 28px;
   font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 0.06em;
   color: var(--muted);
+  flex-wrap: wrap;
+}
+.footer-bottom-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.muted-dot {
+  color: var(--border-strong);
+  opacity: 0.3;
+}
+.footer-back-to-top {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.22s var(--ease-ps5);
+}
+.footer-back-to-top:hover {
+  border-color: var(--text);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+.footer-back-to-top:active {
+  transform: scale(0.96);
 }
 
 body.app-mode .site-footer { display: none; }
 body.app-mode { overflow: hidden; }
 
 /* Responsive */
-@media (max-width: 900px) {
-  .main-nav {
-    display: none;
+@media (max-width: 960px) {
+  .footer-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
   }
-  .nav-toggle { display: inline-grid; }
-  .footer-grid { grid-template-columns: 1fr; gap: 32px; }
+  .footer-brand-col {
+    grid-column: 1 / -1;
+    padding-inline-end: 0;
+  }
+}
+@media (max-width: 580px) {
+  .footer-grid {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+  .footer-bottom {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
 }
