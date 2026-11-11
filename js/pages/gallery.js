@@ -12,10 +12,13 @@
     render(container) {
       let activeFilter = 'all';
 
-      const root = CL.h('div.page.container', { style: { paddingBottom: '60px' } });
+      const root = CL.h('div.page.container', { style: { paddingBottom: '80px' } });
 
       const head = CL.h('div.page-head', null,
-        CL.h('span.eyebrow', { text: 'COSLAB KOREA · Liptint Showcase' }),
+        CL.h('div.hero-meta-row', null,
+          CL.h('span.pill-tag', { text: 'ARCHIVE VAULT' }),
+          CL.h('span.index-num', { text: '(CURATED EDITIONS)' })
+        ),
         CL.h('div.page-head-row', null,
           CL.h('div', null,
             CL.h('h1', { text: t('gallery.title') }),
@@ -25,7 +28,7 @@
             CL.h('a.btn.btn-primary', { href: '#/design', html: CL.icon('plus') + `<span>${t('nav.start')}</span>` })
           )
         ),
-        CL.h('div.chips#galleryFilter', null,
+        CL.h('div.chips#galleryFilter', { style: { marginTop: '16px' } },
           [
             ['all', 'gallery.filterAll'],
             ['k-velvet', 'gallery.filterKVelvet'],
@@ -48,18 +51,9 @@
         )
       );
 
-      const note = CL.h('div', {
-        style: {
-          display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px',
-          background: 'var(--surface-2)', borderRadius: 'var(--r-md)', fontSize: '13px', color: 'var(--muted)',
-          marginBlock: '12px 20px',
-        },
-        html: CL.icon('sparkles') + `<span>${t('gallery.autoUpdateNote')}</span>`,
-      });
-
       const grid = CL.h('div.gallery-grid#galleryGrid');
 
-      root.append(head, note, grid);
+      root.append(head, grid);
       container.appendChild(root);
 
       function renderCards() {

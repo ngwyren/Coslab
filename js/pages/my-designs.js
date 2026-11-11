@@ -9,10 +9,13 @@
     appMode: false,
 
     render(container) {
-      const root = CL.h('div.page.container', { style: { paddingBottom: '60px' } });
+      const root = CL.h('div.page.container', { style: { paddingBottom: '80px' } });
 
       const head = CL.h('div.page-head', null,
-        CL.h('span.eyebrow', { text: 'Workspace' }),
+        CL.h('div.hero-meta-row', null,
+          CL.h('span.pill-tag', { text: 'CLIENT VAULT' }),
+          CL.h('span.index-num', { text: '(STORAGE)' })
+        ),
         CL.h('div.page-head-row', null,
           CL.h('div', null,
             CL.h('h1', { text: t('myDesigns.title') }),

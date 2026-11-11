@@ -50,6 +50,34 @@
               href: '#/gallery',
               html: `<span>${t('home.hero.galleryCta')}</span>`,
             })
+          ),
+
+          // Architectural 3-Column Metrics Grid (Clean Grid Layout)
+          CL.h('div.hero-metrics-grid.reveal-up.stagger-4', null,
+            CL.h('div.hero-metric-item', null,
+              CL.h('div.metric-header', null,
+                CL.h('span', { text: '(01) STANDARD' }),
+                CL.h('span', { text: 'OEM · ODM' })
+              ),
+              CL.h('div.metric-val', { text: 'CGMP & ISO' }),
+              CL.h('div.metric-sub', { text: 'Korean Clean Formulation' })
+            ),
+            CL.h('div.hero-metric-item', null,
+              CL.h('div.metric-header', null,
+                CL.h('span', { text: '(02) SIMULATION' }),
+                CL.h('span', { text: 'REAL-TIME' })
+              ),
+              CL.h('div.metric-val', { text: '360° PBR 3D' }),
+              CL.h('div.metric-sub', { text: 'Velvet, Glass & Chrome' })
+            ),
+            CL.h('div.hero-metric-item', null,
+              CL.h('div.metric-header', null,
+                CL.h('span', { text: '(03) PROTOTYPE' }),
+                CL.h('span', { text: 'RAPID LAB' })
+              ),
+              CL.h('div.metric-val', { text: '72h Specimen' }),
+              CL.h('div.metric-sub', { text: 'Vector Artwork to Print' })
+            )
           )
         )
       );

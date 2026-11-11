@@ -19,7 +19,15 @@
     return nav.find((l) => supported.includes(l)) || 'vi';
   }
 
-  const defaults = () => ({ lang: detectLang(), theme: 'light', author: { name: '', brand: '', email: '', phone: '' } });
+  const defaults = () => ({
+    lang: detectLang(),
+    theme: 'light',
+    autoRotate3D: true,
+    highQuality3D: true,
+    cropMarks: true,
+    exportDPI: 300,
+    author: { name: '', brand: '', email: '', phone: '' },
+  });
 
   CL.store = {
     settings: Object.assign(defaults(), read(K.settings, {})),
