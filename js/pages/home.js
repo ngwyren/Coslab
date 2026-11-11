@@ -37,41 +37,8 @@
             })
           ),
 
-          // Center Stage 3D Showcase (Pure White Studio on Ceramic Podium)
-          CL.h('div.showcase-canvas-box.reveal-up.stagger-2', { style: { height: '620px', marginTop: '16px' } },
-            CL.h('div.showcase-hud-tag', null,
-              CL.h('span.pill-tag', { 'data-i18n': 'home.pbrStage', text: t('home.pbrStage') }),
-              CL.h('span.index-num', { 'data-i18n': 'home.ceramicPodium', text: t('home.ceramicPodium') })
-            ),
-            CL.h('div.showcase-controls-topright', null,
-              CL.h('button.showcase-ctrl-btn.is-active#btnHomeRotate', {
-                'data-i18n': 'home.autoRotate',
-                text: t('home.autoRotate'),
-                onclick: (e) => {
-                  if (!preview) return;
-                  preview.opts.autoRotate = !preview.opts.autoRotate;
-                  e.currentTarget.classList.toggle('is-active', preview.opts.autoRotate);
-                },
-              }),
-              CL.h('button.showcase-ctrl-btn', {
-                'data-i18n': 'home.resetAngle',
-                text: t('home.resetAngle'),
-                onclick: () => {
-                  if (!preview) return;
-                  preview.targetRotY = -0.35;
-                  preview.targetRotX = 0.08;
-                  preview.targetDist = 14;
-                },
-              })
-            ),
-            CL.h('div#hero3dTarget', { style: { width: '100%', height: '100%' } }),
-            CL.h('div.showcase-hud-bottom', {
-              html: CL.icon('cube') + `<span data-i18n="home.dragHint">${t('home.dragHint')}</span>`,
-            })
-          ),
-
-          // Action buttons below 3D stage
-          CL.h('div.hero-actions-bar.reveal-up.stagger-3', { style: { justifyContent: 'flex-start', marginTop: '24px' } },
+          // Action buttons
+          CL.h('div.hero-actions-bar.reveal-up.stagger-2', { style: { justifyContent: 'flex-start', marginTop: '32px' } },
             CL.h('a.btn.btn-primary.btn-lg', {
               href: '#/design',
               html: `<span data-i18n="home.launchStudio">${t('home.launchStudio')}</span>` + CL.icon('arrowRight'),
@@ -85,7 +52,7 @@
           ),
 
           // Architectural 3-Column Metrics Grid (Orchard / Laconic style)
-          CL.h('div.hero-metrics-grid.reveal-up.stagger-4', null,
+          CL.h('div.hero-metrics-grid.reveal-up.stagger-3', { style: { marginTop: '48px' } },
             CL.h('div.hero-metric-item', null,
               CL.h('div.metric-header', null,
                 CL.h('span', { text: '(01) STANDARD' }),
@@ -361,18 +328,7 @@
       root.append(hero, marquee, worksSection, standardsSection, journalSection, connectSection);
       container.appendChild(root);
 
-      // Initialize 3D Engine in the central stage
-      let preview = null;
-      const target = document.getElementById('hero3dTarget');
-      if (target && window.THREE) {
-        preview = new CL.Preview3D(target, { autoRotate: true, interactive: true });
-        const demoDesign = CL.templates.createDesign('velvet-rose', 'velvet-round');
-        preview.setDesign(demoDesign);
-      }
-
-      return () => {
-        if (preview) preview.dispose();
-      };
+      return () => {};
     },
   };
 })(window.CL);

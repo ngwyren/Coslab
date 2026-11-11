@@ -234,8 +234,10 @@
 
       function selectPart(p) {
         activePart = p;
-        document.getElementById('btnPartCap').classList.toggle('is-active', p === 'cap');
-        document.getElementById('btnPartBase').classList.toggle('is-active', p === 'base');
+        const bCap = document.getElementById('btnPartCap');
+        if (bCap) bCap.classList.toggle('is-active', p === 'cap');
+        const bBase = document.getElementById('btnPartBase');
+        if (bBase) bBase.classList.toggle('is-active', p === 'base');
         renderTabContent();
       }
 
@@ -328,6 +330,7 @@
 
       // --- 1. Colors & Gradients Tab (Minimalist & Compact) ---
       function renderColorsTab() {
+        tabContent.innerHTML = '';
         const sec = CL.h('div.sidebar-section');
 
         // Part Selector (Compact 3-Way Tabs with short labels)
@@ -346,6 +349,7 @@
               onclick: () => {
                 activePart = p.id;
                 renderColorsTab();
+                render2DCanvas();
               },
             });
           })
@@ -366,11 +370,12 @@
             return CL.h('button.finish-card-btn' + (curPart.finish === f.id ? '.is-active' : ''), {
               type: 'button',
               html: `<span class="finish-icon-badge">${f.icon}</span><span>${name}</span>`,
-              onclick: () => {
+              onclick: (e) => {
                 curPart.finish = f.id;
                 pushHistory();
                 render2DCanvas();
-                renderColorsTab();
+                finishRow.querySelectorAll('.finish-card-btn').forEach((b) => b.classList.remove('is-active'));
+                e.currentTarget.classList.add('is-active');
               },
             });
           })
@@ -382,6 +387,8 @@
           onChange: (newHex, final) => {
             curPart.fill = { type: 'solid', color: newHex };
             render2DCanvas();
+            const activeDot = partTabs.querySelector('.part-tab-btn.is-active .part-tab-dot');
+            if (activeDot) activeDot.style.background = newHex;
             if (final) pushHistory();
           },
         });
@@ -400,6 +407,7 @@
 
       // --- 2. Typography Tab ---
       function renderTextTab() {
+        tabContent.innerHTML = '';
         const sec = CL.h('div.sidebar-section');
 
         const addTextBtn = CL.h('button.btn.btn-primary.btn-block', {
@@ -548,6 +556,7 @@
 
       // --- 3. Graphics & Logo Tab (Nano Banana AI) ---
       function renderGraphicsTab() {
+        tabContent.innerHTML = '';
         const sec = CL.h('div.sidebar-section');
 
         const fileIn = CL.h('input', {
@@ -673,6 +682,7 @@
 
       // --- 4. Layers Tab ---
       function renderLayersTab() {
+        tabContent.innerHTML = '';
         const sec = CL.h('div.sidebar-section');
         const listEl = CL.h('div.layer-list');
 
@@ -743,6 +753,7 @@
 
       // --- 5. Model Tab ---
       function renderModelTab() {
+        tabContent.innerHTML = '';
         const sec = CL.h('div.sidebar-section', null,
           CL.h('div.sidebar-section-title', { text: 'Liptint Silhouette' }),
           CL.h('div', { style: { display: 'grid', gap: '8px' } },
