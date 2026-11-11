@@ -1,10 +1,22 @@
 /* ==========================================================
-   Colour picker — Illustrator-like: SV field + hue strip +
-   HEX input + eyedropper + suggested swatches + recents.
+   COSLAB — Colour Picker (Illustrator-style + K-Beauty Curated Palettes)
+   MLBB Velvet Shades, Water Glow Tints, and Chrome/Porcelain Packaging
    ========================================================== */
 (function (CL) {
-  const SHADES = ['#7a0c22', '#a3223f', '#c0132f', '#e0245e', '#d26a7f', '#c4545e', '#b85c4a', '#a8695a', '#c9897a', '#e3a99a', '#8e3b46', '#5a1a2a', '#ff5f6d', '#f28ab2', '#c8577e', '#7b2d5f'];
-  const PACK = ['#0e0e0e', '#2b2b2b', '#6b6b6b', '#bdbdbd', '#f2f2f2', '#ffffff', '#c9a24b', '#d9c4a3', '#e7c3b5', '#cfcfcf', '#f3eee7', '#f5d6d9', '#1f3a5f', '#2f4f3f', '#b7c9d6', '#e9dfcf'];
+  // Korean K-Beauty MLBB & Tint Shades
+  const K_TINTS = [
+    '#b85c66', '#a84d59', '#be5d69', '#9e5967', '#8a4c58', '#783c47',
+    '#df705e', '#a63428', '#c94d5b', '#e26b77', '#d96758', '#96382b',
+    '#df8b7d', '#c98d79', '#bb6f62', '#da877c', '#c76671', '#e89098'
+  ];
+
+  // Korean Atelier Packaging (Frosted, Porcelain, Chrome, Obsidian, Bone)
+  const K_PACK = [
+    '#fbfaf7', '#f4f2ec', '#eae5da', '#d9d9d9', '#c4bfb6', '#8e887e',
+    '#171615', '#242220', '#3b3834', '#c5a367', '#d4a896', '#e8c4b8',
+    '#202938', '#2b3933', '#dedad2', '#fdfbf9'
+  ];
+
   const RKEY = 'coslab.recentColors';
   const getRecent = () => { try { return JSON.parse(localStorage.getItem(RKEY)) || []; } catch (e) { return []; } };
   const pushRecent = (hex) => {
@@ -12,7 +24,7 @@
     try { localStorage.setItem(RKEY, JSON.stringify(r)); } catch (e) { }
   };
 
-  CL.ColorPicker = function ({ value = '#000000', onChange, showSwatches = true, compact = false }) {
+  CL.ColorPicker = function ({ value = '#171615', onChange, showSwatches = true, compact = false }) {
     let hsv = CL.color.rgbToHsv(CL.color.hexToRgb(value));
     let hex = CL.color.normalize(value);
 
@@ -32,7 +44,7 @@
         CL.h('div.cp-swatches', null, colors.map((c) => CL.h('button.cp-sw', { type: 'button', style: { background: c }, title: c.toUpperCase(), 'data-c': c }))));
       const recent = getRecent();
       if (recent.length) root.append(group(t('editor.colors.recent'), recent));
-      root.append(group(t('editor.colors.shades'), SHADES), group(t('editor.colors.packaging'), PACK));
+      root.append(group('K-Beauty Tint Shades (MLBB)', K_TINTS), group('K-Beauty Packaging & Metals', K_PACK));
       root.addEventListener('click', (e) => {
         const b = e.target.closest('.cp-sw'); if (!b) return;
         set(b.dataset.c, true);
@@ -91,6 +103,6 @@
     return root;
   };
 
-  CL.ColorPicker.SHADES = SHADES;
-  CL.ColorPicker.PACK = PACK;
+  CL.ColorPicker.K_TINTS = K_TINTS;
+  CL.ColorPicker.K_PACK = K_PACK;
 })(window.CL);

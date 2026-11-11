@@ -1,95 +1,174 @@
 /* ==========================================================
-   Templates (sample products). Later: fetched from backend
-   so the factory can auto-update the gallery.
+   COSLAB — Liptint Templates (Korean K-Beauty Aesthetics)
+   Curated aesthetics: Velvet Blur, Dewy Glow, Cold Chrome,
+   Sculpted Ice, and Porcelain MLBB.
    ========================================================== */
 (function (CL) {
   const solid = (color) => ({ type: 'solid', color });
   const grad = (a, b, angle = 180) => ({ type: 'linear', angle, stops: [{ o: 0, c: a }, { o: 1, c: b }] });
 
   let n = 0;
-  const base = (o) => Object.assign({ id: 'L' + (++n), x: 0.5, y: 0.5, rotation: 0, opacity: 1, visible: true, locked: false, flipX: false, flipY: false }, o);
+  const base = (o) => Object.assign({
+    id: 'L' + (++n),
+    x: 0.5,
+    y: 0.5,
+    rotation: 0,
+    opacity: 1,
+    visible: true,
+    locked: false,
+    flipX: false,
+    flipY: false,
+  }, o);
+
   const T = (part, content, o = {}) => base({
-    type: 'text', part, name: content, x: o.x, y: o.y, rotation: o.rotation || 0,
-    text: { content, font: o.font || 'Inter', size: o.size || 20, weight: o.weight || 600, italic: !!o.italic, color: o.color || '#111111', spacing: o.spacing || 0, align: 'center', lineHeight: 1.2 },
+    type: 'text',
+    part,
+    name: content,
+    x: o.x ?? 0.5,
+    y: o.y ?? 0.5,
+    rotation: o.rotation || 0,
+    text: {
+      content,
+      font: o.font || 'Plus Jakarta Sans',
+      size: o.size || 18,
+      weight: o.weight || 600,
+      italic: !!o.italic,
+      color: o.color || '#171615',
+      spacing: o.spacing || 0,
+      align: 'center',
+      lineHeight: 1.2,
+    },
   });
+
   const S = (part, kind, o = {}) => base({
-    type: 'shape', part, name: kind, x: o.x, y: o.y, rotation: o.rotation || 0,
-    shape: { kind, w: o.w || 40, h: o.h || 40, fill: o.fill || '#111111', stroke: o.stroke || null, strokeWidth: o.strokeWidth || 0 },
+    type: 'shape',
+    part,
+    name: kind,
+    x: o.x ?? 0.5,
+    y: o.y ?? 0.5,
+    rotation: o.rotation || 0,
+    shape: {
+      kind,
+      w: o.w || 36,
+      h: o.h || 36,
+      fill: o.fill || '#171615',
+      stroke: o.stroke || null,
+      strokeWidth: o.strokeWidth || 0,
+    },
   });
 
   const TEMPLATES = [
     {
-      templateId: 'blank', category: 'minimal',
-      parts: { cap: { fill: solid('#f2f2f2'), finish: 'gloss' }, base: { fill: solid('#f2f2f2'), finish: 'gloss' }, sleeve: { fill: solid('#cfcfcf'), finish: 'metallic' }, bullet: { fill: solid('#b3173c'), finish: 'satin' } },
+      templateId: 'velvet-rose',
+      category: 'k-velvet',
+      parts: {
+        cap: { fill: solid('#b85c66'), finish: 'matte' },
+        ring: { fill: solid('#d4a896'), finish: 'satin' },
+        base: { fill: solid('#b85c66'), finish: 'matte' },
+      },
+      layers: [
+        T('base', 'COSLAB VELVET TINT', { y: 0.5, rotation: -90, font: 'Plus Jakarta Sans', weight: 700, size: 14, spacing: 6, color: '#fcfbf9' }),
+        T('cap', '01 ROSÉ', { y: 0.8, font: 'Cinzel', weight: 600, size: 13, spacing: 3, color: '#fcfbf9' }),
+      ],
+    },
+    {
+      templateId: 'seoul-noir',
+      category: 'k-luxury',
+      parts: {
+        cap: { fill: solid('#121211'), finish: 'gloss' },
+        ring: { fill: solid('#c5a367'), finish: 'metallic' },
+        base: { fill: solid('#121211'), finish: 'gloss' },
+      },
+      layers: [
+        T('base', 'HERA ATELIER', { y: 0.48, rotation: -90, font: 'Cinzel', weight: 700, size: 16, spacing: 8, color: '#ffffff' }),
+        T('cap', 'SEOUL', { y: 0.82, font: 'Plus Jakarta Sans', weight: 600, size: 11, spacing: 5, color: '#c5a367' }),
+      ],
+    },
+    {
+      templateId: 'dewy-glass',
+      category: 'k-dewy',
+      parts: {
+        cap: { fill: solid('#fbfaf7'), finish: 'gloss' },
+        ring: { fill: solid('#e5e0d8'), finish: 'metallic' },
+        base: { fill: solid('#fbfaf7'), finish: 'gloss' },
+        tint: { color: '#c94d5b' },
+      },
+      layers: [
+        T('base', 'DEW DROP WATER TINT', { y: 0.52, rotation: -90, font: 'Plus Jakarta Sans', weight: 500, size: 12, spacing: 5, color: '#171615' }),
+        S('cap', 'circle', { y: 0.5, w: 48, h: 48, fill: 'none', stroke: '#171615', strokeWidth: 1.2 }),
+        T('cap', 'CL', { y: 0.5, font: 'Italiana', weight: 400, size: 24, color: '#171615' }),
+      ],
+    },
+    {
+      templateId: 'chrome-minimal',
+      category: 'k-tamburins',
+      parts: {
+        cap: { fill: solid('#d9d9d9'), finish: 'metallic' },
+        ring: { fill: solid('#171615'), finish: 'matte' },
+        base: { fill: solid('#f6f4ee'), finish: 'matte' },
+      },
+      layers: [
+        T('base', 'TAMBURINS 712', { y: 0.46, rotation: -90, font: 'Plus Jakarta Sans', weight: 700, size: 14, spacing: 6, color: '#171615' }),
+        T('base', 'FORMULA ATELIER', { y: 0.78, rotation: -90, font: 'Plus Jakarta Sans', weight: 400, size: 10, spacing: 4, color: '#736e65' }),
+        S('cap', 'line', { y: 0.75, w: 40, h: 1.5, fill: '#171615' }),
+      ],
+    },
+    {
+      templateId: 'fig-mauve',
+      category: 'k-velvet',
+      parts: {
+        cap: { fill: solid('#8a4c58'), finish: 'satin' },
+        ring: { fill: solid('#d8b8a8'), finish: 'metallic' },
+        base: { fill: solid('#8a4c58'), finish: 'satin' },
+      },
+      layers: [
+        T('base', 'Muted Fig', { y: 0.5, rotation: -90, font: 'Cormorant Garamond', weight: 600, italic: true, size: 28, color: '#fcfbf9' }),
+        T('cap', 'N° 04', { y: 0.8, font: 'Plus Jakarta Sans', weight: 600, size: 12, spacing: 3, color: '#fcfbf9' }),
+      ],
+    },
+    {
+      templateId: 'porcelain-ivory',
+      category: 'k-luxury',
+      parts: {
+        cap: { fill: solid('#f5f0e6'), finish: 'satin' },
+        ring: { fill: solid('#c5a367'), finish: 'metallic' },
+        base: { fill: solid('#f5f0e6'), finish: 'satin' },
+      },
+      layers: [
+        T('base', 'COSLAB KOREA', { y: 0.5, rotation: -90, font: 'Cinzel', weight: 600, size: 15, spacing: 7, color: '#2b2926' }),
+        S('cap', 'diamond', { y: 0.5, w: 22, h: 32, fill: '#c5a367' }),
+      ],
+    },
+    {
+      templateId: 'chili-gradient',
+      category: 'k-gradient',
+      parts: {
+        cap: { fill: grad('#df705e', '#a63428'), finish: 'gloss' },
+        ring: { fill: solid('#e6d5ca'), finish: 'metallic' },
+        base: { fill: grad('#a63428', '#df705e'), finish: 'gloss' },
+      },
+      layers: [
+        T('base', 'GLOW SUNSET', { y: 0.5, rotation: -90, font: 'Bebas Neue', weight: 400, size: 30, spacing: 8, color: '#ffffff' }),
+        T('cap', 'K-TINT', { y: 0.82, font: 'Plus Jakarta Sans', weight: 800, size: 11, spacing: 5, color: '#ffffff' }),
+      ],
+    },
+    {
+      templateId: 'blank-liptint',
+      category: 'k-minimal',
+      parts: {
+        cap: { fill: solid('#f4f2ec'), finish: 'matte' },
+        ring: { fill: solid('#ded9ce'), finish: 'satin' },
+        base: { fill: solid('#f4f2ec'), finish: 'matte' },
+      },
       layers: [],
-    },
-    {
-      templateId: 'noir', category: 'luxury',
-      parts: { cap: { fill: solid('#0e0e0e'), finish: 'gloss' }, base: { fill: solid('#0e0e0e'), finish: 'gloss' }, sleeve: { fill: solid('#d7d7d7'), finish: 'metallic' }, bullet: { fill: solid('#8f0f2a'), finish: 'satin' } },
-      layers: [
-        T('base', 'COSLAB', { y: 0.5, rotation: -90, font: 'Montserrat', weight: 800, size: 24, spacing: 9, color: '#ffffff' }),
-        T('cap', 'N°01', { y: 0.86, font: 'Cormorant Garamond', weight: 700, size: 18, color: '#ffffff', spacing: 2 }),
-      ],
-    },
-    {
-      templateId: 'ivory', category: 'minimal',
-      parts: { cap: { fill: solid('#f3eee7'), finish: 'satin' }, base: { fill: solid('#f3eee7'), finish: 'satin' }, sleeve: { fill: solid('#d9c4a3'), finish: 'metallic' }, bullet: { fill: solid('#c4545e'), finish: 'satin' } },
-      layers: [
-        T('base', 'Maison', { y: 0.5, rotation: -90, font: 'Great Vibes', weight: 400, size: 44, color: '#1a1a1a' }),
-        S('cap', 'line', { y: 0.78, w: 56, h: 1.5, fill: '#1a1a1a' }),
-        T('cap', 'COSLAB', { y: 0.86, font: 'Inter', weight: 600, size: 11, spacing: 5, color: '#1a1a1a' }),
-      ],
-    },
-    {
-      templateId: 'monogram', category: 'typographic',
-      parts: { cap: { fill: solid('#141414'), finish: 'matte' }, base: { fill: solid('#141414'), finish: 'matte' }, sleeve: { fill: solid('#bdbdbd'), finish: 'metallic' }, bullet: { fill: solid('#a3223f'), finish: 'matte' } },
-      layers: [
-        T('cap', 'CL', { y: 0.5, font: 'Playfair Display', weight: 700, size: 52, color: '#ffffff' }),
-        S('cap', 'circle', { y: 0.5, w: 84, h: 84, fill: 'none', stroke: '#ffffff', strokeWidth: 1.2 }),
-        T('base', 'PARIS · SEOUL · TOKYO', { y: 0.5, rotation: -90, font: 'Inter', weight: 500, size: 11, spacing: 4, color: '#ffffff' }),
-      ],
-    },
-    {
-      templateId: 'sunset', category: 'gradient',
-      parts: { cap: { fill: grad('#ffb199', '#ff0844'), finish: 'gloss' }, base: { fill: grad('#ff0844', '#ffb199'), finish: 'gloss' }, sleeve: { fill: solid('#e9e9e9'), finish: 'metallic' }, bullet: { fill: solid('#e0245e'), finish: 'gloss' } },
-      layers: [
-        T('base', 'Sunset', { y: 0.5, rotation: -90, font: 'Dancing Script', weight: 700, size: 44, color: '#ffffff' }),
-        T('cap', 'COSLAB', { y: 0.88, font: 'Montserrat', weight: 800, size: 11, spacing: 5, color: '#ffffff' }),
-      ],
-    },
-    {
-      templateId: 'luxe', category: 'luxury',
-      parts: { cap: { fill: solid('#c9a24b'), finish: 'metallic' }, base: { fill: solid('#111111'), finish: 'gloss' }, sleeve: { fill: solid('#c9a24b'), finish: 'metallic' }, bullet: { fill: solid('#7a0c22'), finish: 'satin' } },
-      layers: [
-        T('base', 'LUXE', { y: 0.5, rotation: -90, font: 'Bebas Neue', weight: 400, size: 40, spacing: 12, color: '#c9a24b' }),
-        S('cap', 'diamond', { y: 0.5, w: 26, h: 38, fill: '#111111' }),
-      ],
-    },
-    {
-      templateId: 'blush', category: 'minimal',
-      parts: { cap: { fill: solid('#f5d6d9'), finish: 'satin' }, base: { fill: solid('#f5d6d9'), finish: 'satin' }, sleeve: { fill: solid('#e7c3b5'), finish: 'metallic' }, bullet: { fill: solid('#d26a7f'), finish: 'satin' } },
-      layers: [
-        T('base', 'blush', { y: 0.5, rotation: -90, font: 'Cormorant Garamond', weight: 400, italic: true, size: 46, color: '#6b2737' }),
-        S('cap', 'heart', { y: 0.5, w: 30, h: 28, fill: '#6b2737' }),
-      ],
-    },
-    {
-      templateId: 'line', category: 'typographic',
-      parts: { cap: { fill: solid('#fafafa'), finish: 'gloss' }, base: { fill: solid('#fafafa'), finish: 'gloss' }, sleeve: { fill: solid('#1a1a1a'), finish: 'gloss' }, bullet: { fill: solid('#c0132f'), finish: 'gloss' } },
-      layers: [
-        T('base', '01', { y: 0.36, font: 'Inter', weight: 300, size: 54, color: '#111111' }),
-        S('base', 'line', { y: 0.6, w: 70, h: 1.5, fill: '#111111' }),
-        T('base', 'ROUGE', { y: 0.68, font: 'Inter', weight: 600, size: 11, spacing: 6, color: '#111111' }),
-        S('cap', 'rect', { y: 0.5, w: 2, h: 160, fill: '#111111' }),
-      ],
     },
   ];
 
-  /** Build a fresh design object from a template id + model id. */
-  function createDesign(templateId = 'blank', modelId = 'classic') {
+  function createDesign(templateId = 'velvet-rose', modelId = 'velvet-round') {
     const tpl = TEMPLATES.find((x) => x.templateId === templateId) || TEMPLATES[0];
     const d = CL.clone(tpl);
-    d.layers.forEach((l) => (l.id = CL.uid('ly')));
+    (d.layers || []).forEach((l) => (l.id = CL.uid('ly')));
+
     return {
       id: null,
       name: '',
@@ -102,12 +181,21 @@
     };
   }
 
-  /** Gallery samples = templates paired with a showcase model. */
   const SAMPLES = [
-    ['noir', 'classic'], ['ivory', 'slim'], ['sunset', 'bold'], ['luxe', 'square'],
-    ['monogram', 'classic'], ['blush', 'liquid'], ['line', 'slim'], ['luxe', 'classic'],
-    ['sunset', 'liquid'], ['noir', 'square'], ['blush', 'bold'], ['ivory', 'classic'],
+    ['velvet-rose', 'velvet-round'],
+    ['seoul-noir', 'square-monolith'],
+    ['dewy-glass', 'dewy-crystal'],
+    ['chrome-minimal', 'slim-atelier'],
+    ['fig-mauve', 'chubby-pot'],
+    ['porcelain-ivory', 'velvet-round'],
+    ['chili-gradient', 'dewy-crystal'],
+    ['chrome-minimal', 'square-monolith'],
   ];
 
-  CL.templates = { TEMPLATES, SAMPLES, createDesign, CATEGORIES: ['all', 'minimal', 'luxury', 'gradient', 'typographic'] };
+  CL.templates = {
+    TEMPLATES,
+    SAMPLES,
+    createDesign,
+    CATEGORIES: ['all', 'k-velvet', 'k-dewy', 'k-luxury', 'k-tamburins', 'k-gradient', 'k-minimal'],
+  };
 })(window.CL);

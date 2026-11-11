@@ -1,5 +1,5 @@
 /* ==========================================================
-   Design setup page: Choose Model & Choose Template
+   COSLAB — Design setup page: Choose Liptint Model & Template
    ========================================================== */
 (function (CL) {
   CL.pages = CL.pages || {};
@@ -9,14 +9,13 @@
     appMode: false,
 
     render(container) {
-      let selectedModel = 'classic';
-      let selectedTemplate = 'noir';
+      let selectedModel = 'velvet-round';
+      let selectedTemplate = 'velvet-rose';
 
       const root = CL.h('div.page.container', { style: { paddingBottom: '60px' } });
 
-      // Page Head
       const head = CL.h('div.page-head', null,
-        CL.h('span.eyebrow', { text: 'COSLAB Studio' }),
+        CL.h('span.eyebrow', { text: 'COSLAB KOREA · Liptint Studio' }),
         CL.h('h1', { text: t('design.title') }),
         CL.h('p', { text: t('design.subtitle') })
       );
@@ -47,7 +46,7 @@
       const floatBar = CL.h('div.setup-floating-bar', null,
         CL.h('div', null,
           CL.h('div', { id: 'summaryText', style: { fontWeight: '600', fontSize: '14px' } }),
-          CL.h('div.muted', { text: 'Customise caps, engraving & formulas in the editor', style: { fontSize: '12px' } })
+          CL.h('div.muted', { text: 'Customise Up Liptint cap & Button Liptint body', style: { fontSize: '12px' } })
         ),
         CL.h('button.btn.btn-primary#btnProceed', {
           html: `<span>${t('design.proceed')}</span>` + CL.icon('arrowRight'),
@@ -63,12 +62,13 @@
       container.appendChild(root);
 
       function updateSummary() {
-        const mName = t('models.' + selectedModel);
+        const m = CL.models.getModel(selectedModel);
+        const mName = t(m.nameKey);
         const tName = t('templates.' + selectedTemplate);
         document.getElementById('summaryText').textContent = `${mName}  ·  ${tName}`;
       }
 
-      // Render Models
+      // Render Models (1 cây son liptint trong mỗi thẻ preview)
       const mGrid = document.getElementById('modelGrid');
       CL.models.MODELS.forEach((m) => {
         const card = CL.h('div.card-choice', {
@@ -82,11 +82,11 @@
           },
         },
           CL.h('div.choice-preview-box', {
-            html: CL.render.renderSVG(CL.templates.createDesign('noir', m.id), { width: 140, height: 180, shadow: false }),
+            html: CL.render.renderSVG(CL.templates.createDesign('velvet-rose', m.id), { width: 140, height: 190, shadow: false }),
           }),
           CL.h('div.choice-info', null,
-            CL.h('h4', { text: t('models.' + m.id) }),
-            CL.h('p', { text: t('models.' + m.id + 'Desc') })
+            CL.h('h4', { text: t(m.nameKey) }),
+            CL.h('p', { text: t(m.descKey) })
           )
         );
         mGrid.appendChild(card);
@@ -107,7 +107,7 @@
             },
           },
             CL.h('div.choice-preview-box', {
-              html: CL.render.renderSVG(CL.templates.createDesign(tpl.templateId, selectedModel), { width: 140, height: 180, shadow: false }),
+              html: CL.render.renderSVG(CL.templates.createDesign(tpl.templateId, selectedModel), { width: 140, height: 190, shadow: false }),
             }),
             CL.h('div.choice-info', null,
               CL.h('h4', { text: t('templates.' + tpl.templateId) }),

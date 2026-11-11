@@ -1,6 +1,6 @@
 /* ==========================================================
-   Gallery page: live sample products, direct edit-as-template,
-   and instant download of PDF / PNG / JPG.
+   COSLAB — Gallery page: K-Beauty Liptint Showcase
+   Live templates ready to customize directly or download.
    ========================================================== */
 (function (CL) {
   CL.pages = CL.pages || {};
@@ -14,9 +14,8 @@
 
       const root = CL.h('div.page.container', { style: { paddingBottom: '60px' } });
 
-      // Head
       const head = CL.h('div.page-head', null,
-        CL.h('span.eyebrow', { text: 'COSLAB Factory Samples' }),
+        CL.h('span.eyebrow', { text: 'COSLAB KOREA · Liptint Showcase' }),
         CL.h('div.page-head-row', null,
           CL.h('div', null,
             CL.h('h1', { text: t('gallery.title') }),
@@ -27,9 +26,17 @@
           )
         ),
         CL.h('div.chips#galleryFilter', null,
-          ['all', 'minimal', 'luxury', 'gradient', 'typographic'].map((k) =>
+          [
+            ['all', 'gallery.filterAll'],
+            ['k-velvet', 'gallery.filterKVelvet'],
+            ['k-dewy', 'gallery.filterKDewy'],
+            ['k-luxury', 'gallery.filterKLuxury'],
+            ['k-tamburins', 'gallery.filterKTamburins'],
+            ['k-gradient', 'gallery.filterKGradient'],
+            ['k-minimal', 'gallery.filterKMinimal'],
+          ].map(([k, key]) =>
             CL.h('button.chip' + (k === activeFilter ? '.is-active' : ''), {
-              text: t('gallery.filter' + k.charAt(0).toUpperCase() + k.slice(1)),
+              text: t(key),
               'data-filter': k,
               onclick: (e) => {
                 activeFilter = k;
@@ -41,7 +48,6 @@
         )
       );
 
-      // Auto update note
       const note = CL.h('div', {
         style: {
           display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px',
@@ -51,7 +57,6 @@
         html: CL.icon('sparkles') + `<span>${t('gallery.autoUpdateNote')}</span>`,
       });
 
-      // Grid
       const grid = CL.h('div.gallery-grid#galleryGrid');
 
       root.append(head, note, grid);
@@ -66,10 +71,10 @@
           if (activeFilter !== 'all' && tpl.category !== activeFilter) return;
 
           const design = CL.templates.createDesign(tplId, modelId);
-          design.name = `${t('templates.' + tplId)} (${t('models.' + modelId)})`;
+          const m = CL.models.getModel(modelId);
+          design.name = `${t('templates.' + tplId)} (${t(m.nameKey)})`;
 
           const card = CL.h('div.gallery-card', null,
-            // Media preview
             CL.h('div.gallery-media', {
               title: t('gallery.editAsTemplate'),
               onclick: () => {
@@ -77,14 +82,13 @@
                 CL.go('#/editor');
               },
             },
-              CL.h('div.gallery-badge', { text: tpl.category }),
-              CL.h('div', { html: CL.render.renderSVG(design, { width: 220, height: 280, shadow: true }) })
+              CL.h('div.gallery-badge', { text: tpl.category.replace('k-', '') }),
+              CL.h('div', { html: CL.render.renderSVG(design, { width: 220, height: 290, shadow: true }) })
             ),
-            // Body
             CL.h('div.gallery-body', null,
               CL.h('div.gallery-meta', null,
                 CL.h('h4', { text: t('templates.' + tplId) }),
-                CL.h('p', { text: t('models.' + modelId) })
+                CL.h('p', { text: t(m.nameKey) })
               ),
               CL.h('div.gallery-actions', null,
                 CL.h('button.btn.btn-sm.btn-primary', {

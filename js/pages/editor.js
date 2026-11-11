@@ -1,7 +1,8 @@
 /* ==========================================================
-   Artwork Editor: Figma-inspired studio with 2D & 3D real-time,
-   Up/Button Liptint, AI background removal (Nano Banana),
-   Illustrator-style colors/gradients, Typography & Layers.
+   COSLAB — Artwork Editor (K-Beauty Liptint Studio)
+   Single cohesive liptint tube with Up Liptint & Button Liptint.
+   Nano Banana AI background removal, Illustrator-style colors/gradients,
+   typography & layers transform.
    ========================================================== */
 (function (CL) {
   CL.pages = CL.pages || {};
@@ -11,14 +12,12 @@
     appMode: true,
 
     render(container) {
-      // 1. Load or initialise active design draft
       let design = CL.store.getDraft();
-      if (!design) {
-        design = CL.templates.createDesign('noir', 'classic');
+      if (!design || !design.model || !design.parts?.cap) {
+        design = CL.templates.createDesign('velvet-rose', 'velvet-round');
         CL.store.saveDraft(design);
       }
 
-      // History stack for Undo / Redo
       const history = [CL.clone(design)];
       let historyIdx = 0;
 
@@ -51,20 +50,16 @@
         }
       }
 
-      // Active state
-      let activeView = '2d'; // '2d' | '3d'
-      let activePart = 'base'; // 'cap' | 'base' | 'sleeve' | 'bullet'
-      let activeTab = 'colors'; // 'model' | 'colors' | 'text' | 'graphics' | 'layers'
-      let selectedLayerId = (design.layers[0] && design.layers[0].id) || null;
+      let activeView = '2d';
+      let activePart = 'base'; // 'cap' | 'base' | 'ring'
+      let activeTab = 'colors';
+      let selectedLayerId = (design.layers && design.layers[0] && design.layers[0].id) || null;
       let zoomLevel = 1.0;
       let preview3DInstance = null;
 
-      // Root layout
       const root = CL.h('div.editor-layout');
 
-      // ----------------------------------------------------
-      // TOPBAR
-      // ----------------------------------------------------
+      // Topbar
       const titleInput = CL.h('input.editor-title-input', {
         value: design.name || t('editor.untitled'),
         placeholder: t('editor.untitled'),
@@ -85,7 +80,6 @@
         onclick: redo,
       });
 
-      // View toggle (2D / 3D segmented)
       const viewToggle = CL.h('div.segmented', null,
         CL.h('button#btnView2D.is-active', {
           html: CL.icon('square') + `<span>${t('editor.view2D')}</span>`,
@@ -97,7 +91,7 @@
         })
       );
 
-      // Part Quick Select (Up Liptint / Button Liptint)
+      // Single Liptint part toggle: Up Liptint (Nắp) vs Button Liptint (Thân)
       const partQuickToggle = CL.h('div.segmented', null,
         CL.h('button#btnPartCap', {
           html: CL.icon('lipstick') + `<span>${t('editor.upPart')}</span>`,
@@ -109,7 +103,6 @@
         })
       );
 
-      // Save & Export
       const saveBtn = CL.h('button.btn.btn-sm.btn-outline', {
         html: CL.icon('save') + `<span>${t('editor.save')}</span>`,
         onclick: () => {
@@ -145,12 +138,10 @@
         )
       );
 
-      // ----------------------------------------------------
-      // WORKSPACE (Left sidebar, Canvas, Right inspector)
-      // ----------------------------------------------------
+      // Workspace
       const workspace = CL.h('div.editor-workspace');
 
-      // Left Sidebar
+      // Left Sidebar Tabs
       const sidebar = CL.h('aside.editor-sidebar', null,
         CL.h('div.editor-tabs-bar', null,
           ['colors', 'text', 'graphics', 'layers', 'model'].map((tab) =>
@@ -181,7 +172,6 @@
         CL.h('div.preview-3d-host#preview3dHost', { style: { display: 'none' } },
           CL.h('div.preview-3d-hud', { html: CL.icon('cube') + '<span> Drag to rotate 360° · Scroll to zoom</span>' })
         ),
-        // Floating zoom controls
         CL.h('div.canvas-floating-controls#canvasFloatingControls', null,
           CL.h('button.icon-btn.sm', {
             title: 'Zoom Out',
@@ -202,7 +192,7 @@
         )
       );
 
-      // Right Inspector (Figma-style layer properties)
+      // Right Inspector
       const inspector = CL.h('aside.editor-inspector#editorInspector', null,
         CL.h('div.inspector-head', null,
           CL.h('span', { text: 'Layer Properties' }),
@@ -215,9 +205,6 @@
       root.append(topbar, workspace);
       container.appendChild(root);
 
-      // ----------------------------------------------------
-      // VIEW & ZOOM LOGIC
-      // ----------------------------------------------------
       function switchView(view) {
         activeView = view;
         document.getElementById('btnView2D').classList.toggle('is-active', view === '2d');
@@ -257,17 +244,14 @@
         redoBtn.disabled = historyIdx >= history.length - 1;
       }
 
-      // ----------------------------------------------------
-      // 2D SVG CANVAS RENDERING & INTERACTION
-      // ----------------------------------------------------
       function render2DCanvas() {
         const holder = document.getElementById('canvasSvgHolder');
         if (!holder) return;
 
         const svg = CL.render.renderSVG(design, {
           interactive: true,
-          width: 520,
-          height: 620,
+          width: 460,
+          height: 640,
           shading: true,
           shadow: true,
         });
@@ -276,7 +260,6 @@
         const svgEl = holder.querySelector('svg');
         svgEl.classList.add('canvas-svg-root');
 
-        // Part click
         svgEl.querySelectorAll('[data-part]').forEach((el) => {
           el.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -285,7 +268,6 @@
           });
         });
 
-        // Layer selection & drag
         svgEl.querySelectorAll('[data-layer]').forEach((el) => {
           el.addEventListener('pointerdown', (e) => {
             const lid = el.getAttribute('data-layer');
@@ -297,16 +279,14 @@
             renderInspector();
             if (activeTab === 'layers') renderTabContent();
 
-            // Drag setup
             const layout = CL.models.layout(design.model);
             const rect = layout[lyr.part];
             const startX = e.clientX, startY = e.clientY;
             const origX = lyr.x, origY = lyr.y;
 
             const onMove = (ev) => {
-              // Convert client pixel delta to SVG units
-              const dx = (ev.clientX - startX) / (zoomLevel * (svgEl.clientWidth / 520));
-              const dy = (ev.clientY - startY) / (zoomLevel * (svgEl.clientHeight / 620));
+              const dx = (ev.clientX - startX) / (zoomLevel * (svgEl.clientWidth / 460));
+              const dy = (ev.clientY - startY) / (zoomLevel * (svgEl.clientHeight / 640));
               lyr.x = CL.clamp(origX + dx / rect.w, -0.2, 1.2);
               lyr.y = CL.clamp(origY + dy / rect.h, -0.2, 1.2);
               render2DCanvas();
@@ -335,35 +315,24 @@
         renderInspector();
       }
 
-      // ----------------------------------------------------
-      // SIDEBAR TABS RENDERING
-      // ----------------------------------------------------
       const tabContent = document.getElementById('sidebarTabContent');
 
       function renderTabContent() {
         tabContent.innerHTML = '';
-
-        if (activeTab === 'colors') {
-          renderColorsTab();
-        } else if (activeTab === 'text') {
-          renderTextTab();
-        } else if (activeTab === 'graphics') {
-          renderGraphicsTab();
-        } else if (activeTab === 'layers') {
-          renderLayersTab();
-        } else if (activeTab === 'model') {
-          renderModelTab();
-        }
+        if (activeTab === 'colors') renderColorsTab();
+        else if (activeTab === 'text') renderTextTab();
+        else if (activeTab === 'graphics') renderGraphicsTab();
+        else if (activeTab === 'layers') renderLayersTab();
+        else if (activeTab === 'model') renderModelTab();
       }
 
       // --- 1. Colors & Gradients Tab ---
       function renderColorsTab() {
         const sec = CL.h('div.sidebar-section');
 
-        // Part Selector dropdown/chips
         const partSelect = CL.h('select.select', null,
-          ['cap', 'base', 'sleeve', 'bullet'].map((p) =>
-            CL.h('option', { value: p, selected: p === activePart, text: t('editor.parts.' + p) })
+          ['cap', 'base', 'ring'].map((p) =>
+            CL.h('option', { value: p, selected: p === activePart, text: p === 'cap' ? t('editor.upPart') : p === 'base' ? t('editor.btnPart') : 'Khớp viền (Ring)' })
           )
         );
         partSelect.addEventListener('change', () => {
@@ -371,9 +340,8 @@
           renderColorsTab();
         });
 
-        const curPart = design.parts[activePart] || { fill: { type: 'solid', color: '#111111' }, finish: 'gloss' };
+        const curPart = design.parts[activePart] || { fill: { type: 'solid', color: '#171615' }, finish: 'matte' };
 
-        // Fill style toggle (Solid / Gradient)
         const isGrad = curPart.fill && curPart.fill.type === 'linear';
         const fillToggle = CL.h('div.segmented.block', null,
           CL.h('button' + (!isGrad ? '.is-active' : ''), {
@@ -397,9 +365,8 @@
           })
         );
 
-        // Finish Texture (Matte, Satin, Gloss, Metallic)
         const finishWrap = CL.h('div.chips', null,
-          ['gloss', 'satin', 'matte', 'metallic'].map((fin) =>
+          ['matte', 'satin', 'gloss', 'metallic'].map((fin) =>
             CL.h('button.chip' + (curPart.finish === fin ? '.is-active' : ''), {
               text: t('editor.colors.' + fin),
               onclick: () => {
@@ -412,7 +379,6 @@
           )
         );
 
-        // Color Picker integration
         const activeColor = isGrad ? curPart.fill.stops[0].c : curPart.fill.color;
         const picker = CL.ColorPicker({
           value: activeColor,
@@ -424,7 +390,6 @@
           },
         });
 
-        // Gradient secondary stop if linear
         let gradControls = null;
         if (isGrad) {
           const stop2Picker = CL.ColorPicker({
@@ -475,25 +440,26 @@
         const addTextBtn = CL.h('button.btn.btn-primary.btn-block', {
           html: CL.icon('plus') + `<span>${t('editor.text.addBtn')}</span>`,
           onclick: () => {
+            const isBase = activePart === 'base';
             const newLayer = {
               id: CL.uid('ly_txt'),
               type: 'text',
-              name: 'Brand Name',
+              name: 'Brand Typography',
               part: activePart === 'cap' ? 'cap' : 'base',
               x: 0.5,
               y: 0.5,
-              rotation: activePart === 'base' ? -90 : 0,
+              rotation: isBase ? -90 : 0,
               opacity: 1,
               visible: true,
               locked: false,
               text: {
-                content: 'COSLAB',
-                font: 'Montserrat',
-                size: 22,
+                content: 'COSLAB TINT',
+                font: 'Plus Jakarta Sans',
+                size: 14,
                 weight: 700,
                 italic: false,
                 color: '#ffffff',
-                spacing: 6,
+                spacing: 5,
                 align: 'center',
                 lineHeight: 1.2,
               },
@@ -507,7 +473,6 @@
           },
         });
 
-        // Current active text layer properties
         const curLayer = design.layers.find((l) => l.id === selectedLayerId && l.type === 'text');
         let editBlock = null;
 
@@ -525,11 +490,10 @@
             onchange: pushHistory,
           });
 
-          // Font Selector
           const FONTS = [
-            'Inter', 'Montserrat', 'Playfair Display', 'Instrument Serif',
-            'Cormorant Garamond', 'Bebas Neue', 'Great Vibes', 'Dancing Script',
-            'Noto Sans SC', 'Noto Sans JP', 'Noto Sans KR', 'Noto Naskh Arabic',
+            'Plus Jakarta Sans', 'Cinzel', 'Italiana', 'Cormorant Garamond',
+            'Playfair Display', 'Instrument Serif', 'Montserrat', 'Bebas Neue',
+            'Noto Serif KR', 'Noto Sans KR', 'Noto Sans SC', 'Noto Sans JP',
           ];
           const fontSelect = CL.h('select.select', null,
             FONTS.map((f) => CL.h('option', { value: f, selected: txt.font === f, text: f }))
@@ -540,11 +504,10 @@
             pushHistory();
           });
 
-          // Font Size & Weight
           const sizeIn = CL.h('input.input', {
             type: 'number', min: '8', max: '96', value: txt.size,
             oninput: () => {
-              txt.size = parseInt(sizeIn.value) || 16;
+              txt.size = parseInt(sizeIn.value) || 14;
               render2DCanvas();
             },
             onchange: pushHistory,
@@ -552,7 +515,7 @@
 
           const weightSelect = CL.h('select.select', null,
             [300, 400, 500, 600, 700, 800].map((w) =>
-              CL.h('option', { value: w, selected: (txt.weight || 400) === w, text: w })
+              CL.h('option', { value: w, selected: (txt.weight || 600) === w, text: w })
             )
           );
           weightSelect.addEventListener('change', () => {
@@ -561,7 +524,6 @@
             pushHistory();
           });
 
-          // Tracking (Spacing)
           const spacingIn = CL.h('input.input', {
             type: 'number', min: '-2', max: '30', value: txt.spacing || 0,
             oninput: () => {
@@ -571,7 +533,6 @@
             onchange: pushHistory,
           });
 
-          // Alignment
           const alignWrap = CL.h('div.segmented', null,
             ['left', 'center', 'right'].map((al) =>
               CL.h('button' + (txt.align === al ? '.is-active' : ''), {
@@ -586,7 +547,6 @@
             )
           );
 
-          // Color
           const colorPicker = CL.ColorPicker({
             value: txt.color,
             compact: true,
@@ -615,17 +575,16 @@
         sec.append(
           CL.h('div.sidebar-section-title', { text: t('editor.text.title') }),
           addTextBtn,
-          editBlock || CL.h('p.muted', { text: 'Select or add a text layer to edit typography.', style: { fontSize: '13px', marginTop: '12px' } })
+          editBlock || CL.h('p.muted', { text: 'Select or add a typography layer on the liptint.', style: { fontSize: '13px', marginTop: '12px' } })
         );
 
         tabContent.appendChild(sec);
       }
 
-      // --- 3. Graphics & Logo Tab (with Nano Banana AI background removal) ---
+      // --- 3. Graphics & Logo Tab (Nano Banana AI) ---
       function renderGraphicsTab() {
         const sec = CL.h('div.sidebar-section');
 
-        // File upload input
         const fileIn = CL.h('input', {
           type: 'file',
           accept: 'image/svg+xml,image/png,image/jpeg,image/webp,application/pdf',
@@ -650,8 +609,8 @@
                 locked: false,
                 image: {
                   src: res.src,
-                  w: Math.min(80, res.w / 4),
-                  h: Math.min(80, res.h / 4),
+                  w: Math.min(70, res.w / 4),
+                  h: Math.min(70, res.h / 4),
                 },
               };
               design.layers.push(newLayer);
@@ -660,7 +619,7 @@
               render2DCanvas();
               renderInspector();
               renderGraphicsTab();
-              CL.toast('Image imported!');
+              CL.toast('Logo loaded onto liptint!');
             } catch (err) {
               CL.toast('Failed to load image', 'info');
             }
@@ -672,7 +631,6 @@
           onclick: () => fileIn.click(),
         });
 
-        // AI Background Remover Card (Nano Banana Model)
         const curImgLayer = design.layers.find((l) => l.id === selectedLayerId && l.type === 'image');
         const aiCard = CL.h('div.ai-eraser-card', null,
           CL.h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between' } },
@@ -685,7 +643,7 @@
             disabled: !curImgLayer,
             onclick: async () => {
               if (!curImgLayer) return;
-              CL.toast('AI processing: Nano Banana Model...', 'sparkles');
+              CL.toast('Processing: Nano Banana Model...', 'sparkles');
               try {
                 const cleaned = await CL.removeWhiteBackground(curImgLayer.image.src, 236, 20);
                 curImgLayer.image.src = cleaned;
@@ -699,8 +657,7 @@
           })
         );
 
-        // Geometric Shapes
-        const shapesList = ['rect', 'circle', 'line', 'diamond', 'star', 'heart'];
+        const shapesList = ['circle', 'line', 'diamond', 'star', 'heart', 'rect'];
         const shapesGrid = CL.h('div.chips', null,
           shapesList.map((k) =>
             CL.h('button.chip', {
@@ -719,8 +676,8 @@
                   locked: false,
                   shape: {
                     kind: k,
-                    w: k === 'line' ? 60 : 36,
-                    h: k === 'line' ? 2 : 36,
+                    w: k === 'line' ? 50 : 32,
+                    h: k === 'line' ? 2 : 32,
                     fill: k === 'circle' ? 'none' : '#ffffff',
                     stroke: k === 'circle' ? '#ffffff' : null,
                     strokeWidth: k === 'circle' ? 1.5 : 0,
@@ -754,7 +711,7 @@
         const sec = CL.h('div.sidebar-section');
         const listEl = CL.h('div.layer-list');
 
-        const partLayers = design.layers.filter((l) => l.part === activePart);
+        const partLayers = (design.layers || []).filter((l) => l.part === activePart);
 
         if (!partLayers.length) {
           listEl.appendChild(CL.h('p.muted', { text: t('editor.layers.empty'), style: { fontSize: '13px', padding: '12px' } }));
@@ -771,7 +728,6 @@
               CL.h('span.layer-type-icon', { html: CL.icon(l.type === 'text' ? 'text' : l.type === 'image' ? 'image' : 'shapes') }),
               CL.h('span.layer-name', { text: l.name }),
               CL.h('div.layer-ctrls', null,
-                // Visibility toggle
                 CL.h('button.icon-btn.sm', {
                   title: l.visible ? 'Hide' : 'Show',
                   html: CL.icon(l.visible ? 'eye' : 'eyeOff'),
@@ -783,7 +739,6 @@
                     renderLayersTab();
                   },
                 }),
-                // Lock toggle
                 CL.h('button.icon-btn.sm', {
                   title: l.locked ? 'Unlock' : 'Lock',
                   html: CL.icon(l.locked ? 'lock' : 'unlock'),
@@ -794,7 +749,6 @@
                     renderLayersTab();
                   },
                 }),
-                // Delete
                 CL.h('button.icon-btn.sm', {
                   title: 'Delete',
                   html: CL.icon('trash'),
@@ -815,7 +769,7 @@
         }
 
         sec.append(
-          CL.h('div.sidebar-section-title', { text: t('editor.layers.title') + ` (${t('editor.parts.' + activePart)})` }),
+          CL.h('div.sidebar-section-title', { text: t('editor.layers.title') + ` (${activePart === 'cap' ? t('editor.upPart') : t('editor.btnPart')})` }),
           listEl
         );
 
@@ -825,7 +779,7 @@
       // --- 5. Model Tab ---
       function renderModelTab() {
         const sec = CL.h('div.sidebar-section', null,
-          CL.h('div.sidebar-section-title', { text: 'Change Model Silhouette' }),
+          CL.h('div.sidebar-section-title', { text: 'Liptint Silhouette' }),
           CL.h('div', { style: { display: 'grid', gap: '8px' } },
             CL.models.MODELS.map((m) =>
               CL.h('div.lang-card' + (m.id === design.model ? '.is-active' : ''), {
@@ -836,8 +790,8 @@
                   renderModelTab();
                 },
               },
-                CL.h('span', { text: t('models.' + m.id) }),
-                CL.h('span.badge', { text: m.section })
+                CL.h('span', { text: t(m.nameKey) }),
+                CL.h('span.badge', { text: m.silhouette })
               )
             )
           )
@@ -845,24 +799,21 @@
         tabContent.appendChild(sec);
       }
 
-      // ----------------------------------------------------
-      // RIGHT INSPECTOR (Layer Position, Scale, Align, Rotate)
-      // ----------------------------------------------------
+      // Inspector
       const inspectorBody = document.getElementById('inspectorBody');
 
       function renderInspector() {
         inspectorBody.innerHTML = '';
-        const curLayer = design.layers.find((l) => l.id === selectedLayerId);
+        const curLayer = (design.layers || []).find((l) => l.id === selectedLayerId);
 
         if (!curLayer) {
           document.getElementById('layerTypeBadge').textContent = 'None';
-          inspectorBody.appendChild(CL.h('p.muted', { text: 'Click an element on the canvas to inspect transform properties.', style: { fontSize: '13px' } }));
+          inspectorBody.appendChild(CL.h('p.muted', { text: 'Click a graphic or text on the liptint tube to inspect transform.', style: { fontSize: '13px' } }));
           return;
         }
 
         document.getElementById('layerTypeBadge').textContent = curLayer.type.toUpperCase();
 
-        // Alignment row
         const alignRow = CL.h('div.inspector-actions-row', null,
           CL.h('button.icon-btn', {
             title: t('editor.layers.alignCenterH'),
@@ -932,7 +883,6 @@
           })
         );
 
-        // Rotation & Opacity
         const rotIn = CL.h('input.input.input-sm', {
           type: 'number', min: '-360', max: '360', value: Math.round(curLayer.rotation || 0),
           oninput: () => {
@@ -951,7 +901,6 @@
           onchange: pushHistory,
         });
 
-        // Layer removal
         const delBtn = CL.h('button.btn.btn-sm.btn-outline.btn-block', {
           html: CL.icon('trash') + `<span>${t('editor.layers.delete')}</span>`,
           onclick: () => {
@@ -975,11 +924,9 @@
         );
       }
 
-      // Initial Render
       refreshAll();
       updateUndoRedoUI();
 
-      // Keyboard shortcuts
       const onKey = (e) => {
         if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
           if (e.shiftKey) redo(); else undo();

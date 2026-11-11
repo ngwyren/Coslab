@@ -41,7 +41,7 @@
             ),
             CL.h('div.about-preview', null,
               CL.h('div.about-preview-badge', { text: 'OEM / ODM Manufacturing' }),
-              CL.h('div.card-preview-svg', { html: CL.render.renderSVG(CL.templates.createDesign('noir', 'classic'), { width: 320, height: 380, shadow: true }) })
+              CL.h('div.card-preview-svg', { html: CL.render.renderSVG(CL.templates.createDesign('velvet-rose', 'velvet-round'), { width: 320, height: 420, shadow: true }) })
             )
           ),
           CL.h('div.grid-features', null,
@@ -106,7 +106,7 @@
       const target = document.getElementById('showcase3dTarget');
       if (target && window.THREE) {
         preview = new CL.Preview3D(target, { autoRotate: true, interactive: true });
-        const demoDesign = CL.templates.createDesign('noir', 'classic');
+        const demoDesign = CL.templates.createDesign('velvet-rose', 'velvet-round');
         preview.setDesign(demoDesign);
       }
 
