@@ -28,18 +28,43 @@
     });
   };
 
-  /** Open a dropdown menu anchored to an element. items: [{label, icon, onClick, active, sep, note, disabled}] */
+  /** Open a dropdown menu anchored to an element. items: [{label, icon, onClick, active, sep, note, disabled, code}] */
   let openMenu = null;
+  let menuAnchor = null;
   CL.menu = function (anchor, items, opts = {}) {
     CL.closeMenu();
-    const m = CL.h('div.menu', { role: 'menu' });
+    menuAnchor = anchor;
+    if (anchor) {
+      anchor.classList.add('menu-open');
+      anchor.setAttribute('aria-expanded', 'true');
+    }
+    const isLang = opts.type === 'lang';
+    const m = CL.h('div.menu' + (isLang ? '.menu-simple-lang' : '') + (opts.className ? '.' + opts.className : ''), { role: 'menu' });
     items.forEach((it) => {
       if (it.sep) return m.appendChild(CL.h('div.menu-sep'));
       if (it.note) return m.appendChild(CL.h('div.menu-note', { text: it.note }));
-      const b = CL.h('button', { role: 'menuitem', class: it.active ? 'is-active' : '', disabled: it.disabled, html: (it.icon ? CL.icon(it.icon) : '') + '<span></span>' + (it.right || '') });
-      b.querySelector('span').textContent = it.label;
-      if (it.disabled) b.style.opacity = .5;
-      b.addEventListener('click', (e) => { e.stopPropagation(); CL.closeMenu(); it.onClick && it.onClick(); });
+      
+      let b;
+      if (isLang) {
+        b = CL.h('button.menu-lang-opt' + (it.active ? '.is-active' : ''), {
+          role: 'menuitem',
+          html: `<span class="lang-opt-name">${it.label}</span><span class="lang-opt-code">${it.code || ''}</span>`
+        });
+      } else {
+        b = CL.h('button.menu-item' + (it.active ? '.is-active' : ''), {
+          role: 'menuitem',
+          disabled: it.disabled,
+          html: (it.icon ? `<span class="menu-icon-left">${CL.icon(it.icon)}</span>` : '') +
+                `<span class="menu-item-text">${it.label}</span>` +
+                (it.right ? `<span class="menu-item-right">${it.right}</span>` : '')
+        });
+        if (it.disabled) b.style.opacity = .5;
+      }
+      b.addEventListener('click', (e) => {
+        e.stopPropagation();
+        CL.closeMenu();
+        it.onClick && it.onClick();
+      });
       m.appendChild(b);
     });
     const r = anchor.getBoundingClientRect();
@@ -51,7 +76,8 @@
     left = CL.clamp(left, 8, window.innerWidth - mw - 8);
     let top = r.bottom + 6;
     if (top + mh > window.innerHeight - 8) top = Math.max(8, r.top - mh - 6);
-    m.style.left = left + 'px'; m.style.top = top + 'px';
+    m.style.left = left + 'px';
+    m.style.top = top + 'px';
     openMenu = m;
     setTimeout(() => document.addEventListener('pointerdown', outside), 0);
     function outside(e) { if (!m.contains(e.target)) CL.closeMenu(); }
@@ -59,7 +85,16 @@
     return m;
   };
   CL.closeMenu = function () {
-    if (openMenu) { document.removeEventListener('pointerdown', openMenu._outside); openMenu.remove(); openMenu = null; }
+    if (menuAnchor) {
+      menuAnchor.classList.remove('menu-open');
+      menuAnchor.setAttribute('aria-expanded', 'false');
+      menuAnchor = null;
+    }
+    if (openMenu) {
+      document.removeEventListener('pointerdown', openMenu._outside);
+      openMenu.remove();
+      openMenu = null;
+    }
   };
   window.addEventListener('resize', () => CL.closeMenu());
   window.addEventListener('hashchange', () => CL.closeMenu());

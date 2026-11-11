@@ -3,6 +3,7 @@
    Exact aesthetic of https://orchard.framer.website/
    Giant display typography, screen-filling editorial media,
    3D PBR WebGL center stage, standards table, and atelier journal.
+   Fully internationalized with reactive multi-language switching.
    ========================================================== */
 (function (CL) {
   CL.pages = CL.pages || {};
@@ -19,29 +20,33 @@
         CL.h('div.container.hero-inner', null,
           // Tracked-out Eyebrow (Orchard Style)
           CL.h('div.orchard-eyebrow', {
-            text: 'C R E A T I V E   S T U D I O   B A S E D   I N   S E O U L   S P E C I A L I Z I N G   I N   L I P   T I N T   O E M   ·   O D M',
+            'data-i18n': 'home.eyebrow',
+            text: t('home.eyebrow'),
           }),
 
           // Massive Editorial Headline (Orchard Style)
           CL.h('div.hero-title-block', null,
             CL.h('h1.hero-giant-title.reveal-up', { text: 'COSLAB ATELIER®' }),
             CL.h('p.orchard-manifesto.reveal-up.stagger-1', {
-              text: 'Coslab turns liquid tint formulas into a cohesive bespoke packaging language — designed to scale across global cosmetics houses.',
+              'data-i18n': 'home.manifesto1',
+              text: t('home.manifesto1'),
             }),
             CL.h('p.orchard-manifesto-sub.reveal-up.stagger-2', {
-              text: 'We design silhouettes and formulate bespoke Korean liptints with the same level of intention. From velvet matte to dewy crystal glass and cold chrome sequences, Coslab builds packaging with strong rhythm, clean structure, and a finish that feels premium.',
+              'data-i18n': 'home.manifesto2',
+              text: t('home.manifesto2'),
             })
           ),
 
           // Center Stage 3D Showcase (Pure White Studio on Ceramic Podium)
           CL.h('div.showcase-canvas-box.reveal-up.stagger-2', { style: { height: '620px', marginTop: '16px' } },
             CL.h('div.showcase-hud-tag', null,
-              CL.h('span.pill-tag', { text: '360° PBR STAGE' }),
-              CL.h('span.index-num', { text: 'CERAMIC PODIUM' })
+              CL.h('span.pill-tag', { 'data-i18n': 'home.pbrStage', text: t('home.pbrStage') }),
+              CL.h('span.index-num', { 'data-i18n': 'home.ceramicPodium', text: t('home.ceramicPodium') })
             ),
             CL.h('div.showcase-controls-topright', null,
               CL.h('button.showcase-ctrl-btn.is-active#btnHomeRotate', {
-                text: '360° Auto-Rotate',
+                'data-i18n': 'home.autoRotate',
+                text: t('home.autoRotate'),
                 onclick: (e) => {
                   if (!preview) return;
                   preview.opts.autoRotate = !preview.opts.autoRotate;
@@ -49,7 +54,8 @@
                 },
               }),
               CL.h('button.showcase-ctrl-btn', {
-                text: 'Reset Angle',
+                'data-i18n': 'home.resetAngle',
+                text: t('home.resetAngle'),
                 onclick: () => {
                   if (!preview) return;
                   preview.targetRotY = -0.35;
@@ -60,7 +66,7 @@
             ),
             CL.h('div#hero3dTarget', { style: { width: '100%', height: '100%' } }),
             CL.h('div.showcase-hud-bottom', {
-              html: CL.icon('cube') + '<span> Drag to rotate 360° · Scroll to zoom · PBR Specular</span>',
+              html: CL.icon('cube') + `<span data-i18n="home.dragHint">${t('home.dragHint')}</span>`,
             })
           ),
 
@@ -68,13 +74,13 @@
           CL.h('div.hero-actions-bar.reveal-up.stagger-3', { style: { justifyContent: 'flex-start', marginTop: '24px' } },
             CL.h('a.btn.btn-primary.btn-lg', {
               href: '#/design',
-              html: `<span>Launch 3D Studio</span>` + CL.icon('arrowRight'),
+              html: `<span data-i18n="home.launchStudio">${t('home.launchStudio')}</span>` + CL.icon('arrowRight'),
             }),
             CL.h('button.btn.btn-outline.btn-lg', {
               onclick: () => {
                 document.getElementById('worksSection')?.scrollIntoView({ behavior: 'smooth' });
               },
-              html: `<span>Explore Works ↓</span>`,
+              html: `<span data-i18n="home.exploreWorks">${t('home.exploreWorks')}</span>`,
             })
           ),
 
@@ -83,26 +89,26 @@
             CL.h('div.hero-metric-item', null,
               CL.h('div.metric-header', null,
                 CL.h('span', { text: '(01) STANDARD' }),
-                CL.h('span', { text: 'OEM · ODM' })
+                CL.h('span', { 'data-i18n': 'home.metric1Tag', text: t('home.metric1Tag') })
               ),
-              CL.h('div.metric-val', { text: 'CGMP & ISO' }),
-              CL.h('div.metric-sub', { text: 'Korean Cleanroom Formulation' })
+              CL.h('div.metric-val', { 'data-i18n': 'home.metric1Val', text: t('home.metric1Val') }),
+              CL.h('div.metric-sub', { 'data-i18n': 'home.metric1Sub', text: t('home.metric1Sub') })
             ),
             CL.h('div.hero-metric-item', null,
               CL.h('div.metric-header', null,
                 CL.h('span', { text: '(02) SIMULATION' }),
-                CL.h('span', { text: 'REAL-TIME' })
+                CL.h('span', { 'data-i18n': 'home.metric2Tag', text: t('home.metric2Tag') })
               ),
-              CL.h('div.metric-val', { text: '360° PBR 3D' }),
-              CL.h('div.metric-sub', { text: 'Velvet, Glass & Chrome' })
+              CL.h('div.metric-val', { 'data-i18n': 'home.metric2Val', text: t('home.metric2Val') }),
+              CL.h('div.metric-sub', { 'data-i18n': 'home.metric2Sub', text: t('home.metric2Sub') })
             ),
             CL.h('div.hero-metric-item', null,
               CL.h('div.metric-header', null,
                 CL.h('span', { text: '(03) PROTOTYPE' }),
-                CL.h('span', { text: 'RAPID LAB' })
+                CL.h('span', { 'data-i18n': 'home.metric3Tag', text: t('home.metric3Tag') })
               ),
-              CL.h('div.metric-val', { text: '72h Specimen' }),
-              CL.h('div.metric-sub', { text: 'Vector Artwork to Print' })
+              CL.h('div.metric-val', { 'data-i18n': 'home.metric3Val', text: t('home.metric3Val') }),
+              CL.h('div.metric-sub', { 'data-i18n': 'home.metric3Sub', text: t('home.metric3Sub') })
             )
           )
         )
@@ -124,10 +130,10 @@
         CL.h('div.container', null,
           CL.h('div.section-meta-head', null,
             CL.h('div', null,
-              CL.h('span.index-num', { text: '(01) SELECTED WORKS & FORMULAS' }),
-              CL.h('h2', { text: 'Packaging Silhouettes & Formulations.' })
+              CL.h('span.index-num', { 'data-i18n': 'home.worksSectionNum', text: t('home.worksSectionNum') }),
+              CL.h('h2', { 'data-i18n': 'home.worksHeading', text: t('home.worksHeading') })
             ),
-            CL.h('p', { text: 'Formulated in Seoul, engineered to 0.1mm tolerance for global cosmetic houses.' })
+            CL.h('p', { 'data-i18n': 'home.worksDesc', text: t('home.worksDesc') })
           ),
 
           CL.h('div.orchard-works-grid', null,
@@ -141,17 +147,17 @@
             },
               CL.h('img.orchard-work-img', {
                 src: 'https://images.unsplash.com/photo-1586495777744-4413f21062fa?auto=format&fit=crop&w=1600&q=85',
-                alt: 'Dew Drop Crystal Tint',
+                alt: t('home.work1Title'),
                 loading: 'lazy',
               }),
               CL.h('div.orchard-work-overlay', null,
-                CL.h('span.orchard-work-badge', { text: '01 / DEW DROP GLASS TINT' }),
+                CL.h('span.orchard-work-badge', { 'data-i18n': 'home.work1Badge', text: t('home.work1Badge') }),
                 CL.h('div.orchard-work-info', null,
                   CL.h('div', null,
-                    CL.h('h3.orchard-work-title', { text: 'Dew Drop Crystal Acrylic.' }),
-                    CL.h('p.orchard-work-desc', { text: 'Double-wall transparent refraction with cherry rose fluid core and polished divider collar.' })
+                    CL.h('h3.orchard-work-title', { 'data-i18n': 'home.work1Title', text: t('home.work1Title') }),
+                    CL.h('p.orchard-work-desc', { 'data-i18n': 'home.work1Desc', text: t('home.work1Desc') })
                   ),
-                  CL.h('span.orchard-work-btn', { html: '<span>Customize in 3D</span>' + CL.icon('arrowRight') })
+                  CL.h('span.orchard-work-btn', { html: `<span data-i18n="home.customize3d">${t('home.customize3d')}</span>` + CL.icon('arrowRight') })
                 )
               )
             ),
@@ -167,17 +173,17 @@
               },
                 CL.h('img.orchard-work-img', {
                   src: 'https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&w=1000&q=85',
-                  alt: 'Cloud Velvet MLBB',
+                  alt: t('home.work2Title'),
                   loading: 'lazy',
                 }),
                 CL.h('div.orchard-work-overlay', null,
-                  CL.h('span.orchard-work-badge', { text: '02 / CLOUD VELVET' }),
+                  CL.h('span.orchard-work-badge', { 'data-i18n': 'home.work2Badge', text: t('home.work2Badge') }),
                   CL.h('div.orchard-work-info', null,
                     CL.h('div', null,
-                      CL.h('h3.orchard-work-title', { text: 'Cloud Velvet MLBB.' }),
-                      CL.h('p.orchard-work-desc', { text: 'Cashmere-touch frosted barrel with weightless air-fit tint formula.' })
+                      CL.h('h3.orchard-work-title', { 'data-i18n': 'home.work2Title', text: t('home.work2Title') }),
+                      CL.h('p.orchard-work-desc', { 'data-i18n': 'home.work2Desc', text: t('home.work2Desc') })
                     ),
-                    CL.h('span.orchard-work-btn', { html: '<span>Design 3D</span>' + CL.icon('arrowRight') })
+                    CL.h('span.orchard-work-btn', { html: `<span data-i18n="home.design3d">${t('home.design3d')}</span>` + CL.icon('arrowRight') })
                   )
                 )
               ),
@@ -191,17 +197,17 @@
               },
                 CL.h('img.orchard-work-img', {
                   src: 'https://images.unsplash.com/photo-1512496015851-a90fb38ba796?auto=format&fit=crop&w=1000&q=85',
-                  alt: 'Seoul Noir Monolith',
+                  alt: t('home.work3Title'),
                   loading: 'lazy',
                 }),
                 CL.h('div.orchard-work-overlay', null,
-                  CL.h('span.orchard-work-badge', { text: '03 / SEOUL NOIR' }),
+                  CL.h('span.orchard-work-badge', { 'data-i18n': 'home.work3Badge', text: t('home.work3Badge') }),
                   CL.h('div.orchard-work-info', null,
                     CL.h('div', null,
-                      CL.h('h3.orchard-work-title', { text: 'Deep Lacquer & Mirror Gold.' }),
-                      CL.h('p.orchard-work-desc', { text: 'Monolithic square prism with cold electroplated 24K mirror divider ring.' })
+                      CL.h('h3.orchard-work-title', { 'data-i18n': 'home.work3Title', text: t('home.work3Title') }),
+                      CL.h('p.orchard-work-desc', { 'data-i18n': 'home.work3Desc', text: t('home.work3Desc') })
                     ),
-                    CL.h('span.orchard-work-btn', { html: '<span>Design 3D</span>' + CL.icon('arrowRight') })
+                    CL.h('span.orchard-work-btn', { html: `<span data-i18n="home.design3d">${t('home.design3d')}</span>` + CL.icon('arrowRight') })
                   )
                 )
               )
@@ -218,17 +224,17 @@
               },
                 CL.h('img.orchard-work-img', {
                   src: 'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=1000&q=85',
-                  alt: 'Cold Chrome Phial',
+                  alt: t('home.work4Title'),
                   loading: 'lazy',
                 }),
                 CL.h('div.orchard-work-overlay', null,
-                  CL.h('span.orchard-work-badge', { text: '04 / CHROME ATELIER' }),
+                  CL.h('span.orchard-work-badge', { 'data-i18n': 'home.work4Badge', text: t('home.work4Badge') }),
                   CL.h('div.orchard-work-info', null,
                     CL.h('div', null,
-                      CL.h('h3.orchard-work-title', { text: 'Cold Chrome Minimal.' }),
-                      CL.h('p.orchard-work-desc', { text: 'Slender architectural phial with polished specular electroplating.' })
+                      CL.h('h3.orchard-work-title', { 'data-i18n': 'home.work4Title', text: t('home.work4Title') }),
+                      CL.h('p.orchard-work-desc', { 'data-i18n': 'home.work4Desc', text: t('home.work4Desc') })
                     ),
-                    CL.h('span.orchard-work-btn', { html: '<span>Design 3D</span>' + CL.icon('arrowRight') })
+                    CL.h('span.orchard-work-btn', { html: `<span data-i18n="home.design3d">${t('home.design3d')}</span>` + CL.icon('arrowRight') })
                   )
                 )
               ),
@@ -242,17 +248,17 @@
               },
                 CL.h('img.orchard-work-img', {
                   src: 'https://images.unsplash.com/photo-1571781926291-c477ebfd024b?auto=format&fit=crop&w=1000&q=85',
-                  alt: 'Porcelain Ivory & Gold',
+                  alt: t('home.work5Title'),
                   loading: 'lazy',
                 }),
                 CL.h('div.orchard-work-overlay', null,
-                  CL.h('span.orchard-work-badge', { text: '05 / PORCELAIN ESSENCE' }),
+                  CL.h('span.orchard-work-badge', { 'data-i18n': 'home.work5Badge', text: t('home.work5Badge') }),
                   CL.h('div.orchard-work-info', null,
                     CL.h('div', null,
-                      CL.h('h3.orchard-work-title', { text: 'Porcelain Ivory & Gold.' }),
-                      CL.h('p.orchard-work-desc', { text: 'Glazed ceramic tactile touch with warm bone undertone.' })
+                      CL.h('h3.orchard-work-title', { 'data-i18n': 'home.work5Title', text: t('home.work5Title') }),
+                      CL.h('p.orchard-work-desc', { 'data-i18n': 'home.work5Desc', text: t('home.work5Desc') })
                     ),
-                    CL.h('span.orchard-work-btn', { html: '<span>Design 3D</span>' + CL.icon('arrowRight') })
+                    CL.h('span.orchard-work-btn', { html: `<span data-i18n="home.design3d">${t('home.design3d')}</span>` + CL.icon('arrowRight') })
                   )
                 )
               )
@@ -266,26 +272,26 @@
         CL.h('div.container', null,
           CL.h('div.section-meta-head', null,
             CL.h('div', null,
-              CL.h('span.index-num', { text: '(02) STANDARDS & COMPLIANCE' }),
-              CL.h('h2', { text: 'Global Cosmetic Engineering.' })
+              CL.h('span.index-num', { 'data-i18n': 'home.standardsSectionNum', text: t('home.standardsSectionNum') }),
+              CL.h('h2', { 'data-i18n': 'home.standardsHeading', text: t('home.standardsHeading') })
             ),
-            CL.h('span.pill-tag', { text: 'CGMP / ISO CERTIFIED' })
+            CL.h('span.pill-tag', { 'data-i18n': 'home.standardsBadge', text: t('home.standardsBadge') })
           ),
 
           CL.h('div.orchard-table', null,
             [
-              ['[ 01 ]', 'CGMP Certified Foundry', 'South Korea Ministry of Food & Drug Safety verified facility', 'SOUTH KOREA'],
-              ['[ 02 ]', 'ISO 22716 International Standard', 'Cleanroom cosmetic manufacturing and packaging compliance', 'INCHEON LAB'],
-              ['[ 03 ]', 'Micro-Pigment Dispersion Lab', 'Korean MLBB velvet emulsion and water-gel formulations', 'GANGNAM SEOUL'],
-              ['[ 04 ]', 'Rapid Prototyping Laboratory', '72-Hour vector artwork to physical molded specimen turnaround', 'RAPID 72H'],
-              ['[ 05 ]', 'Clean & Vegan Formulation Standard', 'EWG Green grade ingredients and cruelty-free certified', 'VEGAN VERIFIED'],
-              ['[ 06 ]', 'Global Regulatory Export Dossier', 'Full compliance packaging files for EU, US FDA, ASEAN', 'WORLDWIDE READY'],
-            ].map(([idx, title, desc, tag]) =>
+              ['[ 01 ]', 'home.std1Title', 'home.std1Desc', 'home.std1Tag'],
+              ['[ 02 ]', 'home.std2Title', 'home.std2Desc', 'home.std2Tag'],
+              ['[ 03 ]', 'home.std3Title', 'home.std3Desc', 'home.std3Tag'],
+              ['[ 04 ]', 'home.std4Title', 'home.std4Desc', 'home.std4Tag'],
+              ['[ 05 ]', 'home.std5Title', 'home.std5Desc', 'home.std5Tag'],
+              ['[ 06 ]', 'home.std6Title', 'home.std6Desc', 'home.std6Tag'],
+            ].map(([idx, titleKey, descKey, tagKey]) =>
               CL.h('div.orchard-table-row', null,
                 CL.h('span.index-num', { text: idx }),
-                CL.h('h3', { text: title }),
-                CL.h('p', { text: desc }),
-                CL.h('span.orchard-table-tag', { text: tag })
+                CL.h('h3', { 'data-i18n': titleKey, text: t(titleKey) }),
+                CL.h('p', { 'data-i18n': descKey, text: t(descKey) }),
+                CL.h('span.orchard-table-tag', { 'data-i18n': tagKey, text: t(tagKey) })
               )
             )
           )
@@ -297,51 +303,53 @@
         CL.h('div.container', null,
           CL.h('div.section-meta-head', null,
             CL.h('div', null,
-              CL.h('span.index-num', { text: '(03) ATELIER JOURNAL & INSIGHTS' }),
-              CL.h('h2', { text: 'Engineering & Technical Workflows.' })
+              CL.h('span.index-num', { 'data-i18n': 'home.journalSectionNum', text: t('home.journalSectionNum') }),
+              CL.h('h2', { 'data-i18n': 'home.journalHeading', text: t('home.journalHeading') })
             ),
-            CL.h('a.btn.btn-outline.btn-sm', { href: '#/gallery', html: '<span>View Archive</span>' + CL.icon('arrowRight') })
+            CL.h('a.btn.btn-outline.btn-sm', { href: '#/gallery', html: `<span data-i18n="home.viewArchive">${t('home.viewArchive')}</span>` + CL.icon('arrowRight') })
           ),
 
           CL.h('div.orchard-journal-grid', null,
             [
-              ['AUG 2026', '3D Product Visuals: Lighting That Feels Expensive', 'How real-time PBR shading and softbox specular highlights bridge the gap between digital vector and physical plastic injection.'],
-              ['JUL 2026', 'Designing Packaging Systems That Survive Scale', 'Inside Coslab\'s 0.1mm tolerance molding process for seamless fit between Up Liptint and Button Liptint parts.'],
-              ['JUN 2026', 'From Moodboard to Key Specimen: Our 72h Lab Workflow', 'How Korean cosmetic founders validate formulations from Pinterest boards to factory physical proofs in 3 days.'],
-              ['MAY 2026', 'The Korean MLBB Tint: Dispersion, Water-Gel & Velvet Sheen', 'Analyzing the microscopic emulsion stability of dewy water tints vs. cloud velvet textures.'],
-            ].map(([date, title, desc]) =>
-              CL.h('div.orchard-journal-card', {
+              ['home.j1Date', 'home.j1Title', 'home.j1Desc'],
+              ['home.j2Date', 'home.j2Title', 'home.j2Desc'],
+              ['home.j3Date', 'home.j3Title', 'home.j3Desc'],
+              ['home.j4Date', 'home.j4Title', 'home.j4Desc'],
+            ].map(([dateKey, titleKey, descKey]) => {
+              const articleTitle = t(titleKey);
+              return CL.h('div.orchard-journal-card', {
                 onclick: () => {
-                  CL.toast('Atelier Journal: ' + title);
+                  CL.toast('Atelier Journal: ' + articleTitle);
                 },
               },
-                CL.h('span.orchard-journal-date', { text: date }),
-                CL.h('h4', { text: title }),
-                CL.h('p', { text: desc })
-              )
-            )
+                CL.h('span.orchard-journal-date', { 'data-i18n': dateKey, text: t(dateKey) }),
+                CL.h('h4', { 'data-i18n': titleKey, text: articleTitle }),
+                CL.h('p', { 'data-i18n': descKey, text: t(descKey) })
+              );
+            })
           )
         )
       );
 
       // 6. Orchard Connect / Newsletter Callout (Orchard Stay Connected Box)
-      const emailInput = CL.h('input.input', { placeholder: 'Enter your brand email...', type: 'email' });
+      const emailInput = CL.h('input.input', { placeholder: t('home.connectPlaceholder'), 'data-i18n-ph': 'home.connectPlaceholder', type: 'email' });
       const connectSection = CL.h('section.orchard-connect-section', null,
         CL.h('div.container', null,
           CL.h('div.orchard-connect-box', null,
-            CL.h('span.index-num', { text: '(04) STAY CONNECTED' }),
-            CL.h('h2', { text: 'Stay connected with Coslab Atelier®.' }),
-            CL.h('p', { text: 'New silhouettes, refined Korean formulations, and packaging engineering — delivered occasionally. Maximum two updates monthly — only meaningful releases.' }),
+            CL.h('span.index-num', { 'data-i18n': 'home.connectSectionNum', text: t('home.connectSectionNum') }),
+            CL.h('h2', { 'data-i18n': 'home.connectHeading', text: t('home.connectHeading') }),
+            CL.h('p', { 'data-i18n': 'home.connectDesc', text: t('home.connectDesc') }),
             CL.h('div.orchard-connect-form', null,
               emailInput,
               CL.h('button.btn.btn-primary', {
-                text: 'Subscribe',
+                'data-i18n': 'home.subscribe',
+                text: t('home.subscribe'),
                 onclick: () => {
                   if (emailInput.value.includes('@')) {
-                    CL.toast('Cảm ơn bạn đã kết nối cùng Coslab Atelier!');
+                    CL.toast(t('home.subscribeSuccess'));
                     emailInput.value = '';
                   } else {
-                    CL.toast('Vui lòng nhập địa chỉ email hợp lệ.');
+                    CL.toast(t('home.subscribeError'));
                   }
                 },
               })

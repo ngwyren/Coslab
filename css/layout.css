@@ -81,26 +81,51 @@
   gap: 8px;
 }
 
-/* Language switch */
+/* Language switch (Minimal K-Beauty) */
 .lang-switch { position: relative; }
 .lang-btn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  height: 34px;
-  padding-inline: 10px 12px;
+  gap: 7px;
+  height: 32px;
+  padding: 0 11px;
   border-radius: var(--r-pill);
   border: 1px solid var(--border);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
   background: var(--surface);
-  transition: border-color 0.15s;
+  color: var(--text);
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
 }
-.lang-btn:hover { border-color: var(--text); }
-.lang-btn svg { width: 14px; height: 14px; }
-.lang-switch .menu { inset-inline-end: 0; top: calc(100% + 6px); }
+.lang-btn:hover,
+.lang-btn.menu-open,
+.lang-btn[aria-expanded="true"] {
+  border-color: var(--text);
+  background: var(--surface-2);
+}
+.lang-code-pill {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  opacity: 0.65;
+}
+.lang-label {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+.lang-chevron {
+  width: 8px;
+  height: 5px;
+  opacity: 0.55;
+  transition: transform 0.2s var(--ease);
+  flex-shrink: 0;
+}
+.lang-btn.menu-open .lang-chevron {
+  transform: rotate(180deg);
+}
 
 /* ==========================================================
    COSLAB — Minimalist Korean Luxury Atelier Footer (Orchard Studio Style)

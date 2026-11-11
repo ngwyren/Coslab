@@ -42,7 +42,7 @@
     document.getElementById('mainNav').classList.remove('open');
     current = { route, r };
     cleanup = page.render(app, { query: r.query, sub: r.sub, anchor: route.anchor, rerender: !!opts.rerender });
-    I18N.apply(app);
+    I18N.apply(document);
     document.title = `${t(page.titleKey || 'nav.home')} — COSLAB`;
     if (!opts.rerender) {
       if (route.anchor) setTimeout(() => { const el = document.getElementById(route.anchor); el && el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 60);
@@ -50,19 +50,26 @@
     }
   }
 
-  /* ---------- Language switcher ---------- */
+  /* ---------- Language switcher (Minimalist K-Beauty Style) ---------- */
   function buildLangSwitch() {
     const host = document.getElementById('langSwitch');
+    if (!host) return;
     host.innerHTML = '';
     const meta = I18N.meta;
-    const btn = CL.h('button.lang-btn', { type: 'button', 'aria-haspopup': 'menu', html: CL.icon('globe') + `<span class="lang-name"></span>` + CL.icon('chevronDown') });
-    btn.querySelector('.lang-name').textContent = meta.name;
-    btn.addEventListener('click', () => {
+    const btn = CL.h('button.lang-btn', {
+      type: 'button',
+      'aria-haspopup': 'menu',
+      'aria-expanded': 'false',
+      html: `<span class="lang-code-pill">${meta.code.toUpperCase()}</span><span class="lang-label">${meta.name}</span><svg class="lang-chevron" viewBox="0 0 10 6" fill="none"><path d="M1 1L5 5L9 1" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`
+    });
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
       CL.menu(btn, I18N.LANGS.map((l) => ({
-        label: l.name, active: l.code === I18N.lang, right: `<span class="code">${l.code}</span>`,
-        icon: l.code === I18N.lang ? 'check' : null,
+        label: l.name,
+        code: l.code.toUpperCase(),
+        active: l.code === I18N.lang,
         onClick: () => CL.setLang(l.code),
-      })));
+      })), { align: 'end', type: 'lang' });
     });
     host.appendChild(btn);
   }
@@ -80,7 +87,11 @@
     window.addEventListener('scroll', () => header.classList.toggle('scrolled', window.scrollY > 4), { passive: true });
 
     document.documentElement.setAttribute('data-theme', 'light');
-    I18N.onChange(() => { buildLangSwitch(); render({ rerender: true }); });
+    I18N.onChange(() => {
+      buildLangSwitch();
+      I18N.apply(document);
+      render({ rerender: true });
+    });
     I18N.setLang(CL.store.settings.lang || 'vi');
     window.addEventListener('hashchange', () => render());
 
