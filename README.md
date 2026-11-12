@@ -171,6 +171,18 @@ git push origin feature/your-feature-name
 
 ---
 
+## ✦ Factory & Laboratory Information
+
+- **Company:** COSLAB (주식회사 코스랩)
+- **Official Slogan:** *"Of the lips by the people for the beauty"* — Korea's One and Only Lip Color Lab
+- **Facility Address:** 20, 423 Cheongcheon-dong, Bupyeong District, Incheon, South Korea (인천광역시 부평구 청천동 423)
+- **Business Registration:** 337-88-03756
+- **Contact:** +82-32-715-4277 | coslabkorea@gmail.com
+- **Official Portal:** [coslabkorea.com](https://coslabkorea.com/default/en/index.php)
+- **Certifications:** CGMP (ISO 22716), ISO 9001, ISO 14001, Cleanroom Automated Manufacturing
+
+---
+
 ## ✦ License & Credits
 
 Developed for **COSLAB ATELIER®** — Seoul Bespoke Packaging Studio.  
