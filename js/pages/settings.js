@@ -17,10 +17,6 @@
 
       // Page Header
       const head = CL.h('div.page-head', null,
-        CL.h('div.hero-meta-row', null,
-          CL.h('span.pill-tag', { text: 'ATELIER CONFIG' }),
-          CL.h('span.index-num', { text: '(SETTINGS)' })
-        ),
         CL.h('h1', { text: 'Studio Settings.', style: { fontSize: ' clamp(32px, 4vw, 48px)', fontWeight: '700', letterSpacing: '-0.03em' } })
       );
 
@@ -46,7 +42,7 @@
       // 1. Language Selection (Smart Pills)
       const langSection = CL.h('div.settings-section', null,
         CL.h('div.hero-meta-row', { style: { marginBottom: '8px' } },
-          CL.h('span.index-num', { text: '[ 01 / LANGUAGE ]' }),
+          CL.h('h3.setting-title', { text: 'LANGUAGE' }),
           CL.h('span.mono', { text: '8 REGIONS' })
         ),
         CL.h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: '8px' } },
@@ -64,7 +60,7 @@
       // 2. 3D Engine & Viewport Controls (Smart Switches)
       const engineSection = CL.h('div.settings-section', null,
         CL.h('div.hero-meta-row', { style: { marginBottom: '6px' } },
-          CL.h('span.index-num', { text: '[ 02 / 3D ENGINE ]' }),
+          CL.h('h3.setting-title', { text: '3D ENGINE' }),
           CL.h('span.mono', { text: 'WEBGL PBR' })
         ),
         CL.h('div', null,
@@ -104,7 +100,7 @@
       // 3. Manufacturing & Export Preferences
       const exportSection = CL.h('div.settings-section', null,
         CL.h('div.hero-meta-row', { style: { marginBottom: '6px' } },
-          CL.h('span.index-num', { text: '[ 03 / EXPORT ]' }),
+          CL.h('h3.setting-title', { text: 'EXPORT PREFERENCES' }),
           CL.h('span.mono', { text: 'FACTORY SPECS' })
         ),
         CL.h('div', null,
@@ -201,7 +197,7 @@
 
       const authorSection = CL.h('div.settings-section', null,
         CL.h('div.hero-meta-row', { style: { marginBottom: '8px' } },
-          CL.h('span.index-num', { text: '[ 04 / BRAND CREDENTIALS ]' }),
+          CL.h('h3.setting-title', { text: 'BRAND CREDENTIALS' }),
           statusBadge
         ),
         CL.h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '14px' } },
@@ -215,7 +211,7 @@
       // 5. Smart Actions & Maintenance
       const maintenanceSection = CL.h('div.settings-section', null,
         CL.h('div.hero-meta-row', { style: { marginBottom: '8px' } },
-          CL.h('span.index-num', { text: '[ 05 / STORAGE ]' }),
+          CL.h('h3.setting-title', { text: 'STORAGE & DATA' }),
           CL.h('span.mono', { text: 'LOCAL VAULT' })
         ),
         CL.h('div', { style: { display: 'flex', gap: '10px', flexWrap: 'wrap' } },

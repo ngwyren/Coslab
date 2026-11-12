@@ -18,12 +18,6 @@
       // 1. Hero Section (Orchard Studio Style)
       const hero = CL.h('section.hero', null,
         CL.h('div.container.hero-inner', null,
-          // Tracked-out Eyebrow (Orchard Style)
-          CL.h('div.orchard-eyebrow', {
-            'data-i18n': 'home.eyebrow',
-            text: t('home.eyebrow'),
-          }),
-
           // Massive Editorial Headline (Orchard Style)
           CL.h('div.hero-title-block', null,
             CL.h('h1.hero-giant-title.reveal-up', { text: 'COSLAB ATELIER®' }),
@@ -51,7 +45,7 @@
           CL.h('div.hero-metrics-grid.reveal-up.stagger-3', { style: { marginTop: '48px' } },
             CL.h('div.hero-metric-item', null,
               CL.h('div.metric-header', null,
-                CL.h('span', { text: '(01) STANDARD' }),
+                CL.h('span', { text: 'STANDARD' }),
                 CL.h('span', { 'data-i18n': 'home.metric1Tag', text: t('home.metric1Tag') })
               ),
               CL.h('div.metric-val', { 'data-i18n': 'home.metric1Val', text: t('home.metric1Val') }),
@@ -59,7 +53,7 @@
             ),
             CL.h('div.hero-metric-item', null,
               CL.h('div.metric-header', null,
-                CL.h('span', { text: '(02) SIMULATION' }),
+                CL.h('span', { text: 'SIMULATION' }),
                 CL.h('span', { 'data-i18n': 'home.metric2Tag', text: t('home.metric2Tag') })
               ),
               CL.h('div.metric-val', { 'data-i18n': 'home.metric2Val', text: t('home.metric2Val') }),
@@ -67,7 +61,7 @@
             ),
             CL.h('div.hero-metric-item', null,
               CL.h('div.metric-header', null,
-                CL.h('span', { text: '(03) PROTOTYPE' }),
+                CL.h('span', { text: 'PROTOTYPE' }),
                 CL.h('span', { 'data-i18n': 'home.metric3Tag', text: t('home.metric3Tag') })
               ),
               CL.h('div.metric-val', { 'data-i18n': 'home.metric3Val', text: t('home.metric3Val') }),
@@ -93,7 +87,6 @@
         CL.h('div.container', null,
           CL.h('div.section-meta-head', null,
             CL.h('div', null,
-              CL.h('span.index-num', { 'data-i18n': 'home.worksSectionNum', text: t('home.worksSectionNum') }),
               CL.h('h2', { 'data-i18n': 'home.worksHeading', text: t('home.worksHeading') })
             ),
             CL.h('p', { 'data-i18n': 'home.worksDesc', text: t('home.worksDesc') })
@@ -239,24 +232,19 @@
       const standardsSection = CL.h('section.orchard-standards-section', null,
         CL.h('div.container', null,
           CL.h('div.section-meta-head', null,
-            CL.h('div', null,
-              CL.h('span.index-num', { 'data-i18n': 'home.standardsSectionNum', text: t('home.standardsSectionNum') }),
-              CL.h('h2', { 'data-i18n': 'home.standardsHeading', text: t('home.standardsHeading') })
-            ),
-            CL.h('span.pill-tag', { 'data-i18n': 'home.standardsBadge', text: t('home.standardsBadge') })
+            CL.h('h2', { 'data-i18n': 'home.standardsHeading', text: t('home.standardsHeading') })
           ),
 
           CL.h('div.orchard-table', null,
             [
-              ['[ 01 ]', 'home.std1Title', 'home.std1Desc', 'home.std1Tag'],
-              ['[ 02 ]', 'home.std2Title', 'home.std2Desc', 'home.std2Tag'],
-              ['[ 03 ]', 'home.std3Title', 'home.std3Desc', 'home.std3Tag'],
-              ['[ 04 ]', 'home.std4Title', 'home.std4Desc', 'home.std4Tag'],
-              ['[ 05 ]', 'home.std5Title', 'home.std5Desc', 'home.std5Tag'],
-              ['[ 06 ]', 'home.std6Title', 'home.std6Desc', 'home.std6Tag'],
-            ].map(([idx, titleKey, descKey, tagKey]) =>
+              ['home.std1Title', 'home.std1Desc', 'home.std1Tag'],
+              ['home.std2Title', 'home.std2Desc', 'home.std2Tag'],
+              ['home.std3Title', 'home.std3Desc', 'home.std3Tag'],
+              ['home.std4Title', 'home.std4Desc', 'home.std4Tag'],
+              ['home.std5Title', 'home.std5Desc', 'home.std5Tag'],
+              ['home.std6Title', 'home.std6Desc', 'home.std6Tag'],
+            ].map(([titleKey, descKey, tagKey]) =>
               CL.h('div.orchard-table-row', null,
-                CL.h('span.index-num', { text: idx }),
                 CL.h('h3', { 'data-i18n': titleKey, text: t(titleKey) }),
                 CL.h('p', { 'data-i18n': descKey, text: t(descKey) }),
                 CL.h('span.orchard-table-tag', { 'data-i18n': tagKey, text: t(tagKey) })
@@ -270,10 +258,7 @@
       const journalSection = CL.h('section.orchard-journal-section', null,
         CL.h('div.container', null,
           CL.h('div.section-meta-head', null,
-            CL.h('div', null,
-              CL.h('span.index-num', { 'data-i18n': 'home.journalSectionNum', text: t('home.journalSectionNum') }),
-              CL.h('h2', { 'data-i18n': 'home.journalHeading', text: t('home.journalHeading') })
-            ),
+            CL.h('h2', { 'data-i18n': 'home.journalHeading', text: t('home.journalHeading') }),
             CL.h('a.btn.btn-outline.btn-sm', { href: '#/gallery', html: `<span data-i18n="home.viewArchive">${t('home.viewArchive')}</span>` + CL.icon('arrowRight') })
           ),
 
@@ -303,7 +288,6 @@
       const connectSection = CL.h('section.orchard-connect-section', null,
         CL.h('div.container', null,
           CL.h('div.orchard-connect-box', null,
-            CL.h('span.index-num', { 'data-i18n': 'home.connectSectionNum', text: t('home.connectSectionNum') }),
             CL.h('h2', { 'data-i18n': 'home.connectHeading', text: t('home.connectHeading') }),
             CL.h('p', { 'data-i18n': 'home.connectDesc', text: t('home.connectDesc') }),
             CL.h('div.orchard-connect-form', null,

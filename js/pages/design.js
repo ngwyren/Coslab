@@ -15,10 +15,6 @@
       const root = CL.h('div.page.container', { style: { paddingBottom: '60px' } });
 
       const head = CL.h('div.page-head', null,
-        CL.h('div.hero-meta-row', null,
-          CL.h('span.pill-tag', { text: 'SILHOUETTE STUDIO' }),
-          CL.h('span.index-num', { text: '(INITIALIZE)' })
-        ),
         CL.h('h1', { text: t('design.title') }),
         CL.h('p', { text: t('design.subtitle') })
       );
@@ -26,11 +22,7 @@
       // Step 1: Choose Model
       const step1 = CL.h('div.setup-step', null,
         CL.h('div.setup-step-head', null,
-          CL.h('div.setup-step-title', { style: { display: 'flex', alignItems: 'center', gap: '10px' } },
-            CL.h('span.index-num', { text: '[ 01 ]' }),
-            CL.h('h2', { text: t('design.step1') })
-          ),
-          CL.h('span.mono.muted', { text: '5 MODELS' })
+          CL.h('h2', { text: t('design.step1') })
         ),
         CL.h('div.setup-grid#modelGrid')
       );
@@ -38,11 +30,7 @@
       // Step 2: Choose Template
       const step2 = CL.h('div.setup-step', { style: { marginTop: '48px' } },
         CL.h('div.setup-step-head', null,
-          CL.h('div.setup-step-title', { style: { display: 'flex', alignItems: 'center', gap: '10px' } },
-            CL.h('span.index-num', { text: '[ 02 ]' }),
-            CL.h('h2', { text: t('design.step2') })
-          ),
-          CL.h('span.mono.muted', { text: '8 PALETTES' })
+          CL.h('h2', { text: t('design.step2') })
         ),
         CL.h('div.setup-grid#templateGrid')
       );

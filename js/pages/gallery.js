@@ -15,10 +15,6 @@
       const root = CL.h('div.page.container', { style: { paddingBottom: '80px' } });
 
       const head = CL.h('div.page-head', null,
-        CL.h('div.hero-meta-row', null,
-          CL.h('span.pill-tag', { text: 'ARCHIVE VAULT' }),
-          CL.h('span.index-num', { text: '(CURATED EDITIONS)' })
-        ),
         CL.h('div.page-head-row', null,
           CL.h('div', null,
             CL.h('h1', { text: t('gallery.title') }),
