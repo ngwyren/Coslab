@@ -43,18 +43,7 @@
         )
       );
 
-      // 2. Subtle Marquee Ticker (Orchard Style)
-      const marqueeText = 'COSLAB ATELIER · BESPOKE LIPTINT · SEOUL LAB · 3D PACKAGING ENGINE · OEM / ODM · VELVET & GLASS · CGMP KOREA · ';
-      const marquee = CL.h('div.marquee-band', null,
-        CL.h('div.marquee-track', null,
-          CL.h('span.marquee-item', { text: marqueeText }),
-          CL.h('span.marquee-item', { text: marqueeText }),
-          CL.h('span.marquee-item', { text: marqueeText }),
-          CL.h('span.marquee-item', { text: marqueeText })
-        )
-      );
-
-      // 3. Orchard Works Showcase (Full-Screen & Split Large Media Cards)
+      // 2. Orchard Works Showcase (Full-Screen & Split Large Media Cards)
       const worksSection = CL.h('section.orchard-works-section#worksSection', null,
         CL.h('div.container', null,
           CL.h('div.section-meta-head', null,
@@ -278,7 +267,7 @@
         )
       );
 
-      root.append(hero, marquee, worksSection, standardsSection, journalSection, connectSection);
+      root.append(hero, worksSection, standardsSection, journalSection, connectSection);
       container.appendChild(root);
 
       return () => {};
