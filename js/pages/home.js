@@ -58,10 +58,7 @@
       const worksSection = CL.h('section.orchard-works-section#worksSection', null,
         CL.h('div.container', null,
           CL.h('div.section-meta-head', null,
-            CL.h('div', null,
-              CL.h('h2', { 'data-i18n': 'home.worksHeading', text: t('home.worksHeading') })
-            ),
-            CL.h('p', { 'data-i18n': 'home.worksDesc', text: t('home.worksDesc') })
+            CL.h('h2', { 'data-i18n': 'home.worksHeading', text: t('home.worksHeading') })
           ),
 
           CL.h('div.orchard-works-grid', null,
