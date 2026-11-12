@@ -53,7 +53,7 @@
       let activeView = '2d';
       let activePart = 'base'; // 'cap' | 'base' | 'ring'
       let activeTab = 'colors';
-      let selectedLayerId = (design.layers && design.layers[0] && design.layers[0].id) || null;
+      let selectedLayerId = null;
       let zoomLevel = 1.0;
       let preview3DInstance = null;
 
@@ -91,17 +91,20 @@
         })
       );
 
-      // Single Liptint part toggle: Up Liptint (Nắp) vs Button Liptint (Thân)
-      const partQuickToggle = CL.h('div.segmented', null,
-        CL.h('button#btnPartCap', {
-          html: CL.icon('lipstick') + `<span>${t('editor.upPart')}</span>`,
-          onclick: () => selectPart('cap'),
-        }),
-        CL.h('button#btnPartBase.is-active', {
-          html: CL.icon('lipstick') + `<span>${t('editor.btnPart')}</span>`,
-          onclick: () => selectPart('base'),
-        })
-      );
+      const langBtn = CL.h('button.lang-btn', {
+        type: 'button',
+        style: { height: '32px', padding: '0 10px', fontSize: '11px', display: 'inline-flex', alignItems: 'center', gap: '6px' },
+        html: `<span class="lang-code-pill">${I18N.meta.code.toUpperCase()}</span><svg class="lang-chevron" viewBox="0 0 10 6" fill="none"><path d="M1 1L5 5L9 1" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+        onclick: (e) => {
+          e.stopPropagation();
+          CL.menu(e.currentTarget, I18N.LANGS.map((l) => ({
+            label: l.name,
+            code: l.code.toUpperCase(),
+            active: l.code === I18N.lang,
+            onClick: () => CL.setLang(l.code),
+          })), { align: 'end', type: 'lang' });
+        }
+      });
 
       const saveBtn = CL.h('button.btn.btn-sm.btn-outline', {
         html: CL.icon('save') + `<span>${t('editor.save')}</span>`,
@@ -122,24 +125,25 @@
       const topbar = CL.h('header.editor-topbar', null,
         CL.h('div.editor-topbar-left', null,
           CL.h('a.icon-btn.sm', { href: '#/design', title: t('common.back'), html: CL.icon('arrowLeft') }),
+          CL.h('span.brand-word', { text: 'COSLAB', style: { fontSize: '13px', fontWeight: '800', letterSpacing: '0.12em', marginLeft: '2px', marginRight: '4px' } }),
+          CL.h('div.topbar-sep'),
           CL.h('div.editor-title-wrap', null, titleInput),
           CL.h('div.topbar-sep'),
           undoBtn,
           redoBtn
         ),
         CL.h('div.editor-topbar-center', null,
-          viewToggle,
-          CL.h('div.topbar-sep'),
-          partQuickToggle
+          viewToggle
         ),
         CL.h('div.editor-topbar-right', null,
+          langBtn,
           saveBtn,
           exportBtn
         )
       );
 
-      // Workspace
-      const workspace = CL.h('div.editor-workspace');
+      // Workspace (auto-collapsed inspector for clean spacious canvas)
+      const workspace = CL.h('div.editor-workspace.no-inspector');
 
       // Left Sidebar Tabs
       const sidebar = CL.h('aside.editor-sidebar', null,
@@ -192,14 +196,31 @@
         )
       );
 
-      // Right Inspector
-      const inspector = CL.h('aside.editor-inspector#editorInspector', null,
+      // Right Inspector (Only appears when a layer is selected in Text/Graphics/Layers mode)
+      const inspector = CL.h('aside.editor-inspector#editorInspector', { style: { display: 'none' } },
         CL.h('div.inspector-head', null,
           CL.h('span', { text: 'Layer Properties' }),
-          CL.h('span.badge#layerTypeBadge', { text: 'None' })
+          CL.h('div', { style: { display: 'flex', alignItems: 'center', gap: '6px' } },
+            CL.h('span.badge#layerTypeBadge', { text: 'None' }),
+            CL.h('button.icon-btn.sm', {
+              title: 'Close',
+              html: '✕',
+              onclick: () => {
+                selectedLayerId = null;
+                render2DCanvas();
+                updateInspectorVisibility();
+              }
+            })
+          )
         ),
         CL.h('div.inspector-body#inspectorBody')
       );
+
+      function updateInspectorVisibility() {
+        const shouldShow = !!selectedLayerId && (activeTab === 'text' || activeTab === 'graphics' || activeTab === 'layers');
+        workspace.classList.toggle('no-inspector', !shouldShow);
+        inspector.style.display = shouldShow ? 'flex' : 'none';
+      }
 
       workspace.append(sidebar, canvasContainer, inspector);
       root.append(topbar, workspace);
@@ -262,6 +283,14 @@
         const svgEl = holder.querySelector('svg');
         svgEl.classList.add('canvas-svg-root');
 
+        holder.onclick = (e) => {
+          if (!e.target.closest('[data-layer]')) {
+            selectedLayerId = null;
+            render2DCanvas();
+            renderInspector();
+          }
+        };
+
         svgEl.querySelectorAll('[data-part]').forEach((el) => {
           el.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -278,8 +307,12 @@
 
             e.stopPropagation();
             selectedLayerId = lid;
+            if (activeTab === 'colors') {
+              activeTab = lyr.type === 'text' ? 'text' : 'graphics';
+              sidebar.querySelectorAll('.editor-tab-btn').forEach((b) => b.classList.toggle('is-active', b.dataset.tab === activeTab));
+              renderTabContent();
+            }
             renderInspector();
-            if (activeTab === 'layers') renderTabContent();
 
             const layout = CL.models.layout(design.model);
             const rect = layout[lyr.part];
@@ -326,6 +359,7 @@
         else if (activeTab === 'graphics') renderGraphicsTab();
         else if (activeTab === 'layers') renderLayersTab();
         else if (activeTab === 'model') renderModelTab();
+        updateInspectorVisibility();
       }
 
       // --- 1. Colors & Gradients Tab (Minimalist & Compact) ---
@@ -394,11 +428,11 @@
         });
 
         sec.append(
-          CL.h('div.sidebar-section-title', { text: t('editor.colors.partSelect') || 'COMPONENT' }),
+          CL.h('div.sidebar-section-title', { text: t('editor.colors.partSelect') || 'Vị trí' }),
           partTabs,
-          CL.h('div.sidebar-section-title', { text: t('editor.colors.finish') || 'FINISH', style: { marginTop: '10px' } }),
+          CL.h('div.sidebar-section-title', { text: t('editor.colors.finish') || 'Chất liệu', style: { marginTop: '12px' } }),
           finishRow,
-          CL.h('div.sidebar-section-title', { text: t('editor.colors.title') || 'COLOR', style: { marginTop: '10px' } }),
+          CL.h('div.sidebar-section-title', { text: t('editor.colors.title') || 'Màu sắc', style: { marginTop: '12px' } }),
           picker
         );
 
@@ -780,6 +814,7 @@
 
       function renderInspector() {
         inspectorBody.innerHTML = '';
+        updateInspectorVisibility();
         const curLayer = (design.layers || []).find((l) => l.id === selectedLayerId);
 
         if (!curLayer) {

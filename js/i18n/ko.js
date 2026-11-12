@@ -107,7 +107,7 @@
       tabs: { model: '모델 형태', colors: '컬러 & 피니시', text: '타이포그래피', graphics: '그래픽 & 로고 (Nano Banana)', layers: '레이어 & 변형' },
       colors: {
         title: '색상 및 그라데이션', sub: '일러스트레이터처럼 직관적인 클릭형 팔레트와 선형 그라데이션을 지원합니다.',
-        partSelect: '색상을 변경할 파츠 선택', fillType: '채우기 스타일',
+        partSelect: '파츠', fillType: '채우기 스타일',
         solid: '단색 (Solid)', gradient: '선형 그라데이션 (Gradient)',
         finish: '표면 질감 (Finish)', matte: '매트 무광 (Matte)', satin: '은은한 새틴 (Satin)', gloss: '고광택 글라스 (Gloss)', metallic: '메탈릭 도금 (Metallic)',
         angle: '그라데이션 각도', recent: '최근 사용한 색상', shades: '추천 립스틱 피그먼트', packaging: '용기 추천 팔레트', eyedropper: '화면 스포이드',

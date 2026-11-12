@@ -107,7 +107,7 @@
       tabs: { model: 'النموذج', colors: 'اللون والملمس', text: 'الخطوط والنصوص', graphics: 'الشعارات والذكاء الاصطناعي', layers: 'الطبقات والمحاذاة' },
       colors: {
         title: 'الألوان والتدرجات', sub: 'اختيار الألوان بنقرة واحدة وتدرجات خطية متقدمة كما في Illustrator.',
-        partSelect: 'اختيار الجزء المطلوب تلوينه', fillType: 'نوع التلوين',
+        partSelect: 'الجزء', fillType: 'نوع التلوين',
         solid: 'لون أحادي (Solid)', gradient: 'تدرج خطي (Gradient)',
         finish: 'ملمس السطح (Finish)', matte: 'مطفي غير لامع (Matte)', satin: 'حريري ناعم (Satin)', gloss: 'شديد اللمعان (Gloss)', metallic: 'معدني مطلي (Metallic)',
         angle: 'زاوية التدرج', recent: 'الألوان المستخدمة مؤخراً', shades: 'ألوان أحمر الشفاه المقترحة', packaging: 'ألوان العبوات والمعادن', eyedropper: 'أداة القطارة',

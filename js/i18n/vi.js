@@ -109,10 +109,10 @@
       finishesShort: { matte: 'Velvet', gloss: 'Dewy', satin: 'Satin', metallic: 'Chrome' },
       tabs: { model: 'Dáng', colors: 'Màu', text: 'Chữ', graphics: 'Logo', layers: 'Lớp' },
       colors: {
-        title: 'Màu sắc (Color)', sub: 'Bảng màu son tint MLBB Hàn Quốc & Vỏ.',
-        partSelect: 'Vị trí (Component)', fillType: 'Kiểu tô',
+        title: 'Màu sắc', sub: 'Tone MLBB Hàn Quốc & Vỏ.',
+        partSelect: 'Vị trí', fillType: 'Kiểu tô',
         solid: 'Đơn sắc', gradient: 'Gradient',
-        finish: 'Chất liệu (Finish)', matte: 'Velvet', satin: 'Satin', gloss: 'Dewy', metallic: 'Chrome',
+        finish: 'Chất liệu', matte: 'Velvet', satin: 'Satin', gloss: 'Dewy', metallic: 'Chrome',
         angle: 'Góc', recent: 'Gần đây', shades: 'Tone MLBB', packaging: 'Vỏ & Kim loại', eyedropper: 'Hút màu',
       },
       text: {

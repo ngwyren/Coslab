@@ -107,7 +107,7 @@
       tabs: { model: '管型款式', colors: '颜色与工艺', text: '文字排版', graphics: '图形与 Logo (Nano Banana)', layers: '图层与变换' },
       colors: {
         title: '颜色与渐变选择', sub: '类似 Illustrator 调色板，支持单击拾色与双色渐变。',
-        partSelect: '选择需要着色的部件', fillType: '填充方式',
+        partSelect: '部件', fillType: '填充方式',
         solid: '单色 (Solid)', gradient: '线性渐变 (Gradient)',
         finish: '表面质感 (Finish)', matte: '哑光磨砂 (Matte)', satin: '丝缎半哑 (Satin)', gloss: '高光镜面 (Gloss)', metallic: '金属电镀 (Metallic)',
         angle: '渐变角度', recent: '最近使用颜色', shades: '经典口红唇膏色卡', packaging: '包材金属色卡', eyedropper: '屏幕吸管拾色',

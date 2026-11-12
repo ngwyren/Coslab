@@ -107,7 +107,7 @@
       tabs: { model: 'Modèle', colors: 'Couleurs & Finis', text: 'Typographie', graphics: 'Logos & IA (Nano Banana)', layers: 'Calques & Alignement' },
       colors: {
         title: 'Couleurs et Dégradés', sub: 'Sélectionnez des teintes ou composez des dégradés comme dans Illustrator.',
-        partSelect: 'Sélectionner la pièce à teinter', fillType: 'Type de remplissage',
+        partSelect: 'Composant', fillType: 'Type de remplissage',
         solid: 'Couleur Unie (Solid)', gradient: 'Dégradé Linéaire (Gradient)',
         finish: 'Fini de Surface (Finish)', matte: 'Mat Poudré (Matte)', satin: 'Satiné Délicat (Satin)', gloss: 'Brillant Laqué (Gloss)', metallic: 'Métallique Anodisé (Metallic)',
         angle: 'Angle du dégradé', recent: 'Couleurs récentes', shades: 'Nuancier de rouges à lèvres', packaging: 'Teintes de packaging & métaux', eyedropper: 'Pipette écran',

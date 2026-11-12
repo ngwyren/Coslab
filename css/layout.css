@@ -302,7 +302,8 @@
   transform: scale(0.96);
 }
 
-body.app-mode .site-footer { display: none; }
+body.app-mode .site-header,
+body.app-mode .site-footer { display: none !important; }
 body.app-mode { overflow: hidden; }
 
 /* Responsive */

@@ -107,7 +107,7 @@
       tabs: { model: 'Modelo', colors: 'Color y Acabado', text: 'Tipografía', graphics: 'Logos e IA (Nano Banana)', layers: 'Capas y Alineación' },
       colors: {
         title: 'Colores y Degradados', sub: 'Selecciona tonos o crea degradados como en Illustrator mediante clic directo.',
-        partSelect: 'Seleccionar pieza a colorear', fillType: 'Tipo de relleno',
+        partSelect: 'Pieza', fillType: 'Tipo de relleno',
         solid: 'Color Sólido (Solid)', gradient: 'Degradado Lineal (Gradient)',
         finish: 'Acabado de Superficie (Finish)', matte: 'Mate Aterciopelado (Matte)', satin: 'Satinado Suave (Satin)', gloss: 'Brillo Espejo (Gloss)', metallic: 'Metálico Anodizado (Metallic)',
         angle: 'Ángulo del degradado', recent: 'Colores recientes', shades: 'Tonos de labial recomendados', packaging: 'Colores de envases y metales', eyedropper: 'Cuentagotas',

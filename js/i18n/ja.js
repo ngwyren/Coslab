@@ -107,7 +107,7 @@
       tabs: { model: '形状', colors: 'カラー＆質感', text: 'テキスト', graphics: 'ロゴ＆AI消去 (Nano Banana)', layers: 'レイヤー' },
       colors: {
         title: 'カラー＆グラデーション', sub: 'Illustrator感覚で直感的に配色やグラデーションを設定できます。',
-        partSelect: '着色パーツを選択', fillType: '塗りスタイル',
+        partSelect: 'パーツ', fillType: '塗りスタイル',
         solid: '単色カラー (Solid)', gradient: '線形グラデーション (Gradient)',
         finish: '表面仕上げ (Finish)', matte: 'マット艶消し (Matte)', satin: 'サテン半艶 (Satin)', gloss: '光沢エナメル (Gloss)', metallic: 'メタリック電鍍 (Metallic)',
         angle: 'グラデーション角度', recent: '最近使用したカラー', shades: '推奨リップカラー', packaging: '容器推奨カラー', eyedropper: '画面スポイト',
