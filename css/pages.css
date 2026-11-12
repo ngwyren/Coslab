@@ -38,7 +38,7 @@
 
 /* ---------- Hero Section (Home Stage) ---------- */
 .hero {
-  padding-block: 72px 56px;
+  padding-block: 88px 72px;
   position: relative;
   border-bottom: 1px solid var(--border);
   background: var(--bg);
@@ -102,49 +102,7 @@
   margin-top: 10px;
 }
 
-/* Architectural 3-Column Grid Metrics (Laconic / Orchard style) */
-.hero-metrics-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  border: 1px solid var(--border);
-  border-radius: var(--r-md);
-  background: var(--bg);
-  overflow: hidden;
-  margin-top: 24px;
-}
-.hero-metric-item {
-  display: grid;
-  gap: 6px;
-  padding: 20px 24px;
-  background: var(--surface);
-  transition: background 0.2s;
-}
-.hero-metric-item:not(:last-child) {
-  border-inline-end: 1px solid var(--border);
-}
-.hero-metric-item:hover {
-  background: var(--surface-2);
-}
-.metric-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--muted);
-  white-space: nowrap;
-}
-.metric-val {
-  font-size: 20px;
-  font-weight: 600;
-  letter-spacing: -0.02em;
-  white-space: nowrap;
-}
-.metric-sub {
-  font-size: 12px;
-  color: var(--muted);
-  white-space: nowrap;
-}
+
 
 /* ---------- 3D Showcase Section (Orchard Frame) ---------- */
 .showcase-section {

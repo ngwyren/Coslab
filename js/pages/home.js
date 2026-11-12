@@ -28,7 +28,7 @@
           ),
 
           // Action buttons
-          CL.h('div.hero-actions-bar.reveal-up.stagger-2', { style: { justifyContent: 'flex-start', marginTop: '32px' } },
+          CL.h('div.hero-actions-bar.reveal-up.stagger-2', { style: { justifyContent: 'flex-start', marginTop: '24px' } },
             CL.h('a.btn.btn-primary.btn-lg', {
               href: '#/design',
               html: `<span data-i18n="home.launchStudio">${t('home.launchStudio')}</span>` + CL.icon('arrowRight'),
@@ -39,34 +39,6 @@
               },
               html: `<span data-i18n="home.exploreWorks">${t('home.exploreWorks')}</span>`,
             })
-          ),
-
-          // Architectural 3-Column Metrics Grid (Orchard / Laconic style)
-          CL.h('div.hero-metrics-grid.reveal-up.stagger-3', { style: { marginTop: '48px' } },
-            CL.h('div.hero-metric-item', null,
-              CL.h('div.metric-header', null,
-                CL.h('span', { text: 'STANDARD' }),
-                CL.h('span', { 'data-i18n': 'home.metric1Tag', text: t('home.metric1Tag') })
-              ),
-              CL.h('div.metric-val', { 'data-i18n': 'home.metric1Val', text: t('home.metric1Val') }),
-              CL.h('div.metric-sub', { 'data-i18n': 'home.metric1Sub', text: t('home.metric1Sub') })
-            ),
-            CL.h('div.hero-metric-item', null,
-              CL.h('div.metric-header', null,
-                CL.h('span', { text: 'SIMULATION' }),
-                CL.h('span', { 'data-i18n': 'home.metric2Tag', text: t('home.metric2Tag') })
-              ),
-              CL.h('div.metric-val', { 'data-i18n': 'home.metric2Val', text: t('home.metric2Val') }),
-              CL.h('div.metric-sub', { 'data-i18n': 'home.metric2Sub', text: t('home.metric2Sub') })
-            ),
-            CL.h('div.hero-metric-item', null,
-              CL.h('div.metric-header', null,
-                CL.h('span', { text: 'PROTOTYPE' }),
-                CL.h('span', { 'data-i18n': 'home.metric3Tag', text: t('home.metric3Tag') })
-              ),
-              CL.h('div.metric-val', { 'data-i18n': 'home.metric3Val', text: t('home.metric3Val') }),
-              CL.h('div.metric-sub', { 'data-i18n': 'home.metric3Sub', text: t('home.metric3Sub') })
-            )
           )
         )
       );
