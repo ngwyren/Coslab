@@ -10,9 +10,9 @@
       home: 'Atelier', design: 'Design', gallery: 'Archive', myDesigns: 'Vault', settings: 'Setting', start: 'Start Design',
     },
     footer: {
-      tagline: 'Bespoke Lip Tint OEM & ODM Engineering Studio. Formulated in Seoul, 0.1mm tolerance.',
-      explore: 'Platform', studio: 'Studio', mfg: 'Manufacturing', rights: 'All rights reserved.',
-      status: 'CGMP & ISO 22716 LAB · ACTIVE',
+      tagline: 'Of the lips by the people for the beauty. Korea\'s One and Only Lip Color Lab (OEM / ODM).',
+      explore: 'Platform', studio: 'Studio', mfg: 'Factory & Lab', rights: 'All rights reserved.',
+      status: 'KOREA\'S ONE AND ONLY LIP COLOR LAB',
       backToTop: 'BACK TO TOP ↑',
     },
     home: {

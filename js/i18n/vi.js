@@ -10,9 +10,9 @@
       home: 'Atelier', design: 'Design', gallery: 'Archive', myDesigns: 'Vault', settings: 'Setting', start: 'Start Design',
     },
     footer: {
-      tagline: 'Xưởng gia công son tint cao cấp OEM / ODM Seoul. Dung sai 0.1mm chuẩn xưởng mỹ phẩm quốc tế.',
-      explore: 'Nền tảng', studio: 'Studio', mfg: 'Sản xuất', rights: 'Toàn bộ quyền được bảo lưu.',
-      status: 'LAB CGMP & ISO 22716 · HOẠT ĐỘNG',
+      tagline: 'Of the lips by the people for the beauty. Xưởng nghiên cứu & sản xuất son tint chuẩn Hàn (OEM / ODM).',
+      explore: 'Nền tảng', studio: 'Studio', mfg: 'Xưởng & Lab', rights: 'Toàn bộ quyền được bảo lưu.',
+      status: 'XƯỞNG NGHIÊN CỨU SON TINT HÀNG ĐẦU HÀN QUỐC',
       backToTop: 'VỀ ĐẦU TRANG ↑',
     },
     home: {

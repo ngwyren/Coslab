@@ -10,9 +10,9 @@
       home: '홈', design: '디자인', gallery: '갤러리', myDesigns: '내 디자인', settings: '설정', start: '디자인 시작하기',
     },
     footer: {
-      tagline: '글로벌 립틴트 OEM/ODM 전문 제조공장 및 3D 패키징 스튜디오. 서울 연구소 기반 0.1mm 정밀 금형 기술.',
-      explore: '플랫폼', studio: '스튜디오', mfg: '제조공정', rights: 'All rights reserved.',
-      status: 'CGMP & ISO 22716 랩 · 가동 중',
+      tagline: 'Of the lips by the people for the beauty. 한국 유일의 립 컬러 전문 연구소 (OEM / ODM).',
+      explore: '플랫폼', studio: '스튜디오', mfg: '연구소 & 제조공장', rights: 'All rights reserved.',
+      status: '한국 유일의 립 컬러 전문 연구소',
       backToTop: '맨 위로 이동 ↑',
     },
     home: {

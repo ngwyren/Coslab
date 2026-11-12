@@ -300,7 +300,7 @@
 
     ctx.fillStyle = '#9e978c';
     ctx.font = `400 30px ${UI}`;
-    ctx.fillText('COSLAB KOREA · Factory Formulation & Automated Packaging Engine', 160, H - 90);
+    ctx.fillText('COSLAB KOREA · 20, 423 Cheongcheon-dong, Bupyeong District, Incheon · Tel: 032-715-4277', 160, H - 90);
 
     // Page 2: Unwrapped Print Flats for Cap & Base (1:1 Ratio)
     const c2 = document.createElement('canvas');
