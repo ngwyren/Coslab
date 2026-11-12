@@ -51,10 +51,10 @@
       const floatBar = CL.h('div.setup-floating-bar', null,
         CL.h('div', null,
           CL.h('div', { id: 'summaryText', style: { fontWeight: '600', fontSize: '14px' } }),
-          CL.h('div.muted', { text: 'Customise Up Liptint cap & Button Liptint body', style: { fontSize: '12px' } })
+          CL.h('div.muted.mono', { text: 'BESPOKE LIPTINT', style: { fontSize: '10px' } })
         ),
         CL.h('button.btn.btn-primary#btnProceed', {
-          html: `<span>${t('design.proceed')}</span>` + CL.icon('arrowRight'),
+          html: `<span>${t('nav.start')}</span>` + CL.icon('arrowRight'),
           onclick: () => {
             const dsn = CL.templates.createDesign(selectedTemplate, selectedModel);
             CL.store.saveDraft(dsn);

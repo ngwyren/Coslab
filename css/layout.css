@@ -136,6 +136,8 @@
   background: var(--bg);
   padding-block: 72px 36px;
   position: relative;
+  content-visibility: auto;
+  contain-intrinsic-size: 1px 400px;
 }
 
 .footer-giant-title {

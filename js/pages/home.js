@@ -30,10 +30,6 @@
             CL.h('p.orchard-manifesto.reveal-up.stagger-1', {
               'data-i18n': 'home.manifesto1',
               text: t('home.manifesto1'),
-            }),
-            CL.h('p.orchard-manifesto-sub.reveal-up.stagger-2', {
-              'data-i18n': 'home.manifesto2',
-              text: t('home.manifesto2'),
             })
           ),
 
@@ -113,9 +109,10 @@
               },
             },
               CL.h('img.orchard-work-img', {
-                src: 'https://images.unsplash.com/photo-1586495777744-4413f21062fa?auto=format&fit=crop&w=1600&q=85',
+                src: 'https://images.unsplash.com/photo-1586495777744-4413f21062fa?auto=format&fit=crop&w=1200&q=80',
                 alt: t('home.work1Title'),
-                loading: 'lazy',
+                loading: 'eager',
+                decoding: 'async',
               }),
               CL.h('div.orchard-work-overlay', null,
                 CL.h('span.orchard-work-badge', { 'data-i18n': 'home.work1Badge', text: t('home.work1Badge') }),
@@ -139,9 +136,10 @@
                 },
               },
                 CL.h('img.orchard-work-img', {
-                  src: 'https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&w=1000&q=85',
+                  src: 'https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&w=800&q=80',
                   alt: t('home.work2Title'),
                   loading: 'lazy',
+                  decoding: 'async',
                 }),
                 CL.h('div.orchard-work-overlay', null,
                   CL.h('span.orchard-work-badge', { 'data-i18n': 'home.work2Badge', text: t('home.work2Badge') }),
@@ -163,9 +161,10 @@
                 },
               },
                 CL.h('img.orchard-work-img', {
-                  src: 'https://images.unsplash.com/photo-1512496015851-a90fb38ba796?auto=format&fit=crop&w=1000&q=85',
+                  src: 'https://images.unsplash.com/photo-1512496015851-a90fb38ba796?auto=format&fit=crop&w=800&q=80',
                   alt: t('home.work3Title'),
                   loading: 'lazy',
+                  decoding: 'async',
                 }),
                 CL.h('div.orchard-work-overlay', null,
                   CL.h('span.orchard-work-badge', { 'data-i18n': 'home.work3Badge', text: t('home.work3Badge') }),
@@ -190,9 +189,10 @@
                 },
               },
                 CL.h('img.orchard-work-img', {
-                  src: 'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=1000&q=85',
+                  src: 'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=800&q=80',
                   alt: t('home.work4Title'),
                   loading: 'lazy',
+                  decoding: 'async',
                 }),
                 CL.h('div.orchard-work-overlay', null,
                   CL.h('span.orchard-work-badge', { 'data-i18n': 'home.work4Badge', text: t('home.work4Badge') }),
@@ -214,9 +214,10 @@
                 },
               },
                 CL.h('img.orchard-work-img', {
-                  src: 'https://images.unsplash.com/photo-1571781926291-c477ebfd024b?auto=format&fit=crop&w=1000&q=85',
+                  src: 'https://images.unsplash.com/photo-1571781926291-c477ebfd024b?auto=format&fit=crop&w=800&q=80',
                   alt: t('home.work5Title'),
                   loading: 'lazy',
+                  decoding: 'async',
                 }),
                 CL.h('div.orchard-work-overlay', null,
                   CL.h('span.orchard-work-badge', { 'data-i18n': 'home.work5Badge', text: t('home.work5Badge') }),
@@ -281,7 +282,6 @@
               ['home.j1Date', 'home.j1Title', 'home.j1Desc'],
               ['home.j2Date', 'home.j2Title', 'home.j2Desc'],
               ['home.j3Date', 'home.j3Title', 'home.j3Desc'],
-              ['home.j4Date', 'home.j4Title', 'home.j4Desc'],
             ].map(([dateKey, titleKey, descKey]) => {
               const articleTitle = t(titleKey);
               return CL.h('div.orchard-journal-card', {
