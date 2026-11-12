@@ -16,8 +16,8 @@
       backToTop: 'トップへ戻る ↑',
     },
     home: {
-      eyebrow: 'SEOUL BESPOKE LIPTINT · OEM & ODM',
-      manifesto1: '韓国リップティント特注OEM・ODMアトリエ。72時間迅速試作。',
+      eyebrow: 'SEOUL BESPOKE LIPTINT',
+      manifesto1: '韓国リップティント特注デザイン＆試作。',
       launchStudio: 'Start Design →',
       exploreWorks: '作品を見る ↓',
       metric1Tag: 'OEM · ODM',

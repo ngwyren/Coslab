@@ -16,8 +16,8 @@
       backToTop: '맨 위로 이동 ↑',
     },
     home: {
-      eyebrow: 'SEOUL BESPOKE LIPTINT · OEM & ODM',
-      manifesto1: '한국 프리미엄 립틴트 OEM · ODM 아틀리에. 72시간 래피드 프로토타이핑.',
+      eyebrow: 'SEOUL BESPOKE LIPTINT',
+      manifesto1: '한국 프리미엄 립틴트 디자인 & 프로토타이핑.',
       launchStudio: 'Start Design →',
       exploreWorks: '둘러보기 ↓',
       metric1Tag: 'OEM · ODM',

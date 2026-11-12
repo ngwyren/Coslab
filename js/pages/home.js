@@ -20,7 +20,7 @@
         CL.h('div.container.hero-inner', null,
           // Massive Editorial Headline (Orchard Style)
           CL.h('div.hero-title-block', null,
-            CL.h('h1.hero-giant-title.reveal-up', { text: 'COSLAB ATELIER®' }),
+            CL.h('h1.hero-giant-title.reveal-up', { text: 'COSLAB ATELIER' }),
             CL.h('p.orchard-manifesto.reveal-up.stagger-1', {
               'data-i18n': 'home.manifesto1',
               text: t('home.manifesto1'),
@@ -72,7 +72,7 @@
       );
 
       // 2. Subtle Marquee Ticker (Orchard Style)
-      const marqueeText = 'COSLAB ATELIER® · BESPOKE LIPTINT · SEOUL LAB · 3D PACKAGING ENGINE · OEM / ODM · VELVET & GLASS · CGMP KOREA · ';
+      const marqueeText = 'COSLAB ATELIER · BESPOKE LIPTINT · SEOUL LAB · 3D PACKAGING ENGINE · OEM / ODM · VELVET & GLASS · CGMP KOREA · ';
       const marquee = CL.h('div.marquee-band', null,
         CL.h('div.marquee-track', null,
           CL.h('span.marquee-item', { text: marqueeText }),

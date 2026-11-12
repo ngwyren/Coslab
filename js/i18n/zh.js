@@ -16,8 +16,8 @@
       backToTop: '回到顶部 ↑',
     },
     home: {
-      eyebrow: 'SEOUL BESPOKE LIPTINT · OEM & ODM',
-      manifesto1: '首尔高端唇釉 OEM · ODM 工坊。72小时极速打样。',
+      eyebrow: 'SEOUL BESPOKE LIPTINT',
+      manifesto1: '高端韩系唇釉定制设计与打样。',
       launchStudio: 'Start Design →',
       exploreWorks: '探索作品 ↓',
       metric1Tag: 'OEM · ODM',

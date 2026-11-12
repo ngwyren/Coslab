@@ -16,8 +16,8 @@
       backToTop: 'VỀ ĐẦU TRANG ↑',
     },
     home: {
-      eyebrow: 'SEOUL BESPOKE LIPTINT · OEM & ODM ATELIER',
-      manifesto1: 'Xưởng gia công son tint chuẩn Hàn OEM · ODM. Thiết kế bespoke & đúc mẫu 72h.',
+      eyebrow: 'SEOUL BESPOKE LIPTINT',
+      manifesto1: 'Thiết kế & gia công son tint chuẩn Hàn.',
       launchStudio: 'Start Design →',
       exploreWorks: 'Khám phá ↓',
       metric1Tag: 'OEM · ODM',

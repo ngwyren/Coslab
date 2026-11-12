@@ -16,8 +16,8 @@
       backToTop: 'HAUT DE PAGE ↑',
     },
     home: {
-      eyebrow: 'SEOUL BESPOKE LIPTINT · OEM & ODM',
-      manifesto1: 'Atelier de lip tint coréen OEM · ODM sur mesure. Prototypage rapide 72h.',
+      eyebrow: 'SEOUL BESPOKE LIPTINT',
+      manifesto1: 'Conception & prototypage de lip tint coréen.',
       launchStudio: 'Start Design →',
       exploreWorks: 'Explorer ↓',
       metric1Tag: 'OEM · ODM',

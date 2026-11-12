@@ -16,8 +16,8 @@
       backToTop: 'إلى أعلى الصفحة ↑',
     },
     home: {
-      eyebrow: 'SEOUL BESPOKE LIPTINT · OEM & ODM',
-      manifesto1: 'استوديو تصنيع ملمع الشفاه الكوري OEM · ODM. نماذج أولية سريعة خلال 72 ساعة.',
+      eyebrow: 'SEOUL BESPOKE LIPTINT',
+      manifesto1: 'تصميم وتصنيع ملمع الشفاه الكوري الفاخر.',
       launchStudio: 'Start Design →',
       exploreWorks: 'استكشاف ↓',
       metric1Tag: 'OEM · ODM',

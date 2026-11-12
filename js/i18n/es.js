@@ -16,8 +16,8 @@
       backToTop: 'VOLVER ARRIBA ↑',
     },
     home: {
-      eyebrow: 'SEOUL BESPOKE LIPTINT · OEM & ODM',
-      manifesto1: 'Atelier de tintes labiales coreanos OEM · ODM. Prototipado rápido en 72h.',
+      eyebrow: 'SEOUL BESPOKE LIPTINT',
+      manifesto1: 'Diseño y prototipado de tintes labiales coreanos.',
       launchStudio: 'Start Design →',
       exploreWorks: 'Explorar ↓',
       metric1Tag: 'OEM · ODM',
