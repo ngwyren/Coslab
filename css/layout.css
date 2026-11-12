@@ -22,6 +22,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 20px;
+  position: relative;
 }
 
 /* Brand */
@@ -46,8 +47,12 @@
   letter-spacing: 0.14em;
 }
 
-/* Nav */
+/* Nav (Dead center floating pill) */
 .main-nav {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
   display: flex;
   align-items: center;
   gap: 2px;
@@ -55,6 +60,7 @@
   padding: 4px;
   border-radius: var(--r-pill);
   border: 1px solid var(--border);
+  z-index: 2;
 }
 .main-nav a {
   padding: 6px 14px;
@@ -64,6 +70,7 @@
   color: var(--muted);
   letter-spacing: 0.02em;
   transition: all 0.18s var(--ease);
+  white-space: nowrap;
 }
 .main-nav a:hover {
   color: var(--text);
@@ -79,6 +86,9 @@
   display: flex;
   align-items: center;
   gap: 8px;
+}
+.nav-toggle {
+  display: none;
 }
 
 /* Language switch (Minimal K-Beauty) */
@@ -297,6 +307,47 @@ body.app-mode { overflow: hidden; }
 
 /* Responsive */
 @media (max-width: 960px) {
+  .main-nav {
+    position: fixed;
+    inset-inline: 0;
+    top: var(--header-h);
+    left: 0;
+    transform: translateY(-8px);
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+    padding: 14px 18px 20px;
+    margin: 0;
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 0 0 16px 16px;
+    border-top: none;
+    border-inline: none;
+    border-bottom: 1px solid var(--border);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.22s var(--ease);
+    z-index: 100;
+  }
+  .main-nav.open {
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .main-nav a {
+    padding: 12px 16px;
+    font-size: 14px;
+    border-radius: 8px;
+  }
+  .nav-toggle {
+    display: inline-grid;
+  }
+  .header-cta {
+    display: none;
+  }
   .footer-grid {
     grid-template-columns: 1fr 1fr;
     gap: 40px;
