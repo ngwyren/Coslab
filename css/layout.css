@@ -34,6 +34,11 @@
   letter-spacing: 0.12em;
   font-size: 13px;
   text-transform: uppercase;
+  transition: opacity 0.3s var(--ease-in-out-framer), transform 0.3s var(--ease-framer);
+}
+.brand:hover {
+  opacity: 0.75;
+  transform: scale(0.985);
 }
 .brand-mark {
   width: 14px;
@@ -41,6 +46,10 @@
   border-radius: 50%;
   background: var(--text);
   position: relative;
+  transition: transform 0.4s var(--ease-spring);
+}
+.brand:hover .brand-mark {
+  transform: scale(1.15);
 }
 .brand-word {
   font-weight: 800;
@@ -61,6 +70,7 @@
   border-radius: var(--r-pill);
   border: 1px solid var(--border);
   z-index: 2;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
 }
 .main-nav a {
   padding: 6px 14px;
@@ -69,17 +79,23 @@
   font-weight: 500;
   color: var(--muted);
   letter-spacing: 0.02em;
-  transition: all 0.18s var(--ease);
+  transition: color 0.3s var(--ease-in-out-framer), background 0.3s var(--ease-framer), transform 0.3s var(--ease-framer), box-shadow 0.3s var(--ease-framer);
   white-space: nowrap;
 }
 .main-nav a:hover {
   color: var(--text);
+  transform: translateY(-1px);
+}
+.main-nav a:active {
+  transform: scale(0.96);
+  transition-duration: 0.12s;
 }
 .main-nav a.is-active {
   background: var(--surface);
   color: var(--text);
-  box-shadow: var(--shadow-xs);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   font-weight: 600;
+  transform: translateY(0);
 }
 
 .header-actions {

@@ -48,6 +48,7 @@
       if (route.anchor) setTimeout(() => { const el = document.getElementById(route.anchor); el && el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 60);
       else window.scrollTo({ top: 0 });
     }
+    setTimeout(setupFramerMotion, 40);
   }
 
   /* ---------- Language switcher (Minimalist K-Beauty Style) ---------- */
@@ -95,23 +96,56 @@
     I18N.setLang(CL.store.settings.lang || 'vi');
     window.addEventListener('hashchange', () => render());
 
-    // Scroll reveal observer (Framer motion style)
-    if ('IntersectionObserver' in window) {
-      const obs = new IntersectionObserver((entries) => {
-        entries.forEach((e) => {
-          if (e.isIntersecting) {
-            e.target.classList.add('reveal-up');
-            obs.unobserve(e.target);
+    // Framer Scroll Reveal & Luxury Motion Engine
+    let scrollObserver = null;
+    function setupFramerMotion() {
+      if (!('IntersectionObserver' in window)) return;
+      if (scrollObserver) {
+        scrollObserver.disconnect();
+      }
+
+      scrollObserver = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-revealed');
+            scrollObserver.unobserve(entry.target);
           }
         });
-      }, { threshold: 0.1 });
+      }, {
+        threshold: 0.08,
+        rootMargin: '0px 0px -40px 0px'
+      });
 
-      const observeAll = () => {
-        document.querySelectorAll('.motion-reveal').forEach((el) => obs.observe(el));
-      };
-      window.addEventListener('hashchange', () => setTimeout(observeAll, 60));
-      setTimeout(observeAll, 100);
+      // Stagger child elements in editorial grids and rows
+      const groupSelectors = ['.orchard-works-row', '.orchard-journal-grid', '.setup-grid', '.gallery-grid', '.orchard-table'];
+      groupSelectors.forEach((sel) => {
+        document.querySelectorAll(sel).forEach((group) => {
+          Array.from(group.children).forEach((child, idx) => {
+            child.classList.add(`stagger-${(idx % 5) + 1}`);
+          });
+        });
+      });
+
+      // Target cards, rows, sections, and headers
+      const targets = document.querySelectorAll(
+        '.orchard-work-card, .orchard-table-row, .orchard-journal-card, .orchard-connect-box, .section-meta-head, .card-choice, .gallery-card, .settings-section, .framer-reveal'
+      );
+
+      const winH = window.innerHeight;
+      targets.forEach((el) => {
+        el.classList.add('framer-reveal');
+        const rect = el.getBoundingClientRect();
+        if (rect.top < winH * 0.92 && rect.bottom > 0) {
+          el.classList.add('is-revealed');
+        } else {
+          scrollObserver.observe(el);
+        }
+      });
     }
+
+    window.setupFramerMotion = setupFramerMotion;
+    window.addEventListener('resize', () => setTimeout(setupFramerMotion, 100), { passive: true });
+
     if (!I18N.LANGS.length) return;
     buildLangSwitch();
     render();

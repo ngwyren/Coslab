@@ -84,27 +84,38 @@ button { cursor: pointer; background: none; border: 0; }
   margin-block: 40px;
 }
 
-/* ---------- PS5 UI Motion & Physics Engine ---------- */
-@keyframes ps5RevealUp {
+/* ---------- Framer Motion Engine & Easing System ---------- */
+@keyframes framerPageIn {
   0% {
     opacity: 0;
-    transform: translateY(22px) scale(0.985);
+    transform: translateY(20px);
   }
   100% {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: translateY(0);
   }
 }
 
-@keyframes ps5Fade {
+@keyframes framerRevealUp {
+  0% {
+    opacity: 0;
+    transform: translateY(32px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes framerFadeIn {
   0% { opacity: 0; }
   100% { opacity: 1; }
 }
 
-@keyframes ps5ScaleUp {
+@keyframes framerScaleUp {
   0% {
     opacity: 0;
-    transform: scale(0.96) translateY(10px);
+    transform: scale(0.96) translateY(14px);
   }
   100% {
     opacity: 1;
@@ -112,29 +123,79 @@ button { cursor: pointer; background: none; border: 0; }
   }
 }
 
-@keyframes ps5CardPulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.015); }
-  100% { transform: scale(1); }
+/* Page Mount Animation (Smooth Framer Crossfade & Glide) */
+.page {
+  animation: framerPageIn 0.65s var(--ease-framer) both;
+  will-change: opacity, transform;
 }
 
-@keyframes marquee {
-  0% { transform: translateX(0%); }
-  100% { transform: translateX(-50%); }
+/* Scroll-triggered Reveal Classes (Framer ease-in-out curve) */
+.framer-reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.85s var(--ease-in-out-framer),
+              transform 0.85s var(--ease-framer);
+  will-change: opacity, transform;
+}
+.framer-reveal.is-revealed {
+  opacity: 1;
+  transform: translateY(0);
 }
 
+.framer-fade {
+  opacity: 0;
+  transition: opacity 0.85s var(--ease-in-out-framer);
+  will-change: opacity;
+}
+.framer-fade.is-revealed {
+  opacity: 1;
+}
+
+.framer-scale {
+  opacity: 0;
+  transform: scale(0.96) translateY(16px);
+  transition: opacity 0.85s var(--ease-in-out-framer),
+              transform 0.85s var(--ease-framer);
+  will-change: opacity, transform;
+}
+.framer-scale.is-revealed {
+  opacity: 1;
+  transform: scale(1) translateY(0);
+}
+
+/* Immediate Hero & Display Reveals */
 .reveal-up {
-  animation: ps5RevealUp 0.65s var(--ease-ps5) forwards;
+  animation: framerRevealUp 0.75s var(--ease-framer) both;
+  will-change: opacity, transform;
 }
 
 .reveal-fade {
-  animation: ps5Fade 0.5s var(--ease-ps5) forwards;
+  animation: framerFadeIn 0.65s var(--ease-in-out-framer) both;
+  will-change: opacity;
 }
 
-.stagger-1 { animation-delay: 0.05s; }
-.stagger-2 { animation-delay: 0.10s; }
-.stagger-3 { animation-delay: 0.16s; }
-.stagger-4 { animation-delay: 0.22s; }
+/* Staggered Delay Hierarchy */
+.stagger-1 { transition-delay: 0.06s; animation-delay: 0.06s; }
+.stagger-2 { transition-delay: 0.12s; animation-delay: 0.12s; }
+.stagger-3 { transition-delay: 0.18s; animation-delay: 0.18s; }
+.stagger-4 { transition-delay: 0.24s; animation-delay: 0.24s; }
+.stagger-5 { transition-delay: 0.30s; animation-delay: 0.30s; }
+.stagger-6 { transition-delay: 0.36s; animation-delay: 0.36s; }
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .page,
+  .framer-reveal,
+  .framer-fade,
+  .framer-scale,
+  .reveal-up,
+  .reveal-fade {
+    animation: none !important;
+    transition: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
 
 /* Continuous Marquee Ticker (Orchard / Laconic style) */
 .marquee-band {

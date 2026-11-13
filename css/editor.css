@@ -118,7 +118,11 @@
   border: none;
   background: transparent;
   cursor: pointer;
-  transition: all 0.15s var(--ease);
+  transition: all 0.25s var(--ease-framer);
+}
+.editor-tab-btn:active {
+  transform: scale(0.96);
+  transition-duration: 0.1s;
 }
 .editor-tab-btn svg {
   width: 14px;
@@ -144,6 +148,9 @@
   align-content: start;
   scrollbar-width: thin;
   scrollbar-color: rgba(0, 0, 0, 0.12) transparent;
+}
+.editor-tab-content > * {
+  animation: framerFadeIn 0.35s var(--ease-in-out-framer) both;
 }
 .editor-tab-content::-webkit-scrollbar {
   width: 4px;
@@ -199,8 +206,12 @@
   background: transparent;
   border: none;
   cursor: pointer;
-  transition: all 0.12s ease;
+  transition: all 0.22s var(--ease-framer);
   white-space: nowrap;
+}
+.part-tab-btn:active {
+  transform: scale(0.96);
+  transition-duration: 0.1s;
 }
 .part-tab-btn:hover {
   color: var(--text);
@@ -219,6 +230,10 @@
   border: 1px solid rgba(0, 0, 0, 0.2);
   flex-shrink: 0;
   box-shadow: inset 0 0 1px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s var(--ease-spring);
+}
+.part-tab-btn:hover .part-tab-dot {
+  transform: scale(1.15);
 }
 
 /* 4-Item Compact Finish Row */
@@ -241,8 +256,12 @@
   font-size: 10.5px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.12s ease;
+  transition: all 0.22s var(--ease-framer);
   white-space: nowrap;
+}
+.finish-card-btn:active {
+  transform: scale(0.96);
+  transition-duration: 0.1s;
 }
 .finish-card-btn:hover {
   border-color: var(--text);
