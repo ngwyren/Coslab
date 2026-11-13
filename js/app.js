@@ -29,6 +29,57 @@
 
   CL.go = (hash) => { if (location.hash === hash) render(); else location.hash = hash; };
 
+  // Framer Scroll Reveal & Luxury Motion Engine
+  let scrollObserver = null;
+  function setupFramerMotion() {
+    try {
+      if (!('IntersectionObserver' in window)) return;
+      if (scrollObserver) {
+        scrollObserver.disconnect();
+      }
+
+      scrollObserver = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-revealed');
+            scrollObserver.unobserve(entry.target);
+          }
+        });
+      }, {
+        threshold: 0.08,
+        rootMargin: '0px 0px -40px 0px'
+      });
+
+      // Stagger child elements in editorial grids and rows
+      const groupSelectors = ['.orchard-works-row', '.orchard-journal-grid', '.orchard-table'];
+      groupSelectors.forEach((sel) => {
+        document.querySelectorAll(sel).forEach((group) => {
+          Array.from(group.children).forEach((child, idx) => {
+            child.classList.add(`stagger-${(idx % 5) + 1}`);
+          });
+        });
+      });
+
+      // Target home editorial cards and rows for scroll reveal
+      const targets = document.querySelectorAll(
+        '.orchard-work-card, .orchard-table-row, .orchard-journal-card, .orchard-connect-box, .framer-reveal'
+      );
+
+      const winH = window.innerHeight;
+      targets.forEach((el) => {
+        el.classList.add('framer-reveal');
+        const rect = el.getBoundingClientRect();
+        if (rect.top < winH * 0.92 && rect.bottom > 0) {
+          el.classList.add('is-revealed');
+        } else {
+          scrollObserver.observe(el);
+        }
+      });
+    } catch (err) {
+      console.warn('Framer motion init:', err);
+    }
+  }
+
   function render(opts = {}) {
     const r = parse();
     const route = ROUTES[r.key] || ROUTES[''];
@@ -95,55 +146,6 @@
     });
     I18N.setLang(CL.store.settings.lang || 'vi');
     window.addEventListener('hashchange', () => render());
-
-    // Framer Scroll Reveal & Luxury Motion Engine
-    let scrollObserver = null;
-    function setupFramerMotion() {
-      if (!('IntersectionObserver' in window)) return;
-      if (scrollObserver) {
-        scrollObserver.disconnect();
-      }
-
-      scrollObserver = new IntersectionObserver((entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('is-revealed');
-            scrollObserver.unobserve(entry.target);
-          }
-        });
-      }, {
-        threshold: 0.08,
-        rootMargin: '0px 0px -40px 0px'
-      });
-
-      // Stagger child elements in editorial grids and rows
-      const groupSelectors = ['.orchard-works-row', '.orchard-journal-grid', '.setup-grid', '.gallery-grid', '.orchard-table'];
-      groupSelectors.forEach((sel) => {
-        document.querySelectorAll(sel).forEach((group) => {
-          Array.from(group.children).forEach((child, idx) => {
-            child.classList.add(`stagger-${(idx % 5) + 1}`);
-          });
-        });
-      });
-
-      // Target cards, rows, sections, and headers
-      const targets = document.querySelectorAll(
-        '.orchard-work-card, .orchard-table-row, .orchard-journal-card, .orchard-connect-box, .section-meta-head, .card-choice, .gallery-card, .settings-section, .framer-reveal'
-      );
-
-      const winH = window.innerHeight;
-      targets.forEach((el) => {
-        el.classList.add('framer-reveal');
-        const rect = el.getBoundingClientRect();
-        if (rect.top < winH * 0.92 && rect.bottom > 0) {
-          el.classList.add('is-revealed');
-        } else {
-          scrollObserver.observe(el);
-        }
-      });
-    }
-
-    window.setupFramerMotion = setupFramerMotion;
     window.addEventListener('resize', () => setTimeout(setupFramerMotion, 100), { passive: true });
 
     if (!I18N.LANGS.length) return;

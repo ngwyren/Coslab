@@ -125,7 +125,7 @@ button { cursor: pointer; background: none; border: 0; }
 
 /* Page Mount Animation (Smooth Framer Crossfade & Glide) */
 .page {
-  animation: framerPageIn 0.65s var(--ease-framer) both;
+  animation: framerPageIn 0.45s var(--ease-framer) both;
   will-change: opacity, transform;
 }
 
