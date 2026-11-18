@@ -1,7 +1,6 @@
 /* ==========================================================
-   COSLAB — Home Page (Minimalist Swiss / Bento Grid Architecture)
-   High-contrast editorial layout, optimized WebP media, concise specs,
-   zero prose clutter, and reactive multi-language switching.
+   COSLAB — Home Page (Minimalist Editorial + Full-Bleed Visual)
+   Massive edge-to-edge campaign visual, 3x2 lab grid, zero clutter.
    ========================================================== */
 (function (CL) {
   CL.pages = CL.pages || {};
@@ -41,91 +40,21 @@
         )
       );
 
-      // 2. Silhouettes & Finishes (12-Column Asymmetric Bento Grid)
-      const worksData = [
-        {
-          span: 'bento-span-7',
-          tpl: 'dewy-glass',
-          model: 'dewy-crystal',
-          img: 'https://images.unsplash.com/photo-1586495777744-4413f21062fa?auto=format&fit=crop&fm=webp&w=900&q=75',
-          badge: 'home.work1Badge',
-          title: 'home.work1Title',
-          desc: 'home.work1Desc',
-          eager: true,
+      // 2. Massive Full-Bleed (Tràn Viền) Editorial Campaign Visual
+      const campaignSection = CL.h('section.fullbleed-campaign-section#worksSection', null,
+        CL.h('a.fullbleed-campaign-frame', {
+          href: '#/design',
+          'aria-label': 'COSLAB Bespoke Liptint Campaign',
         },
-        {
-          span: 'bento-span-5',
-          tpl: 'velvet-rose',
-          model: 'velvet-round',
-          img: 'https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&fm=webp&w=700&q=75',
-          badge: 'home.work2Badge',
-          title: 'home.work2Title',
-          desc: 'home.work2Desc',
-          eager: true,
-        },
-        {
-          span: 'bento-span-4',
-          tpl: 'seoul-noir',
-          model: 'square-monolith',
-          img: 'https://images.unsplash.com/photo-1512496015851-a90fb38ba796?auto=format&fit=crop&fm=webp&w=600&q=75',
-          badge: 'home.work3Badge',
-          title: 'home.work3Title',
-          desc: 'home.work3Desc',
-        },
-        {
-          span: 'bento-span-4',
-          tpl: 'chrome-minimal',
-          model: 'slim-atelier',
-          img: 'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&fm=webp&w=600&q=75',
-          badge: 'home.work4Badge',
-          title: 'home.work4Title',
-          desc: 'home.work4Desc',
-        },
-        {
-          span: 'bento-span-4',
-          tpl: 'porcelain-ivory',
-          model: 'velvet-round',
-          img: 'https://images.unsplash.com/photo-1571781926291-c477ebfd024b?auto=format&fit=crop&fm=webp&w=600&q=75',
-          badge: 'home.work5Badge',
-          title: 'home.work5Title',
-          desc: 'home.work5Desc',
-        },
-      ];
-
-      const worksSection = CL.h('section.orchard-works-section#worksSection', null,
-        CL.h('div.container', null,
-          CL.h('div.section-meta-head', null,
-            CL.h('h2', { 'data-i18n': 'home.worksHeading', text: t('home.worksHeading') }),
-            CL.h('span.mono.muted', { 'data-i18n': 'home.worksSectionNum', text: t('home.worksSectionNum') })
-          ),
-
-          CL.h('div.orchard-bento-grid', null,
-            worksData.map((w) =>
-              CL.h(`div.orchard-work-card.${w.span}`, {
-                onclick: () => {
-                  const d = CL.templates.createDesign(w.tpl, w.model);
-                  CL.store.saveDraft(d);
-                  CL.go('#/editor');
-                },
-              },
-                CL.h('img.orchard-work-img', {
-                  src: w.img,
-                  alt: t(w.title),
-                  loading: w.eager ? 'eager' : 'lazy',
-                  decoding: 'async',
-                }),
-                CL.h('div.orchard-work-overlay', null,
-                  CL.h('span.orchard-work-badge', { 'data-i18n': w.badge, text: t(w.badge) }),
-                  CL.h('div.orchard-work-info', null,
-                    CL.h('div', null,
-                      CL.h('h3.orchard-work-title', { 'data-i18n': w.title, text: t(w.title) }),
-                      CL.h('p.orchard-work-desc', { 'data-i18n': w.desc, text: t(w.desc) })
-                    ),
-                    CL.h('span.orchard-work-icon-btn', { html: CL.icon('arrowRight') })
-                  )
-                )
-              )
-            )
+          CL.h('img.fullbleed-campaign-img', {
+            src: 'assets/campaign-hero.jpg',
+            alt: 'COSLAB Atelier Bespoke Lip Tint Collection',
+            loading: 'eager',
+            decoding: 'async',
+            fetchpriority: 'high',
+          }),
+          CL.h('div.fullbleed-campaign-cta', null,
+            CL.h('span', { 'data-i18n': 'home.launchStudio', text: t('home.launchStudio') })
           )
         )
       );
@@ -217,7 +146,7 @@
         )
       );
 
-      root.append(hero, worksSection, standardsSection, journalSection, connectSection);
+      root.append(hero, campaignSection, standardsSection, journalSection, connectSection);
       container.appendChild(root);
 
       return () => {};

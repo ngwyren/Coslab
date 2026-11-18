@@ -1,10 +1,9 @@
 /* ==========================================================
    COSLAB — Liptint Models (Korean K-Beauty Packaging Silhouettes)
-   Rendered as EXACTLY 1 COHESIVE LIPTINT TUBE (Chỉ 1 cây son liptint).
-   Components:
-     - cap:  Up Liptint (Nắp trên của cây son)
-     - base: Button / Bottom Liptint (Thân dưới chứa chất son tint)
-     - ring: Khớp nối / viền trang trí phân tách nắp và thân
+   Rendered as 1 cohesive liptint tube:
+     - cap:  Up Liptint (Nắp trên)
+     - base: Button Liptint (Thân dưới)
+   No artificial middle ring; includes strict Safe Zone bounds.
    ========================================================== */
 (function (CL) {
   const SCENE = { w: 460, h: 640, cx: 230, ground: 590 };
@@ -15,12 +14,11 @@
       silhouette: 'round',
       nameKey: 'models.velvetRound',
       descKey: 'models.velvetRoundDesc',
-      w: 120,
-      capH: 220,
-      baseH: 270,
-      ringH: 4,
-      r: 12,
-      style: 'velvet', // soft frosted velvet touch (like 3CE / Romand Velvet)
+      w: 118,
+      capH: 215,
+      baseH: 275,
+      r: 14,
+      style: 'velvet',
     },
     {
       id: 'dewy-crystal',
@@ -30,9 +28,8 @@
       w: 114,
       capH: 200,
       baseH: 290,
-      ringH: 5,
-      r: 6,
-      style: 'glass', // clear acrylic double-wall water tint (like Amuse / Romand Glasting)
+      r: 8,
+      style: 'glass',
     },
     {
       id: 'slim-atelier',
@@ -40,35 +37,32 @@
       nameKey: 'models.slimAtelier',
       descKey: 'models.slimAtelierDesc',
       w: 86,
-      capH: 240,
-      baseH: 290,
-      ringH: 4,
-      r: 8,
-      style: 'chrome', // architectural slender tube (like Hera Sensual / Tamburins)
+      capH: 235,
+      baseH: 295,
+      r: 10,
+      style: 'chrome',
     },
     {
       id: 'square-monolith',
       silhouette: 'square',
       nameKey: 'models.squareMonolith',
       descKey: 'models.squareMonolithDesc',
-      w: 122,
+      w: 120,
       capH: 210,
-      baseH: 270,
-      ringH: 4,
-      r: 4,
-      style: 'minimal', // clean modern square packaging
+      baseH: 275,
+      r: 5,
+      style: 'minimal',
     },
     {
       id: 'chubby-pot',
       silhouette: 'round',
       nameKey: 'models.chubbyPot',
       descKey: 'models.chubbyPotDesc',
-      w: 138,
-      capH: 180,
-      baseH: 220,
-      ringH: 5,
+      w: 136,
+      capH: 175,
+      baseH: 235,
       r: 22,
-      style: 'soft', // chubby sensory tint (like Peripera / Fwee)
+      style: 'soft',
     },
   ];
 
@@ -76,14 +70,26 @@
     return MODELS.find((m) => m.id === id) || MODELS[0];
   }
 
-  /**
-   * Layout for exactly ONE assembled liptint tube.
-   * Both Up Liptint (cap) and Button Liptint (base) sit on the same vertical axis (cx).
-   */
+  function makeSafeZone(rect) {
+    const padX = Math.max(14, Math.round(rect.w * 0.16));
+    const padY = Math.max(18, Math.round(rect.h * 0.14));
+    return {
+      x: rect.x + padX,
+      y: rect.y + padY,
+      w: rect.w - padX * 2,
+      h: rect.h - padY * 2,
+      minX: padX / rect.w,
+      maxX: 1 - padX / rect.w,
+      minY: padY / rect.h,
+      maxY: 1 - padY / rect.h,
+    };
+  }
+
   function layout(modelId) {
     const m = getModel(modelId);
     const cx = SCENE.cx;
-    const totalH = m.capH + m.ringH + m.baseH;
+    const seam = 1.5;
+    const totalH = m.capH + seam + m.baseH;
     const topY = SCENE.ground - totalH;
 
     const cap = {
@@ -93,29 +99,30 @@
       h: m.capH,
       r: m.r,
     };
+    cap.safe = makeSafeZone(cap);
 
     const ring = {
-      x: cx - (m.w - 4) / 2,
+      x: cx - m.w / 2,
       y: cap.y + cap.h,
-      w: m.w - 4,
-      h: m.ringH,
-      r: 1,
+      w: m.w,
+      h: 0,
+      r: 0,
     };
 
     const base = {
       x: cx - m.w / 2,
-      y: ring.y + ring.h,
+      y: cap.y + cap.h + seam,
       w: m.w,
       h: m.baseH,
       r: m.r,
     };
+    base.safe = makeSafeZone(base);
 
-    // Tint window / gradient reservoir inside base
     const windowRect = {
       x: base.x + 12,
-      y: base.y + 18,
+      y: base.y + 14,
       w: base.w - 24,
-      h: base.h - 36,
+      h: base.h - 28,
       r: Math.max(m.r - 4, 3),
     };
 
@@ -127,7 +134,7 @@
     MODELS,
     getModel,
     layout,
-    PARTS: ['cap', 'base', 'ring'],
+    PARTS: ['cap', 'base'],
     ART_PARTS: ['cap', 'base'],
   };
 })(window.CL);

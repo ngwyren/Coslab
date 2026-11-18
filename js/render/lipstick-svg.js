@@ -1,19 +1,17 @@
 /* ==========================================================
-   COSLAB — Liptint SVG Renderer
-   Renders EXACTLY 1 ASSEMBLED LIPTINT TUBE (Chỉ 1 cây son liptint duy nhất).
-   Up Liptint (Cap) on top, divider ring in middle, Button Liptint (Base) at bottom.
-   Korean K-Beauty aesthetic (velvet matte, crystal acrylic, dewy water tint, chrome).
+   COSLAB — Liptint SVG Renderer (Clean 2-Part Tube + Safe Zone)
+   Up Liptint (Cap) on top, Button Liptint (Base) at bottom.
+   Zero protruding ring/lines; strict Safe Zone clipping & auto-fit text.
    ========================================================== */
 (function (CL) {
   const FONT_FALLBACK = "'Noto Sans KR','Noto Serif KR','Noto Sans SC','Noto Sans JP','Noto Naskh Arabic',sans-serif";
 
-  /* Shading overlays (cylindrical highlight & shadow) per finish & silhouette */
   const SHADES = {
     round: {
-      matte: [[0, '#000', .24], [.18, '#fff', .06], [.36, '#fff', .18], [.6, '#000', 0], [.88, '#000', .12], [1, '#000', .28]],
-      satin: [[0, '#000', .28], [.16, '#fff', .08], [.34, '#fff', .32], [.48, '#fff', .04], [.82, '#000', .10], [1, '#000', .32]],
-      gloss: [[0, '#000', .35], [.14, '#000', 0], [.26, '#fff', .68], [.33, '#fff', .15], [.6, '#fff', 0], [.86, '#000', .12], [.93, '#fff', .16], [1, '#000', .40]],
-      metallic: [[0, '#000', .45], [.12, '#fff', .6], [.24, '#000', .1], [.38, '#fff', .75], [.54, '#000', .15], [.76, '#fff', .35], [.9, '#000', .18], [1, '#000', .48]],
+      matte: [[0, '#000', .22], [.18, '#fff', .06], [.36, '#fff', .16], [.6, '#000', 0], [.88, '#000', .10], [1, '#000', .25]],
+      satin: [[0, '#000', .26], [.16, '#fff', .08], [.34, '#fff', .30], [.48, '#fff', .04], [.82, '#000', .10], [1, '#000', .30]],
+      gloss: [[0, '#000', .32], [.14, '#000', 0], [.26, '#fff', .62], [.33, '#fff', .14], [.6, '#fff', 0], [.86, '#000', .12], [.93, '#fff', .14], [1, '#000', .36]],
+      metallic: [[0, '#000', .42], [.12, '#fff', .58], [.24, '#000', .1], [.38, '#fff', .72], [.54, '#000', .14], [.76, '#fff', .32], [.9, '#000', .16], [1, '#000', .44]],
     },
     square: {
       matte: [[0, '#000', .12], [.06, '#000', .02], [.5, '#fff', .08], [.94, '#000', .04], [1, '#000', .18]],
@@ -22,10 +20,10 @@
       metallic: [[0, '#000', .28], [.06, '#fff', .55], [.3, '#000', .06], [.55, '#fff', .5], [.8, '#000', .08], [1, '#000', .30]],
     },
     crystal: {
-      matte: [[0, '#000', .18], [.2, '#fff', .2], [.4, '#fff', .45], [.85, '#000', .1], [1, '#000', .25]],
-      satin: [[0, '#000', .22], [.2, '#fff', .3], [.4, '#fff', .55], [.85, '#000', .12], [1, '#000', .3]],
-      gloss: [[0, '#000', .25], [.15, '#fff', .75], [.3, '#fff', .2], [.65, '#fff', .05], [.8, '#fff', .4], [1, '#000', .35]],
-      metallic: [[0, '#000', .4], [.15, '#fff', .75], [.38, '#fff', .85], [.75, '#fff', .4], [1, '#000', .45]],
+      matte: [[0, '#000', .18], [.2, '#fff', .2], [.4, '#fff', .42], [.85, '#000', .1], [1, '#000', .24]],
+      satin: [[0, '#000', .20], [.2, '#fff', .28], [.4, '#fff', .52], [.85, '#000', .12], [1, '#000', .28]],
+      gloss: [[0, '#000', .24], [.15, '#fff', .70], [.3, '#fff', .18], [.65, '#fff', .05], [.8, '#fff', .36], [1, '#000', .32]],
+      metallic: [[0, '#000', .38], [.15, '#fff', .72], [.38, '#fff', .82], [.75, '#fff', .38], [1, '#000', .42]],
     },
   };
 
@@ -52,6 +50,24 @@
       def: `<linearGradient id="${id}" x1="${v.x1}" y1="${v.y1}" x2="${v.x2}" y2="${v.y2}">${stops}</linearGradient>`,
       paint: `url(#${id})`,
     };
+  }
+
+  /* Cap Path: Top corners rounded (r), bottom corners crisp seam (2px) */
+  function capShape(r, paint, extra = '') {
+    const x = r.x, y = r.y, w = r.w, h = r.h;
+    const rt = Math.min(r.r || 8, w / 2, h / 2);
+    const rb = 2;
+    const d = `M${x + rt},${y} H${x + w - rt} A${rt},${rt} 0 0 1 ${x + w},${y + rt} V${y + h - rb} A${rb},${rb} 0 0 1 ${x + w - rb},${y + h} H${x + rb} A${rb},${rb} 0 0 1 ${x},${y + h - rb} V${y + rt} A${rt},${rt} 0 0 1 ${x + rt},${y} Z`;
+    return `<path d="${d}" fill="${paint}"${extra}/>`;
+  }
+
+  /* Base Path: Top corners crisp seam (2px), bottom corners rounded (r) */
+  function baseShape(r, paint, extra = '') {
+    const x = r.x, y = r.y, w = r.w, h = r.h;
+    const rt = 2;
+    const rb = Math.min(r.r || 8, w / 2, h / 2);
+    const d = `M${x + rt},${y} H${x + w - rt} A${rt},${rt} 0 0 1 ${x + w},${y + rt} V${y + h - rb} A${rb},${rb} 0 0 1 ${x + w - rb},${y + h} H${x + rb} A${rb},${rb} 0 0 1 ${x},${y + h - rb} V${y + rt} A${rt},${rt} 0 0 1 ${x + rt},${y} Z`;
+    return `<path d="${d}" fill="${paint}"${extra}/>`;
   }
 
   /* Shape markup */
@@ -82,18 +98,37 @@
     }
   }
 
-  function textMarkup(tx) {
+  /* Auto-fit text inside Safe Zone so it never overflows */
+  function textMarkup(tx, rect, rotation = 0) {
     const lines = String(tx.content || '').split('\n');
-    const lh = (tx.lineHeight || 1.2) * tx.size;
+    const maxChars = Math.max(1, ...lines.map((l) => l.length));
+    const safe = rect && rect.safe ? rect.safe : { w: (rect?.w || 110) * 0.72, h: (rect?.h || 220) * 0.74 };
+    const isVert = Math.abs(Math.round(rotation)) % 180 === 90;
+    const maxSpan = (isVert ? safe.h : safe.w) - 8;
+
+    let size = tx.size || 13;
+    let spacing = tx.spacing || 0;
+    const estWidth = maxChars * (size * 0.64) + Math.max(0, maxChars - 1) * spacing;
+    if (estWidth > maxSpan && estWidth > 0) {
+      const ratio = maxSpan / estWidth;
+      size = Math.max(7, CL.round(size * ratio, 1));
+      spacing = CL.round(spacing * ratio, 1);
+    }
+
+    const lh = (tx.lineHeight || 1.2) * size;
     const y0 = -((lines.length - 1) * lh) / 2;
     const anchor = tx.align === 'left' ? 'start' : tx.align === 'right' ? 'end' : 'middle';
     const fam = `'${tx.font}',${FONT_FALLBACK}`;
     const spans = lines.map((ln, i) => `<tspan x="0" y="${CL.round(y0 + i * lh, 2)}">${CL.esc(ln) || ' '}</tspan>`).join('');
-    return `<text text-anchor="${anchor}" dominant-baseline="central" font-family="${fam}" font-size="${tx.size}" font-weight="${tx.weight || 400}" font-style="${tx.italic ? 'italic' : 'normal'}" letter-spacing="${tx.spacing || 0}" fill="${tx.color || '#171615'}" xml:space="preserve">${spans}</text>`;
+    return `<text text-anchor="${anchor}" dominant-baseline="central" font-family="${fam}" font-size="${size}" font-weight="${tx.weight || 400}" font-style="${tx.italic ? 'italic' : 'normal'}" letter-spacing="${spacing}" fill="${tx.color || '#171615'}" xml:space="preserve">${spans}</text>`;
   }
 
+  /* Clamp layer center inside Safe Zone */
   function layerCenter(layer, rect) {
-    return { x: rect.x + layer.x * rect.w, y: rect.y + layer.y * rect.h };
+    const safe = rect.safe || { minX: 0.16, maxX: 0.84, minY: 0.14, maxY: 0.86 };
+    const cx = CL.clamp(layer.x ?? 0.5, safe.minX, safe.maxX);
+    const cy = CL.clamp(layer.y ?? 0.5, safe.minY, safe.maxY);
+    return { x: rect.x + cx * rect.w, y: rect.y + cy * rect.h };
   }
 
   function layerTransform(layer, rect) {
@@ -105,10 +140,14 @@
   function layerMarkup(layer, rect, interactive) {
     if (!layer.visible) return '';
     let inner = '';
-    if (layer.type === 'text') inner = textMarkup(layer.text);
+    if (layer.type === 'text') inner = textMarkup(layer.text, rect, layer.rotation);
     else if (layer.type === 'image') {
       const im = layer.image;
-      inner = `<image href="${im.src}" xlink:href="${im.src}" x="${-im.w / 2}" y="${-im.h / 2}" width="${im.w}" height="${im.h}" preserveAspectRatio="none"/>`;
+      const safe = rect.safe || { w: rect.w * 0.7, h: rect.h * 0.7 };
+      const maxW = safe.w - 4, maxH = safe.h - 4;
+      const scale = Math.min(1, maxW / (im.w || 40), maxH / (im.h || 40));
+      const w = CL.round(im.w * scale, 1), h = CL.round(im.h * scale, 1);
+      inner = `<image href="${im.src}" xlink:href="${im.src}" x="${-w / 2}" y="${-h / 2}" width="${w}" height="${h}" preserveAspectRatio="xMidYMid meet"/>`;
     } else if (layer.type === 'shape') {
       inner = shapeMarkup(layer.shape);
     }
@@ -116,17 +155,6 @@
     return `<g transform="${layerTransform(layer, rect)}" opacity="${layer.opacity ?? 1}"${data}>${inner}</g>`;
   }
 
-  function roundRect(r, paint, extra = '') {
-    return `<rect x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" rx="${r.r || 0}" fill="${paint}"${extra}/>`;
-  }
-
-  /**
-   * Render EXACTLY 1 LIPTINT TUBE
-   * Options:
-   *  - interactive: enables data-part and data-layer hooks for canvas interaction
-   *  - shading: realistic light reflection overlay
-   *  - shadow: soft ground shadow
-   */
   function renderSVG(design, opts = {}) {
     const u = opts.uid || CL.uid('lt');
     const L = CL.models.layout(design.model);
@@ -136,16 +164,11 @@
     const inter = !!opts.interactive;
     const defs = [];
 
-    // Fills for Up Liptint (cap), Button Liptint (base), ring
     const fCap = fillPaint(P.cap && P.cap.fill, `${u}-f-cap`);
     const fBase = fillPaint(P.base && P.base.fill, `${u}-f-base`);
-    const fRing = fillPaint((P.ring && P.ring.fill) || { type: 'solid', color: '#dedad2' }, `${u}-f-ring`);
-
     if (fCap.def) defs.push(fCap.def);
     if (fBase.def) defs.push(fBase.def);
-    if (fRing.def) defs.push(fRing.def);
 
-    // Shading gradients
     const shadeKey = (sil === 'square' ? 'square' : sil === 'crystal' ? 'crystal' : 'round');
     const shadeCapId = `${u}-sh-cap`;
     const shadeBaseId = `${u}-sh-base`;
@@ -153,16 +176,16 @@
     defs.push(`<linearGradient id="${shadeCapId}" x1="0" y1="0" x2="1" y2="0">${gradStops((SHADES[shadeKey] || SHADES.round)[P.cap?.finish || 'gloss'])}</linearGradient>`);
     defs.push(`<linearGradient id="${shadeBaseId}" x1="0" y1="0" x2="1" y2="0">${gradStops((SHADES[shadeKey] || SHADES.round)[P.base?.finish || 'matte'])}</linearGradient>`);
 
-    // Vertical rim gradients
-    defs.push(`<linearGradient id="${u}-v-top" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".3"/><stop offset=".08" stop-color="#fff" stop-opacity="0"/><stop offset=".92" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".22"/></linearGradient>`);
-    defs.push(`<linearGradient id="${u}-v-bot" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#000" stop-opacity=".18"/><stop offset=".08" stop-color="#000" stop-opacity="0"/><stop offset=".9" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".32"/></linearGradient>`);
+    defs.push(`<linearGradient id="${u}-v-top" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".26"/><stop offset=".08" stop-color="#fff" stop-opacity="0"/><stop offset=".94" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".18"/></linearGradient>`);
+    defs.push(`<linearGradient id="${u}-v-bot" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#000" stop-opacity=".14"/><stop offset=".06" stop-color="#000" stop-opacity="0"/><stop offset=".9" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".26"/></linearGradient>`);
 
-    // Ground shadow
-    defs.push(`<radialGradient id="${u}-shadow"><stop offset="0" stop-color="#141312" stop-opacity=".25"/><stop offset=".4" stop-color="#141312" stop-opacity=".10"/><stop offset="1" stop-color="#141312" stop-opacity="0"/></radialGradient>`);
+    defs.push(`<radialGradient id="${u}-shadow"><stop offset="0" stop-color="#141312" stop-opacity=".22"/><stop offset=".45" stop-color="#141312" stop-opacity=".08"/><stop offset="1" stop-color="#141312" stop-opacity="0"/></radialGradient>`);
 
-    // Clip paths for 1 single assembled tube
-    defs.push(`<clipPath id="${u}-clip-cap">${roundRect(L.cap, '#000')}</clipPath>`);
-    defs.push(`<clipPath id="${u}-clip-base">${roundRect(L.base, '#000')}</clipPath>`);
+    // Exact shape clip paths + Safe Zone clip paths
+    defs.push(`<clipPath id="${u}-clip-cap">${capShape(L.cap, '#000')}</clipPath>`);
+    defs.push(`<clipPath id="${u}-clip-base">${baseShape(L.base, '#000')}</clipPath>`);
+    defs.push(`<clipPath id="${u}-safe-cap"><rect x="${L.cap.safe.x}" y="${L.cap.safe.y}" width="${L.cap.safe.w}" height="${L.cap.safe.h}" rx="4"/></clipPath>`);
+    defs.push(`<clipPath id="${u}-safe-base"><rect x="${L.base.safe.x}" y="${L.base.safe.y}" width="${L.base.safe.w}" height="${L.base.safe.h}" rx="4"/></clipPath>`);
 
     const layersOf = (part) => (design.layers || []).filter((l) => l.part === part).map((l) => layerMarkup(l, L[part], inter)).join('');
 
@@ -171,64 +194,51 @@
       body += `<rect x="-1000" y="-1000" width="3000" height="3000" fill="${opts.background}"/>`;
     }
 
-    // 1. Ground Shadow (Under exactly 1 liptint tube)
     if (opts.shadow !== false) {
-      body += `<ellipse cx="${L.scene.cx}" cy="${L.scene.ground + 4}" rx="${L.base.w * 0.72}" ry="11" fill="url(#${u}-shadow)"/>`;
+      body += `<ellipse cx="${L.scene.cx}" cy="${L.scene.ground + 5}" rx="${L.base.w * 0.68}" ry="10" fill="url(#${u}-shadow)"/>`;
     }
 
-    // 2. Button Liptint (Base / Body) - Thân son tint dưới
+    // 1. Base (Thân son)
     const baseAttr = inter ? ` data-part="base" class="cl-part"` : '';
-    body += `<g${baseAttr}>`;
-    body += roundRect(L.base, fBase.paint);
-    // Acrylic / Glass tint reservoir indicator if dewy style
+    body += `<g${baseAttr} clip-path="url(#${u}-clip-base)">`;
+    body += baseShape(L.base, fBase.paint);
     if (L.model.style === 'glass') {
       const tintCol = (P.tint && P.tint.color) || '#b83b48';
       body += `<rect x="${L.windowRect.x}" y="${L.windowRect.y}" width="${L.windowRect.w}" height="${L.windowRect.h}" rx="${L.windowRect.r}" fill="${tintCol}" opacity="0.88"/>`;
-      body += `<rect x="${L.windowRect.x}" y="${L.windowRect.y}" width="${L.windowRect.w}" height="${L.windowRect.h}" rx="${L.windowRect.r}" fill="url(#${shadeBaseId})" opacity="0.5" pointer-events="none"/>`;
     }
     body += `</g>`;
 
-    // Artwork on Base (Button Liptint)
-    body += `<g clip-path="url(#${u}-clip-base)"${inter ? ' data-layers="base"' : ''}>${layersOf('base')}</g>`;
+    // Artwork on Base (Strictly inside Safe Zone)
+    body += `<g clip-path="url(#${u}-safe-base)"${inter ? ' data-layers="base"' : ''}>${layersOf('base')}</g>`;
 
-    // Base Shading overlays
     if (shading) {
-      body += `<g pointer-events="none">`;
-      body += roundRect(L.base, `url(#${shadeBaseId})`);
-      body += roundRect(L.base, `url(#${u}-v-bot)`);
-      // subtle bevel lines
-      body += `<rect x="${L.base.x}" y="${L.base.y + L.base.h - 6}" width="${L.base.w}" height="1.5" fill="#000" opacity=".18"/>`;
+      body += `<g pointer-events="none" clip-path="url(#${u}-clip-base)">`;
+      body += baseShape(L.base, `url(#${shadeBaseId})`);
+      body += baseShape(L.base, `url(#${u}-v-bot)`);
       body += `</g>`;
     }
 
-    // 3. Divider Ring / Collar (Khớp nối giữa Up & Button Liptint)
-    body += `<g${inter ? ' data-part="ring" class="cl-part"' : ''}>`;
-    body += roundRect(L.ring, fRing.paint);
-    if (shading) {
-      body += roundRect(L.ring, `url(#${shadeCapId})`, ' pointer-events="none"');
-      body += `<rect x="${L.ring.x}" y="${L.ring.y}" width="${L.ring.w}" height="1" fill="#000" opacity=".25" pointer-events="none"/>`;
-      body += `<rect x="${L.ring.x}" y="${L.ring.y + L.ring.h - 1}" width="${L.ring.w}" height="1" fill="#fff" opacity=".3" pointer-events="none"/>`;
-    }
-    body += `</g>`;
-
-    // 4. Up Liptint (Cap) - Nắp son tint trên
+    // 2. Cap (Nắp son)
     const capAttr = inter ? ` data-part="cap" class="cl-part"` : '';
-    body += `<g${capAttr}>`;
-    body += roundRect(L.cap, fCap.paint);
+    body += `<g${capAttr} clip-path="url(#${u}-clip-cap)">`;
+    body += capShape(L.cap, fCap.paint);
     body += `</g>`;
 
-    // Artwork on Cap (Up Liptint)
-    body += `<g clip-path="url(#${u}-clip-cap)"${inter ? ' data-layers="cap"' : ''}>${layersOf('cap')}</g>`;
+    // Artwork on Cap (Strictly inside Safe Zone)
+    body += `<g clip-path="url(#${u}-safe-cap)"${inter ? ' data-layers="cap"' : ''}>${layersOf('cap')}</g>`;
 
-    // Cap Shading overlays
     if (shading) {
-      body += `<g pointer-events="none">`;
-      body += roundRect(L.cap, `url(#${shadeCapId})`);
-      body += roundRect(L.cap, `url(#${u}-v-top)`);
-      // subtle top crown highlight & bottom seam
-      body += `<rect x="${L.cap.x}" y="${L.cap.y + 6}" width="${L.cap.w}" height="1.5" fill="#fff" opacity=".35"/>`;
-      body += `<rect x="${L.cap.x}" y="${L.cap.y + L.cap.h - 2}" width="${L.cap.w}" height="1.5" fill="#000" opacity=".2"/>`;
+      body += `<g pointer-events="none" clip-path="url(#${u}-clip-cap)">`;
+      body += capShape(L.cap, `url(#${shadeCapId})`);
+      body += capShape(L.cap, `url(#${u}-v-top)`);
       body += `</g>`;
+    }
+
+    // Optional Safe Zone visual guide frame when editing Text or Logo
+    if (opts.showSafeZone) {
+      const sf = opts.showSafeZone === 'cap' ? L.cap.safe : L.base.safe;
+      body += `<rect x="${sf.x}" y="${sf.y}" width="${sf.w}" height="${sf.h}" rx="4" fill="none" stroke="rgba(255,255,255,0.65)" stroke-width="1" stroke-dasharray="4 3" pointer-events="none"/>`;
+      body += `<rect x="${sf.x}" y="${sf.y}" width="${sf.w}" height="${sf.h}" rx="4" fill="none" stroke="rgba(0,0,0,0.35)" stroke-width="1" stroke-dasharray="4 3" stroke-dashoffset="3.5" pointer-events="none"/>`;
     }
 
     const vb = opts.viewBox || `0 0 ${L.scene.w} ${L.scene.h}`;
@@ -238,9 +248,6 @@
     return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="${vb}"${size} preserveAspectRatio="xMidYMid meet">${style}<defs>${defs.join('')}</defs>${body}</svg>`;
   }
 
-  /**
-   * Render flat artwork for print production & 3D unwrapping
-   */
   function renderPartFlat(design, part, opts = {}) {
     const u = opts.uid || CL.uid('p');
     const L = CL.models.layout(design.model);

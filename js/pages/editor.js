@@ -1,20 +1,43 @@
 /* ==========================================================
-   COSLAB — Step-by-Step Lipstick Design Studio (US App Clean UI)
-   Guided 4-Step Flow: 01 Model -> 02 Color -> 03 Text -> 04 Logo
-   Spacious interactive 2D/3D stage + clean step-by-step control card.
+   COSLAB — Clean Step-by-Step Lipstick Studio (US App Minimal UI)
+   4 Turns: 01 Model -> 02 Color -> 03 Text -> 04 Logo
+   - Cap & Body selector only appears after Step 1 (Model).
+   - Zero middle ring ("Viền").
+   - Strict Safe Zone clamping & visual guide for Text and Logo.
    ========================================================== */
 (function (CL) {
   CL.pages = CL.pages || {};
 
   const STEPS = [
-    { id: 'model', num: '01', vi: 'Chọn Model', en: 'Model' },
-    { id: 'colors', num: '02', vi: 'Chọn Màu', en: 'Color' },
-    { id: 'text', num: '03', vi: 'Chọn Chữ', en: 'Text' },
-    { id: 'graphics', num: '04', vi: 'Chọn Logo', en: 'Logo' },
+    { id: 'model', num: '01', vi: 'Model', en: 'Model' },
+    { id: 'colors', num: '02', vi: 'Màu', en: 'Color' },
+    { id: 'text', num: '03', vi: 'Chữ', en: 'Text' },
+    { id: 'graphics', num: '04', vi: 'Logo', en: 'Logo' },
+  ];
+
+  // Curated minimalist K-Beauty & Packaging color grid (17 swatches + 1 custom color button)
+  const PALETTE = [
+    { c: '#b85c66', n: 'Velvet Rosé' },
+    { c: '#a84d59', n: 'Muted Mauve' },
+    { c: '#c94d5b', n: 'Crimson Dew' },
+    { c: '#e26b77', n: 'Cherry Berry' },
+    { c: '#df705e', n: 'Chili Sunset' },
+    { c: '#a63428', n: 'Warm Brick' },
+    { c: '#df8b7d', n: 'Peach Mousse' },
+    { c: '#e89098', n: 'Baby Pink' },
+    { c: '#8a4c58', n: 'Vintage Fig' },
+    { c: '#783c47', n: 'Blackberry' },
+    { c: '#c98d79', n: 'Almond Beige' },
+    { c: '#fbfaf7', n: 'Pure Porcelain' },
+    { c: '#eae5da', n: 'Ivory Glaze' },
+    { c: '#d9d9d9', n: 'Cold Chrome' },
+    { c: '#c5a367', n: '24K Gold' },
+    { c: '#3b3834', n: 'Dark Umber' },
+    { c: '#171615', n: 'Seoul Noir' },
   ];
 
   function stepLabel(s) {
-    return I18N.lang === 'vi' ? s.vi : (t('editor.tabs.' + s.id) || s.en);
+    return I18N.lang === 'vi' ? s.vi : s.en;
   }
 
   function createStudioPage(defaultStep) {
@@ -64,14 +87,14 @@
         const queryStep = ctx.query && ctx.query.step;
         let activeStepIdx = queryStep ? Math.max(0, Math.min(3, parseInt(queryStep, 10) - 1)) : (defaultStep || 0);
         let activeView = '2d';
-        let activePart = 'base'; // 'base' | 'cap' | 'ring'
+        let activePart = 'base'; // strictly 'base' | 'cap'
         let selectedLayerId = null;
         let zoomLevel = 1.0;
         let preview3DInstance = null;
 
         const root = CL.h('div.editor-layout');
 
-        // --- 1. Clean US-App Topbar ---
+        // --- 1. Clean Topbar ---
         const titleInput = CL.h('input.editor-title-input', {
           value: design.name || t('editor.untitled'),
           placeholder: t('editor.untitled'),
@@ -83,17 +106,16 @@
 
         const undoBtn = CL.h('button.icon-btn.sm#btnUndo', {
           html: CL.icon('undo'),
-          title: 'Undo (Ctrl+Z)',
+          title: 'Undo',
           onclick: undo,
         });
         const redoBtn = CL.h('button.icon-btn.sm#btnRedo', {
           html: CL.icon('redo'),
-          title: 'Redo (Ctrl+Y)',
+          title: 'Redo',
           onclick: redo,
         });
 
-        // Center 4-Step Progress Bar
-        const stepperBar = CL.h('nav.studio-stepper', { 'aria-label': 'Design Steps' },
+        const stepperBar = CL.h('nav.studio-stepper', { 'aria-label': 'Steps' },
           STEPS.map((s, idx) =>
             CL.h('button.studio-step-pill' + (idx === activeStepIdx ? '.is-active' : ''), {
               type: 'button',
@@ -110,7 +132,7 @@
             onclick: () => switchView('2d'),
           }),
           CL.h('button#btnView3D', {
-            html: '<span>3D 360°</span>',
+            html: '<span>3D</span>',
             onclick: () => switchView('3d'),
           })
         );
@@ -150,30 +172,39 @@
           )
         );
 
-        // --- 2. Split Studio Workspace (Stage Left + Guided Step Card Right) ---
+        // --- 2. Split Studio Workspace ---
         const workspace = CL.h('div.studio-workspace');
 
-        // Left: Interactive Liptint Stage
+        // Floating Cap / Body Pill Bar — ONLY visible on Steps 2, 3, 4 (after Model is chosen!)
+        const partQuickBar = CL.h('div.canvas-part-Quickbar#partQuickBar', {
+          style: { display: activeStepIdx > 0 ? 'flex' : 'none' },
+        },
+          [
+            { id: 'base', vi: 'Thân son', en: 'Body' },
+            { id: 'cap', vi: 'Nắp son', en: 'Cap' },
+          ].map((p) => {
+            const pColor = getPartHex(p.id);
+            return CL.h('button.canvas-part-chip' + (p.id === activePart ? '.is-active' : ''), {
+              type: 'button',
+              'data-part-chip': p.id,
+              html: `<span class="part-tab-dot" data-dot="${p.id}" style="background:${pColor}"></span><span>${I18N.lang === 'vi' ? p.vi : p.en}</span>`,
+              onclick: () => {
+                activePart = p.id;
+                syncPartChips();
+                render2DCanvas();
+                renderStepPanel();
+              },
+            });
+          })
+        );
+
         const canvasContainer = CL.h('div.editor-canvas-container', null,
-          CL.h('div.canvas-part-Quickbar', null,
-            ['base', 'cap', 'ring'].map((pId) =>
-              CL.h('button.canvas-part-chip' + (pId === activePart ? '.is-active' : ''), {
-                type: 'button',
-                'data-part-chip': pId,
-                text: t('editor.partsShort.' + pId) || pId,
-                onclick: () => {
-                  activePart = pId;
-                  syncPartChips();
-                  if (activeStepIdx === 1 || activeStepIdx === 2 || activeStepIdx === 3) renderStepPanel();
-                },
-              })
-            )
-          ),
+          partQuickBar,
           CL.h('div.canvas-viewport#canvasViewport', null,
             CL.h('div#canvasSvgHolder')
           ),
           CL.h('div.preview-3d-host#preview3dHost', { style: { display: 'none' } },
-            CL.h('div.preview-3d-hud', { html: CL.icon('cube') + '<span> Drag 360° · Scroll to zoom</span>' })
+            CL.h('div.preview-3d-hud', { html: CL.icon('cube') + '<span> Drag 360°</span>' })
           ),
           CL.h('div.canvas-floating-controls#canvasFloatingControls', null,
             CL.h('button.icon-btn.sm', {
@@ -188,14 +219,13 @@
               onclick: () => setZoom(zoomLevel + 0.15),
             }),
             CL.h('button.icon-btn.sm', {
-              title: 'Reset View',
+              title: 'Reset',
               html: CL.icon('fit'),
               onclick: () => setZoom(1.0),
             })
           )
         );
 
-        // Right: Guided Step-by-Step Panel
         const stepHeader = CL.h('div.studio-step-header');
         const stepBody = CL.h('div.studio-step-body#studioStepBody');
         const stepFooter = CL.h('div.studio-step-footer');
@@ -210,9 +240,19 @@
         root.append(topbar, workspace);
         container.appendChild(root);
 
+        function getPartHex(pId) {
+          const pData = design.parts[pId];
+          if (!pData || !pData.fill) return '#b85c66';
+          return pData.fill.type === 'linear' ? (pData.fill.stops[0]?.c || '#b85c66') : (pData.fill.color || '#b85c66');
+        }
+
         function syncPartChips() {
-          canvasContainer.querySelectorAll('.canvas-part-chip').forEach((btn) => {
-            btn.classList.toggle('is-active', btn.dataset.partChip === activePart);
+          partQuickBar.style.display = activeStepIdx > 0 && activeView === '2d' ? 'flex' : 'none';
+          partQuickBar.querySelectorAll('.canvas-part-chip').forEach((btn) => {
+            const pId = btn.dataset.partChip;
+            btn.classList.toggle('is-active', pId === activePart);
+            const dot = btn.querySelector('.part-tab-dot');
+            if (dot) dot.style.background = getPartHex(pId);
           });
         }
 
@@ -222,6 +262,8 @@
             b.classList.toggle('is-active', i === activeStepIdx);
             b.classList.toggle('is-done', i < activeStepIdx);
           });
+          syncPartChips();
+          render2DCanvas();
           renderStepPanel();
         }
 
@@ -231,6 +273,7 @@
           document.getElementById('btnView3D').classList.toggle('is-active', view === '3d');
           document.getElementById('canvasFloatingControls').style.display = view === '2d' ? 'flex' : 'none';
           document.getElementById('canvasViewport').style.display = view === '2d' ? 'block' : 'none';
+          syncPartChips();
 
           const p3d = document.getElementById('preview3dHost');
           p3d.style.display = view === '3d' ? 'block' : 'none';
@@ -262,28 +305,38 @@
           const holder = document.getElementById('canvasSvgHolder');
           if (!holder) return;
 
+          // Show dashed Safe Zone guide when on Step 3 (Text) or Step 4 (Logo)
+          const showSafeZone = (activeStepIdx === 2 || activeStepIdx === 3) ? activePart : null;
+
           const svg = CL.render.renderSVG(design, {
             interactive: true,
             width: 440,
             height: 600,
             shading: true,
             shadow: true,
+            showSafeZone,
           });
 
           holder.innerHTML = svg;
           const svgEl = holder.querySelector('svg');
           svgEl.classList.add('canvas-svg-root');
 
+          // Clicking directly on Cap or Base selects that part (when past Step 1)
           svgEl.querySelectorAll('[data-part]').forEach((el) => {
             el.addEventListener('click', (e) => {
+              if (activeStepIdx === 0) return;
               e.stopPropagation();
               const p = el.getAttribute('data-part');
-              activePart = p;
-              syncPartChips();
-              if (activeStepIdx === 1) renderStepPanel();
+              if (p === 'cap' || p === 'base') {
+                activePart = p;
+                syncPartChips();
+                render2DCanvas();
+                renderStepPanel();
+              }
             });
           });
 
+          // Dragging text / logo strictly clamped inside Safe Zone
           svgEl.querySelectorAll('[data-layer]').forEach((el) => {
             el.addEventListener('pointerdown', (e) => {
               const lid = el.getAttribute('data-layer');
@@ -292,26 +345,27 @@
 
               e.stopPropagation();
               selectedLayerId = lid;
-              activePart = lyr.part || 'base';
-              syncPartChips();
+              activePart = lyr.part === 'cap' ? 'cap' : 'base';
 
               const targetStep = lyr.type === 'text' ? 2 : 3;
               if (activeStepIdx !== targetStep) {
                 goToStep(targetStep);
               } else {
+                syncPartChips();
                 renderStepPanel();
               }
 
               const layout = CL.models.layout(design.model);
               const rect = layout[lyr.part];
+              const safe = rect.safe;
               const startX = e.clientX, startY = e.clientY;
               const origX = lyr.x, origY = lyr.y;
 
               const onMove = (ev) => {
                 const dx = (ev.clientX - startX) / (zoomLevel * (svgEl.clientWidth / 440));
                 const dy = (ev.clientY - startY) / (zoomLevel * (svgEl.clientHeight / 600));
-                lyr.x = CL.clamp(origX + dx / rect.w, -0.1, 1.1);
-                lyr.y = CL.clamp(origY + dy / rect.h, -0.1, 1.1);
+                lyr.x = CL.clamp(origX + dx / rect.w, safe.minX, safe.maxX);
+                lyr.y = CL.clamp(origY + dy / rect.h, safe.minY, safe.maxY);
                 render2DCanvas();
               };
 
@@ -331,27 +385,21 @@
           }
         }
 
-        // --- Render Guided Step Panel ---
+        // --- Render Clean Guided Step Panel ---
         function renderStepPanel() {
           const step = STEPS[activeStepIdx];
           const isVi = I18N.lang === 'vi';
 
           const TITLES = {
-            model: isVi ? 'Chọn Dáng Vỏ Son' : 'Choose Silhouette',
-            colors: isVi ? 'Chọn Màu & Chất Liệu' : 'Color & Finish',
-            text: isVi ? 'Khắc Chữ Lên Son' : 'Custom Typography',
-            graphics: isVi ? 'Logo & Họa Tiết' : 'Logo & Accents',
-          };
-          const SUBS = {
-            model: isVi ? 'Bước 1/4 · Chọn phom dáng và tone khởi đầu' : 'Step 1 of 4 · Select form & starter preset',
-            colors: isVi ? 'Bước 2/4 · Phối màu Thân, Nắp và Viền son' : 'Step 2 of 4 · Customize Body, Cap & Ring',
-            text: isVi ? 'Bước 3/4 · Nhập tên thương hiệu và chọn font' : 'Step 3 of 4 · Type brand name & pick font',
-            graphics: isVi ? 'Bước 4/4 · Tải logo hoặc thêm biểu tượng' : 'Step 4 of 4 · Upload logo or add minimal mark',
+            model: isVi ? 'Chọn Model' : 'Choose Model',
+            colors: isVi ? 'Chọn Màu' : 'Choose Color',
+            text: isVi ? 'Chọn Chữ' : 'Custom Text',
+            graphics: isVi ? 'Chọn Logo' : 'Add Logo',
           };
 
           stepHeader.innerHTML = '';
           stepHeader.append(
-            CL.h('span.studio-step-eyebrow', { text: SUBS[step.id] }),
+            CL.h('span.studio-step-eyebrow', { text: `STEP ${step.num} / 04` }),
             CL.h('h2.studio-step-title', { text: TITLES[step.id] })
           );
 
@@ -361,17 +409,14 @@
           else if (step.id === 'text') buildTextStep();
           else if (step.id === 'graphics') buildLogoStep();
 
-          // Footer Navigation (Back / Next Step)
+          // Clean Footer Navigation
           stepFooter.innerHTML = '';
           const backBtn = activeStepIdx > 0
             ? CL.h('button.btn.btn-outline', {
                 html: CL.icon('arrowLeft') + `<span>${isVi ? 'Quay lại' : 'Back'}</span>`,
                 onclick: () => goToStep(activeStepIdx - 1),
               })
-            : CL.h('a.btn.btn-outline', {
-                href: '#/',
-                html: `<span>${isVi ? 'Trang chủ' : 'Atelier'}</span>`,
-              });
+            : null;
 
           let nextBtn;
           if (activeStepIdx < STEPS.length - 1) {
@@ -382,7 +427,7 @@
             });
           } else {
             nextBtn = CL.h('button.btn.btn-primary.studio-next-btn', {
-              html: CL.icon('download') + `<span>${isVi ? 'Hoàn tất & Xuất file' : 'Finish & Export'}</span>`,
+              html: CL.icon('download') + `<span>${isVi ? 'Xuất thiết kế' : 'Export Design'}</span>`,
               onclick: (e) => {
                 CL.store.saveDesign(design);
                 CL.menu(e.currentTarget, CL.exportMenuItems(() => design), { align: 'end' });
@@ -390,15 +435,14 @@
             });
           }
 
-          stepFooter.append(backBtn, nextBtn);
+          if (backBtn) stepFooter.append(backBtn);
+          stepFooter.append(nextBtn);
         }
 
         // ======================================================
-        // STEP 01: CHOOSE MODEL & STARTER PRESET
+        // STEP 01: MODEL (CLEAN, PURE 5 SILHOUETTES)
         // ======================================================
         function buildModelStep() {
-          const isVi = I18N.lang === 'vi';
-
           const modelGrid = CL.h('div.studio-model-grid', null,
             CL.models.MODELS.map((m) => {
               const active = m.id === design.model;
@@ -414,7 +458,7 @@
                 },
               },
                 CL.h('div.studio-model-thumb', {
-                  html: CL.render.renderSVG(previewDsn, { width: 76, height: 108, shadow: false }),
+                  html: CL.render.renderSVG(previewDsn, { width: 72, height: 102, shadow: false }),
                 }),
                 CL.h('div.studio-model-meta', null,
                   CL.h('strong', { text: t(m.nameKey) }),
@@ -423,142 +467,108 @@
               );
             })
           );
-
-          const presetGrid = CL.h('div.studio-preset-grid', null,
-            CL.templates.TEMPLATES.map((tpl) => {
-              const capColor = tpl.parts.cap.fill.type === 'linear' ? tpl.parts.cap.fill.stops[0].c : tpl.parts.cap.fill.color;
-              const baseColor = tpl.parts.base.fill.type === 'linear' ? tpl.parts.base.fill.stops[0].c : tpl.parts.base.fill.color;
-              return CL.h('button.studio-preset-pill', {
-                type: 'button',
-                onclick: () => {
-                  const fresh = CL.templates.createDesign(tpl.templateId, design.model);
-                  design.parts = fresh.parts;
-                  design.layers = fresh.layers;
-                  design.name = t('templates.' + tpl.templateId);
-                  titleInput.value = design.name;
-                  pushHistory();
-                  render2DCanvas();
-                  renderStepPanel();
-                },
-              },
-                CL.h('span.preset-dual-dot', {
-                  style: { background: `linear-gradient(135deg, ${capColor} 50%, ${baseColor} 50%)` },
-                }),
-                CL.h('span', { text: t('templates.' + tpl.templateId) })
-              );
-            })
-          );
-
-          stepBody.append(
-            CL.h('div.sidebar-section-title', { text: isVi ? '1. Phom dáng thỏi son (5 Models)' : '1. Packaging Silhouette' }),
-            modelGrid,
-            CL.h('div.sidebar-section-title', { text: isVi ? '2. Phối màu gợi ý nhanh (Presets)' : '2. Quick Style Presets', style: { marginTop: '14px' } }),
-            presetGrid
-          );
+          stepBody.append(modelGrid);
         }
 
         // ======================================================
-        // STEP 02: CHOOSE COLOR & FINISH
+        // STEP 02: COLOR (SUPER SIMPLE: FINISH + 1 CLEAN PALETTE)
         // ======================================================
         function buildColorStep() {
           const isVi = I18N.lang === 'vi';
+          const curPart = design.parts[activePart] || (design.parts[activePart] = { fill: { type: 'solid', color: '#b85c66' }, finish: 'matte' });
+          const activeHex = getPartHex(activePart).toLowerCase();
 
-          const partTabs = CL.h('div.part-selector-segmented', null,
-            [
-              { id: 'base', fallback: 'Body' },
-              { id: 'cap', fallback: 'Cap' },
-              { id: 'ring', fallback: 'Ring' },
-            ].map((p) => {
-              const label = t('editor.partsShort.' + p.id) || p.fallback;
-              const pData = design.parts[p.id] || { fill: { type: 'solid', color: '#171615' } };
-              const pColor = pData.fill && pData.fill.type === 'linear' ? (pData.fill.stops[0]?.c || '#b85c66') : (pData.fill?.color || '#b85c66');
-              return CL.h('button.part-tab-btn' + (p.id === activePart ? '.is-active' : ''), {
-                type: 'button',
-                html: `<span class="part-tab-dot" style="background: ${pColor};"></span><span>${label}</span>`,
-                onclick: () => {
-                  activePart = p.id;
-                  syncPartChips();
-                  renderStepPanel();
-                },
-              });
-            })
-          );
-
-          const curPart = design.parts[activePart] || { fill: { type: 'solid', color: '#171615' }, finish: 'matte' };
-
+          // 1. Finish Pills
           const FINISH_LIST = [
-            { id: 'matte', icon: '◐', fallback: 'Velvet' },
-            { id: 'gloss', icon: '✧', fallback: 'Dewy' },
-            { id: 'satin', icon: '◯', fallback: 'Satin' },
-            { id: 'metallic', icon: '◈', fallback: 'Chrome' },
+            { id: 'matte', fallback: 'Velvet' },
+            { id: 'gloss', fallback: 'Dewy' },
+            { id: 'satin', fallback: 'Satin' },
+            { id: 'metallic', fallback: 'Chrome' },
           ];
           const finishRow = CL.h('div.finish-grid', null,
-            FINISH_LIST.map((f) => {
-              const name = t('editor.finishesShort.' + f.id) || f.fallback;
-              return CL.h('button.finish-card-btn' + (curPart.finish === f.id ? '.is-active' : ''), {
+            FINISH_LIST.map((f) =>
+              CL.h('button.finish-card-btn' + (curPart.finish === f.id ? '.is-active' : ''), {
                 type: 'button',
-                html: `<span class="finish-icon-badge">${f.icon}</span><span>${name}</span>`,
-                onclick: (e) => {
+                text: t('editor.finishesShort.' + f.id) || f.fallback,
+                onclick: () => {
                   curPart.finish = f.id;
                   pushHistory();
                   render2DCanvas();
-                  finishRow.querySelectorAll('.finish-card-btn').forEach((b) => b.classList.remove('is-active'));
-                  e.currentTarget.classList.add('is-active');
+                  renderStepPanel();
                 },
-              });
-            })
+              })
+            )
           );
 
-          const activeColor = curPart.fill && curPart.fill.type === 'linear' ? curPart.fill.stops[0].c : (curPart.fill?.color || '#b85c66');
-          const picker = CL.ColorPicker({
-            value: activeColor,
-            onChange: (newHex, final) => {
-              curPart.fill = { type: 'solid', color: newHex };
+          // 2. Clean 1-Grid Color Palette + Native Custom Color Circle
+          const customInput = CL.h('input', {
+            type: 'color',
+            value: activeHex.length === 7 ? activeHex : '#b85c66',
+            style: { position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer', width: '100%', height: '100%' },
+            oninput: () => {
+              curPart.fill = { type: 'solid', color: customInput.value };
+              syncPartChips();
               render2DCanvas();
-              const activeDot = partTabs.querySelector('.part-tab-btn.is-active .part-tab-dot');
-              if (activeDot) activeDot.style.background = newHex;
-              if (final) pushHistory();
+            },
+            onchange: () => {
+              pushHistory();
+              renderStepPanel();
             },
           });
 
+          const customCircle = CL.h('label.studio-color-dot.is-custom', {
+            title: isVi ? 'Tự chọn màu' : 'Custom Color',
+          },
+            CL.h('span', { text: '+' }),
+            customInput
+          );
+
+          const colorGrid = CL.h('div.studio-clean-palette', null,
+            PALETTE.map((item) =>
+              CL.h('button.studio-color-dot' + (activeHex === item.c.toLowerCase() ? '.is-active' : ''), {
+                type: 'button',
+                title: item.n,
+                style: { background: item.c },
+                onclick: () => {
+                  curPart.fill = { type: 'solid', color: item.c };
+                  pushHistory();
+                  syncPartChips();
+                  render2DCanvas();
+                  renderStepPanel();
+                },
+              })
+            ),
+            customCircle
+          );
+
           stepBody.append(
-            CL.h('div.sidebar-section-title', { text: isVi ? '1. Chọn bộ phận cần đổi màu' : '1. Select Component' }),
-            partTabs,
-            CL.h('div.sidebar-section-title', { text: isVi ? '2. Bề mặt chất liệu (Finish)' : '2. Surface Finish', style: { marginTop: '12px' } }),
+            CL.h('div.sidebar-section-title', { text: isVi ? 'Chất liệu' : 'Finish' }),
             finishRow,
-            CL.h('div.sidebar-section-title', { text: isVi ? '3. Bảng màu K-Beauty' : '3. Color Palette', style: { marginTop: '12px' } }),
-            picker
+            CL.h('div.sidebar-section-title', { text: isVi ? 'Bảng màu' : 'Color', style: { marginTop: '14px' } }),
+            colorGrid
           );
         }
 
         // ======================================================
-        // STEP 03: CHOOSE TEXT (DIRECT & SIMPLE)
+        // STEP 03: TEXT (DIRECT INPUT INSIDE SAFE ZONE)
         // ======================================================
         function buildTextStep() {
           const isVi = I18N.lang === 'vi';
           const targetPart = activePart === 'cap' ? 'cap' : 'base';
 
-          // Find existing text layer on targetPart, or any text layer
-          let curLayer = design.layers.find((l) => l.id === selectedLayerId && l.type === 'text')
-            || design.layers.find((l) => l.type === 'text' && l.part === targetPart)
-            || design.layers.find((l) => l.type === 'text');
-
-          if (curLayer) {
-            selectedLayerId = curLayer.id;
-            activePart = curLayer.part;
-            syncPartChips();
-          }
+          let curLayer = design.layers.find((l) => l.type === 'text' && l.part === targetPart);
+          if (curLayer) selectedLayerId = curLayer.id;
 
           function ensureTextLayer(initialText) {
             if (!curLayer) {
-              const isBase = activePart !== 'cap';
+              const isBase = targetPart === 'base';
               curLayer = {
                 id: CL.uid('ly_txt'),
                 type: 'text',
                 name: initialText || 'COSLAB',
-                part: isBase ? 'base' : 'cap',
+                part: targetPart,
                 x: 0.5,
-                y: 0.5,
+                y: isBase ? 0.5 : 0.72,
                 rotation: isBase ? -90 : 0,
                 opacity: 1,
                 visible: true,
@@ -566,7 +576,7 @@
                 text: {
                   content: initialText || 'COSLAB',
                   font: 'Plus Jakarta Sans',
-                  size: 13,
+                  size: 12,
                   weight: 600,
                   italic: false,
                   color: '#ffffff',
@@ -581,36 +591,9 @@
             return curLayer;
           }
 
-          // 1. Part & Orientation Row
-          const partSwitch = CL.h('div.part-selector-segmented', { style: { gridTemplateColumns: '1fr 1fr' } },
-            [
-              { id: 'base', label: isVi ? 'Thân son (Body)' : 'Body' },
-              { id: 'cap', label: isVi ? 'Nắp son (Cap)' : 'Cap' },
-            ].map((p) =>
-              CL.h('button.part-tab-btn' + ((curLayer ? curLayer.part : targetPart) === p.id ? '.is-active' : ''), {
-                type: 'button',
-                text: p.label,
-                onclick: () => {
-                  activePart = p.id;
-                  syncPartChips();
-                  if (curLayer) {
-                    curLayer.part = p.id;
-                    curLayer.x = 0.5;
-                    curLayer.y = 0.5;
-                    curLayer.rotation = p.id === 'base' ? -90 : 0;
-                    pushHistory();
-                    render2DCanvas();
-                  }
-                  renderStepPanel();
-                },
-              })
-            )
-          );
-
-          // 2. Direct Text Input
           const textInput = CL.h('input.input.studio-text-input', {
             value: curLayer ? curLayer.text.content : '',
-            placeholder: isVi ? 'Nhập chữ khắc lên son (VD: COSLAB)...' : 'Type text on lipstick (e.g. COSLAB)...',
+            placeholder: isVi ? 'Nhập chữ (VD: COSLAB)...' : 'Type text (e.g. COSLAB)...',
             oninput: () => {
               const val = textInput.value;
               if (!val.trim() && curLayer) {
@@ -628,14 +611,39 @@
             onchange: pushHistory,
           });
 
-          // 3. Visual Font Picker Grid (6 Luxury Fonts)
+          const isVertical = curLayer ? Math.abs(curLayer.rotation || 0) === 90 : (targetPart === 'base');
+          const orientRow = CL.h('div.part-selector-segmented', { style: { gridTemplateColumns: '1fr 1fr' } },
+            CL.h('button.part-tab-btn' + (isVertical ? '.is-active' : ''), {
+              type: 'button',
+              text: isVi ? 'Dọc' : 'Vertical',
+              onclick: () => {
+                const lyr = ensureTextLayer(textInput.value || 'COSLAB');
+                lyr.rotation = -90;
+                pushHistory();
+                render2DCanvas();
+                renderStepPanel();
+              },
+            }),
+            CL.h('button.part-tab-btn' + (!isVertical ? '.is-active' : ''), {
+              type: 'button',
+              text: isVi ? 'Ngang' : 'Horizontal',
+              onclick: () => {
+                const lyr = ensureTextLayer(textInput.value || 'COSLAB');
+                lyr.rotation = 0;
+                pushHistory();
+                render2DCanvas();
+                renderStepPanel();
+              },
+            })
+          );
+
           const FONTS = [
-            { f: 'Plus Jakarta Sans', label: 'Modern Sans' },
-            { f: 'Cinzel', label: 'Roman Luxury' },
-            { f: 'Playfair Display', label: 'Editorial Serif' },
-            { f: 'Cormorant Garamond', label: 'Classic Atelier' },
-            { f: 'Montserrat', label: 'Geometric' },
-            { f: 'Italiana', label: 'High Fashion' },
+            { f: 'Plus Jakarta Sans', label: 'Sans' },
+            { f: 'Cinzel', label: 'Cinzel' },
+            { f: 'Playfair Display', label: 'Playfair' },
+            { f: 'Cormorant Garamond', label: 'Classic' },
+            { f: 'Montserrat', label: 'Geo' },
+            { f: 'Italiana', label: 'Italiana' },
           ];
           const currentFont = curLayer ? curLayer.text.font : 'Plus Jakarta Sans';
           const fontGrid = CL.h('div.studio-font-grid', null,
@@ -657,37 +665,10 @@
             )
           );
 
-          // 4. Orientation & Size Controls
-          const isVertical = curLayer ? Math.abs(curLayer.rotation || 0) === 90 : true;
-          const orientRow = CL.h('div.part-selector-segmented', { style: { gridTemplateColumns: '1fr 1fr' } },
-            CL.h('button.part-tab-btn' + (isVertical ? '.is-active' : ''), {
-              type: 'button',
-              text: isVi ? '↕ Chữ dọc thân' : '↕ Vertical',
-              onclick: () => {
-                const lyr = ensureTextLayer(textInput.value || 'COSLAB');
-                lyr.rotation = -90;
-                pushHistory();
-                render2DCanvas();
-                renderStepPanel();
-              },
-            }),
-            CL.h('button.part-tab-btn' + (!isVertical ? '.is-active' : ''), {
-              type: 'button',
-              text: isVi ? '↔ Chữ ngang' : '↔ Horizontal',
-              onclick: () => {
-                const lyr = ensureTextLayer(textInput.value || 'COSLAB');
-                lyr.rotation = 0;
-                pushHistory();
-                render2DCanvas();
-                renderStepPanel();
-              },
-            })
-          );
-
-          const curSize = curLayer ? curLayer.text.size : 13;
+          const curSize = curLayer ? curLayer.text.size : 12;
           const sizeValLabel = CL.h('span.mono', { text: `${curSize}px` });
           const sizeSlider = CL.h('input.range', {
-            type: 'range', min: '8', max: '28', step: '1', value: curSize,
+            type: 'range', min: '8', max: '24', step: '1', value: curSize,
             oninput: () => {
               const lyr = ensureTextLayer(textInput.value || 'COSLAB');
               lyr.text.size = parseInt(sizeSlider.value, 10);
@@ -697,26 +678,16 @@
             onchange: pushHistory,
           });
 
-          // 5. Quick Text Color Swatches
-          const TEXT_COLORS = [
-            { c: '#ffffff', n: 'White' },
-            { c: '#171615', n: 'Obsidian' },
-            { c: '#c5a367', n: '24K Gold' },
-            { c: '#e5d5c5', n: 'Champagne' },
-            { c: '#d9d9d9', n: 'Silver' },
-            { c: '#f2c6c2', n: 'Soft Pink' },
-            { c: '#9e5967', n: 'Mauve' },
-          ];
+          const TEXT_COLORS = ['#ffffff', '#171615', '#c5a367', '#e5d5c5', '#d9d9d9', '#f2c6c2'];
           const curTxtColor = (curLayer ? curLayer.text.color : '#ffffff').toLowerCase();
           const txtColorRow = CL.h('div.studio-quick-swatches', null,
-            TEXT_COLORS.map((sw) =>
-              CL.h('button.quick-color-dot' + (curTxtColor === sw.c.toLowerCase() ? '.is-active' : ''), {
+            TEXT_COLORS.map((hex) =>
+              CL.h('button.quick-color-dot' + (curTxtColor === hex ? '.is-active' : ''), {
                 type: 'button',
-                title: sw.n,
-                style: { background: sw.c },
+                style: { background: hex },
                 onclick: () => {
                   const lyr = ensureTextLayer(textInput.value || 'COSLAB');
-                  lyr.text.color = sw.c;
+                  lyr.text.color = hex;
                   pushHistory();
                   render2DCanvas();
                   renderStepPanel();
@@ -725,57 +696,28 @@
             )
           );
 
-          // Add / Clear Text buttons
-          const actionsRow = CL.h('div', { style: { display: 'flex', gap: '8px', marginTop: '4px' } },
-            CL.h('button.btn.btn-sm.btn-outline', {
-              style: { flex: 1 },
-              html: CL.icon('plus') + `<span>${isVi ? 'Thêm dòng chữ mới' : 'Add Another Line'}</span>`,
-              onclick: () => {
-                curLayer = null;
-                const lyr = ensureTextLayer('NEW TEXT');
-                lyr.y = 0.35;
-                pushHistory();
-                render2DCanvas();
-                renderStepPanel();
-              },
-            }),
-            curLayer ? CL.h('button.btn.btn-sm.btn-outline', {
-              style: { color: 'var(--danger)' },
-              html: CL.icon('trash') + `<span>${isVi ? 'Xóa chữ' : 'Clear'}</span>`,
-              onclick: () => {
-                design.layers = design.layers.filter((l) => l.id !== curLayer.id);
-                selectedLayerId = null;
-                pushHistory();
-                render2DCanvas();
-                renderStepPanel();
-              },
-            }) : null
-          );
-
           stepBody.append(
-            CL.h('div.sidebar-section-title', { text: isVi ? '1. Nội dung chữ trên son' : '1. Brand Text' }),
+            CL.h('div.sidebar-section-title', { text: isVi ? 'Nội dung (Safe Zone)' : 'Text (Safe Zone)' }),
             textInput,
-            actionsRow,
-            CL.h('div.sidebar-section-title', { text: isVi ? '2. Vị trí & Hướng chữ' : '2. Placement & Direction', style: { marginTop: '12px' } }),
-            partSwitch,
             orientRow,
-            CL.h('div.sidebar-section-title', { text: isVi ? '3. Kiểu chữ (Font)' : '3. Font Style', style: { marginTop: '12px' } }),
+            CL.h('div.sidebar-section-title', { text: 'Font', style: { marginTop: '10px' } }),
             fontGrid,
-            CL.h('div.sidebar-section-title', { style: { marginTop: '12px' } },
-              CL.h('span', { text: isVi ? '4. Cỡ chữ' : '4. Text Size' }),
+            CL.h('div.sidebar-section-title', { style: { marginTop: '10px' } },
+              CL.h('span', { text: isVi ? 'Cỡ chữ' : 'Size' }),
               sizeValLabel
             ),
             sizeSlider,
-            CL.h('div.sidebar-section-title', { text: isVi ? '5. Màu sắc chữ' : '5. Text Color', style: { marginTop: '12px' } }),
+            CL.h('div.sidebar-section-title', { text: isVi ? 'Màu chữ' : 'Color', style: { marginTop: '10px' } }),
             txtColorRow
           );
         }
 
         // ======================================================
-        // STEP 04: CHOOSE LOGO & ACCENTS
+        // STEP 04: LOGO (CLEAN UPLOAD + SAFE ZONE)
         // ======================================================
         function buildLogoStep() {
           const isVi = I18N.lang === 'vi';
+          const targetPart = activePart === 'cap' ? 'cap' : 'base';
 
           const fileIn = CL.h('input', {
             type: 'file',
@@ -784,14 +726,13 @@
             onchange: async (e) => {
               const file = e.target.files && e.target.files[0];
               if (!file) return;
-              CL.toast(t('common.loading'), 'upload');
               try {
                 const res = await CL.readImageFile(file, 1600);
                 const newLayer = {
                   id: CL.uid('ly_img'),
                   type: 'image',
                   name: file.name.slice(0, 18),
-                  part: activePart === 'cap' ? 'cap' : 'base',
+                  part: targetPart,
                   x: 0.5,
                   y: 0.5,
                   rotation: 0,
@@ -800,8 +741,8 @@
                   locked: false,
                   image: {
                     src: res.src,
-                    w: Math.min(64, res.w / 4),
-                    h: Math.min(64, res.h / 4),
+                    w: Math.min(54, res.w / 4),
+                    h: Math.min(54, res.h / 4),
                   },
                 };
                 design.layers.push(newLayer);
@@ -809,10 +750,7 @@
                 pushHistory();
                 render2DCanvas();
                 renderStepPanel();
-                CL.toast(isVi ? 'Đã tải logo lên thỏi son!' : 'Logo uploaded!');
-              } catch (err) {
-                CL.toast('Failed to load image', 'info');
-              }
+              } catch (err) {}
             },
           });
 
@@ -821,12 +759,11 @@
             onclick: () => fileIn.click(),
           },
             CL.h('div.upload-icon-circle', { html: CL.icon('upload') }),
-            CL.h('strong', { text: isVi ? 'Tải Logo từ máy tính' : 'Upload Brand Logo' }),
-            CL.h('span', { text: 'PNG, SVG, JPG · Kéo thả trực tiếp trên thân son' })
+            CL.h('strong', { text: isVi ? 'Tải ảnh Logo' : 'Upload Logo' }),
+            CL.h('span', { text: 'PNG, SVG, JPG' })
           );
 
-          // Find active image or shape layer
-          const curGraphic = design.layers.find((l) => l.id === selectedLayerId && (l.type === 'image' || l.type === 'shape'))
+          const curGraphic = design.layers.find((l) => l.part === targetPart && (l.type === 'image' || l.type === 'shape'))
             || design.layers.find((l) => l.type === 'image' || l.type === 'shape');
 
           let graphicControls = null;
@@ -837,7 +774,7 @@
             const scaleValLabel = CL.h('span.mono', { text: `${curScale}px` });
 
             const scaleSlider = CL.h('input.range', {
-              type: 'range', min: '12', max: '120', step: '2', value: curScale,
+              type: 'range', min: '14', max: '90', step: '2', value: curScale,
               oninput: () => {
                 const v = parseInt(scaleSlider.value, 10);
                 scaleValLabel.textContent = `${v}px`;
@@ -855,43 +792,26 @@
             });
 
             graphicControls = CL.h('div.studio-active-graphic-card', null,
-              CL.h('div.hero-meta-row', null,
-                CL.h('strong', { text: curGraphic.name, style: { fontSize: '12px' } }),
-                CL.h('span.pill-tag', { text: curGraphic.part.toUpperCase() })
-              ),
-              CL.h('div.sidebar-section-title', { style: { marginTop: '4px' } },
-                CL.h('span', { text: isVi ? 'Kích thước Logo' : 'Logo Size' }),
+              CL.h('div.sidebar-section-title', null,
+                CL.h('span', { text: curGraphic.name }),
                 scaleValLabel
               ),
               scaleSlider,
-              CL.h('div', { style: { display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '6px' } },
+              CL.h('div', { style: { display: 'flex', gap: '8px', marginTop: '4px' } },
                 isImg ? CL.h('button.btn.btn-sm.btn-primary', {
                   style: { flex: 1 },
-                  html: CL.icon('eraser') + `<span>${isVi ? 'AI Xóa nền trắng' : 'AI Remove BG'}</span>`,
+                  text: isVi ? 'AI Xóa nền' : 'AI Remove BG',
                   onclick: async () => {
                     try {
-                      const cleaned = await CL.removeWhiteBackground(curGraphic.image.src, 236, 20);
-                      curGraphic.image.src = cleaned;
+                      curGraphic.image.src = await CL.removeWhiteBackground(curGraphic.image.src, 236, 20);
                       pushHistory();
                       render2DCanvas();
-                      CL.toast(isVi ? 'Đã tách nền trắng!' : 'Background removed!');
                     } catch (err) {}
                   },
                 }) : null,
                 CL.h('button.btn.btn-sm.btn-outline', {
-                  text: isVi ? 'Đổi Nắp/Thân' : 'Move Cap/Body',
-                  onclick: () => {
-                    curGraphic.part = curGraphic.part === 'cap' ? 'base' : 'cap';
-                    curGraphic.x = 0.5;
-                    curGraphic.y = 0.5;
-                    pushHistory();
-                    render2DCanvas();
-                    renderStepPanel();
-                  },
-                }),
-                CL.h('button.btn.btn-sm.btn-outline', {
                   style: { color: 'var(--danger)' },
-                  html: CL.icon('trash'),
+                  html: CL.icon('trash') + `<span>${isVi ? 'Xóa' : 'Remove'}</span>`,
                   onclick: () => {
                     design.layers = design.layers.filter((x) => x.id !== curGraphic.id);
                     selectedLayerId = null;
@@ -904,35 +824,33 @@
             );
           }
 
-          // Minimalist K-Beauty Stamps / Accents
           const shapesList = [
             { k: 'circle', icon: '◯' },
-            { k: 'line', icon: '―' },
             { k: 'star', icon: '✦' },
             { k: 'heart', icon: '♡' },
             { k: 'diamond', icon: '◇' },
-            { k: 'rect', icon: '▭' },
           ];
-          const shapesGrid = CL.h('div.studio-accent-grid', null,
+          const shapesGrid = CL.h('div.studio-accent-grid', { style: { gridTemplateColumns: 'repeat(4, 1fr)' } },
             shapesList.map(({ k, icon }) =>
               CL.h('button.studio-accent-btn', {
                 type: 'button',
+                style: { justifyContent: 'center' },
                 onclick: () => {
                   const newShape = {
                     id: CL.uid('ly_shp'),
                     type: 'shape',
-                    name: t('editor.shapes.' + k),
-                    part: activePart === 'cap' ? 'cap' : 'base',
+                    name: k,
+                    part: targetPart,
                     x: 0.5,
-                    y: 0.35,
+                    y: 0.5,
                     rotation: 0,
                     opacity: 1,
                     visible: true,
                     locked: false,
                     shape: {
                       kind: k,
-                      w: k === 'line' ? 48 : 28,
-                      h: k === 'line' ? 2 : 28,
+                      w: 24,
+                      h: 24,
                       fill: k === 'circle' ? 'none' : '#ffffff',
                       stroke: k === 'circle' ? '#ffffff' : null,
                       strokeWidth: k === 'circle' ? 1.5 : 0,
@@ -945,23 +863,22 @@
                   renderStepPanel();
                 },
               },
-                CL.h('span.accent-symbol', { text: icon }),
-                CL.h('span', { text: t('editor.shapes.' + k) })
+                CL.h('span.accent-symbol', { text: icon })
               )
             )
           );
 
           stepBody.append(
-            CL.h('div.sidebar-section-title', { text: isVi ? '1. Tải Logo thương hiệu' : '1. Upload Brand Logo' }),
             uploadBox,
             graphicControls,
-            CL.h('div.sidebar-section-title', { text: isVi ? '2. Biểu tượng tối giản (1-Click)' : '2. Minimal Accents', style: { marginTop: '14px' } }),
+            CL.h('div.sidebar-section-title', { text: isVi ? 'Biểu tượng nhanh' : 'Minimal Marks', style: { marginTop: '12px' } }),
             shapesGrid,
             fileIn
           );
         }
 
         function refreshAll() {
+          syncPartChips();
           render2DCanvas();
           renderStepPanel();
         }
@@ -988,7 +905,6 @@
     };
   }
 
-  // Both #/design and #/editor open the clean 4-Step Studio seamlessly!
   CL.pages.design = createStudioPage(0);
   CL.pages.editor = createStudioPage(0);
 })(window.CL);

@@ -106,118 +106,55 @@
   line-height: 1.08;
 }
 
-/* ---------- 12-Column Asymmetric Bento Works Grid ---------- */
-.orchard-works-section {
-  padding-block: 56px;
+/* ---------- Massive Full-Bleed Editorial Campaign Visual (Tràn Viền) ---------- */
+.fullbleed-campaign-section {
+  width: 100%;
+  padding: 0;
+  margin: 0;
   border-bottom: 1px solid var(--border);
-  background: var(--bg);
-}
-.orchard-bento-grid {
-  display: grid;
-  grid-template-columns: repeat(12, 1fr);
-  gap: 18px;
-}
-.bento-span-7 {
-  grid-column: span 7;
-  height: 440px;
-}
-.bento-span-5 {
-  grid-column: span 5;
-  height: 440px;
-}
-.bento-span-4 {
-  grid-column: span 4;
-  height: 350px;
-}
-.orchard-work-card {
-  position: relative;
-  border-radius: var(--r-lg);
+  background: #f5f3ef;
   overflow: hidden;
-  border: 1px solid var(--border);
-  background: #111111;
+}
+.fullbleed-campaign-frame {
+  display: block;
+  position: relative;
+  width: 100%;
+  height: clamp(420px, 78vh, 840px);
+  overflow: hidden;
   cursor: pointer;
-  transition: transform 0.6s var(--ease-framer), box-shadow 0.6s var(--ease-framer), border-color 0.35s var(--ease-in-out-framer);
-  user-select: none;
-  will-change: transform, box-shadow;
 }
-.orchard-work-card:hover {
-  transform: translateY(-6px);
-  border-color: #000000;
-  box-shadow: 0 24px 54px -14px rgba(0, 0, 0, 0.2);
-}
-.orchard-work-card:active {
-  transform: scale(0.985);
-  transition-duration: 0.15s;
-}
-.orchard-work-img {
+.fullbleed-campaign-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center 48%;
   display: block;
-  transition: transform 0.9s var(--ease-framer), filter 0.6s var(--ease-in-out-framer);
-  filter: brightness(0.93) contrast(1.03);
+  transition: transform 1.2s var(--ease-framer);
+  will-change: transform;
 }
-.orchard-work-card:hover .orchard-work-img {
-  transform: scale(1.05);
-  filter: brightness(1.01) contrast(1.05);
+.fullbleed-campaign-frame:hover .fullbleed-campaign-img {
+  transform: scale(1.03);
 }
-.orchard-work-overlay {
+.fullbleed-campaign-cta {
   position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, rgba(0,0,0,0.16) 0%, rgba(0,0,0,0.02) 45%, rgba(0,0,0,0.82) 100%);
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding: 22px 24px;
-  color: #ffffff;
-  pointer-events: none;
-}
-.orchard-work-badge {
-  align-self: flex-start;
-  background: rgba(255, 255, 255, 0.94);
-  color: #000000;
-  padding: 3px 10px;
+  bottom: 28px;
+  right: 32px;
+  padding: 10px 22px;
   border-radius: var(--r-pill);
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(12px);
+  color: #111111;
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  transition: transform 0.35s var(--ease-framer), background 0.25s ease;
 }
-.orchard-work-info {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 12px;
-}
-.orchard-work-title {
-  font-size: clamp(18px, 2.2vw, 26px);
-  font-weight: 700;
-  letter-spacing: -0.025em;
-  line-height: 1.15;
-  color: #ffffff;
-}
-.orchard-work-desc {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.04em;
-  color: rgba(255, 255, 255, 0.72);
-  margin-top: 3px;
-}
-.orchard-work-icon-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
+.fullbleed-campaign-frame:hover .fullbleed-campaign-cta {
+  transform: translateY(-2px);
   background: #ffffff;
-  color: #000000;
-  display: inline-grid;
-  place-items: center;
-  flex-shrink: 0;
-  transition: transform 0.35s var(--ease-framer), box-shadow 0.35s var(--ease-framer);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
-}
-.orchard-work-card:hover .orchard-work-icon-btn {
-  transform: translateX(3px) scale(1.06);
 }
 
 /* ---------- 3x2 Standards Architectural Bento Grid ---------- */

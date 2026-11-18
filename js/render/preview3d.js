@@ -335,9 +335,9 @@
 
       const baseW = L.base.w / U;
       const baseH = L.base.h / U;
-      const ringH = L.ring.h / U;
+      const seamH = 0.015;
       const capH = L.cap.h / U;
-      const totalH = baseH + ringH + capH;
+      const totalH = baseH + seamH + capH;
 
       const add = (geo, mats, y) => {
         const m = new THREE.Mesh(geo, mats);
@@ -378,24 +378,10 @@
         add(baseGeo, [baseSide, basePlain, basePlain], tubeY0 + baseH / 2);
       }
 
-      // 2. Middle Divider Ring / Collar
-      const ringGeo = isSquare
-        ? new THREE.BoxGeometry(baseW * 0.985, ringH, baseW * 0.985)
-        : new THREE.CylinderGeometry(baseW * 0.495, baseW * 0.495, ringH, 96);
-
-      const ringMat = new THREE.MeshPhysicalMaterial({
-        color: new THREE.Color(firstColor(P.ring?.fill || { color: '#c5a367' })).convertSRGBToLinear(),
-        roughness: 0.16,
-        metalness: 0.98,
-        clearcoat: 0.6,
-      });
-      this.disposables.push(ringMat);
-      add(ringGeo, ringMat, tubeY0 + baseH + ringH / 2);
-
-      // 3. Top Tube: Up Liptint (Cap)
+      // 2. Top Tube: Up Liptint (Cap) sitting flush atop Base
       const capSide = this._mat(P.cap, tex.cap);
       const capPlain = this._mat(P.cap, null);
-      const capY = tubeY0 + baseH + ringH + capH / 2;
+      const capY = tubeY0 + baseH + seamH + capH / 2;
 
       if (isSquare) {
         const capGeo = new THREE.BoxGeometry(baseW, capH, baseW);
