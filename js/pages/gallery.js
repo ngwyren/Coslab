@@ -1,6 +1,5 @@
 /* ==========================================================
-   COSLAB — Gallery page: K-Beauty Liptint Showcase
-   Live templates ready to customize directly or download.
+   COSLAB — Gallery page: K-Beauty Liptint Archive (4-Column Grid)
    ========================================================== */
 (function (CL) {
   CL.pages = CL.pages || {};
@@ -12,42 +11,39 @@
     render(container) {
       let activeFilter = 'all';
 
-      const root = CL.h('div.page.container', { style: { paddingBottom: '80px' } });
+      const root = CL.h('div.page.container', { style: { paddingBottom: '72px' } });
 
       const head = CL.h('div.page-head', null,
         CL.h('div.page-head-row', null,
-          CL.h('div', null,
+          CL.h('div', { style: { display: 'flex', alignItems: 'baseline', gap: '14px', flexWrap: 'wrap' } },
             CL.h('h1', { text: t('gallery.title') }),
-            CL.h('p', { text: t('gallery.subtitle') })
+            CL.h('span.mono.muted', { text: t('gallery.subtitle') })
           ),
-          CL.h('div.gallery-head-actions', null,
-            CL.h('a.btn.btn-primary', { href: '#/design', html: CL.icon('plus') + `<span>${t('nav.start')}</span>` })
-          )
-        ),
-        CL.h('div.chips#galleryFilter', { style: { marginTop: '16px' } },
-          [
-            ['all', 'gallery.filterAll'],
-            ['k-velvet', 'gallery.filterKVelvet'],
-            ['k-dewy', 'gallery.filterKDewy'],
-            ['k-luxury', 'gallery.filterKLuxury'],
-            ['k-tamburins', 'gallery.filterKTamburins'],
-            ['k-gradient', 'gallery.filterKGradient'],
-            ['k-minimal', 'gallery.filterKMinimal'],
-          ].map(([k, key]) =>
-            CL.h('button.chip' + (k === activeFilter ? '.is-active' : ''), {
-              text: t(key),
-              'data-filter': k,
-              onclick: (e) => {
-                activeFilter = k;
-                document.querySelectorAll('#galleryFilter .chip').forEach((c) => c.classList.toggle('is-active', c.dataset.filter === k));
-                renderCards();
-              },
-            })
+          CL.h('div.chips#galleryFilter', null,
+            [
+              ['all', 'gallery.filterAll'],
+              ['k-velvet', 'gallery.filterKVelvet'],
+              ['k-dewy', 'gallery.filterKDewy'],
+              ['k-luxury', 'gallery.filterKLuxury'],
+              ['k-tamburins', 'gallery.filterKTamburins'],
+              ['k-gradient', 'gallery.filterKGradient'],
+              ['k-minimal', 'gallery.filterKMinimal'],
+            ].map(([k, key]) =>
+              CL.h('button.chip' + (k === activeFilter ? '.is-active' : ''), {
+                text: t(key),
+                'data-filter': k,
+                onclick: () => {
+                  activeFilter = k;
+                  document.querySelectorAll('#galleryFilter .chip').forEach((c) => c.classList.toggle('is-active', c.dataset.filter === k));
+                  renderCards();
+                },
+              })
+            )
           )
         )
       );
 
-      const grid = CL.h('div.gallery-grid#galleryGrid');
+      const grid = CL.h('div.gallery-grid.grid-4#galleryGrid');
 
       root.append(head, grid);
       container.appendChild(root);
@@ -57,7 +53,7 @@
         const samples = CL.templates.SAMPLES;
 
         samples.forEach(([tplId, modelId]) => {
-          const tpl = CL.templates.TEMPLATES.find((t) => t.templateId === tplId) || CL.templates.TEMPLATES[0];
+          const tpl = CL.templates.TEMPLATES.find((item) => item.templateId === tplId) || CL.templates.TEMPLATES[0];
           if (activeFilter !== 'all' && tpl.category !== activeFilter) return;
 
           const design = CL.templates.createDesign(tplId, modelId);
@@ -73,24 +69,24 @@
               },
             },
               CL.h('div.gallery-badge', { text: tpl.category.replace('k-', '') }),
-              CL.h('div', { html: CL.render.renderSVG(design, { width: 220, height: 290, shadow: true }) })
+              CL.h('div', { html: CL.render.renderSVG(design, { width: 190, height: 250, shadow: true }) })
             ),
             CL.h('div.gallery-body', null,
               CL.h('div.gallery-meta', null,
                 CL.h('h4', { text: t('templates.' + tplId) }),
                 CL.h('p', { text: t(m.nameKey) })
               ),
-              CL.h('div.gallery-actions', null,
+              CL.h('div.gallery-actions', { style: { display: 'flex', gap: '6px', alignItems: 'center' } },
                 CL.h('button.btn.btn-sm.btn-primary', {
-                  html: CL.icon('edit') + `<span>${t('gallery.editAsTemplate')}</span>`,
+                  html: `<span>${t('gallery.editAsTemplate')}</span>`,
                   onclick: () => {
                     CL.store.saveDraft(design);
                     CL.go('#/editor');
                   },
                 }),
-                CL.h('button.btn.btn-sm.btn-outline', {
+                CL.h('button.icon-btn.sm', {
                   title: t('common.download'),
-                  html: CL.icon('download') + `<span>${t('common.download')}</span>`,
+                  html: CL.icon('download'),
                   onclick: (e) => {
                     CL.menu(e.currentTarget, CL.exportMenuItems(() => design), { align: 'end' });
                   },

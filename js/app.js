@@ -51,7 +51,7 @@
       });
 
       // Stagger child elements in editorial grids and rows
-      const groupSelectors = ['.orchard-works-row', '.orchard-journal-grid', '.orchard-table'];
+      const groupSelectors = ['.orchard-bento-grid', '.standards-bento-grid', '.orchard-journal-grid'];
       groupSelectors.forEach((sel) => {
         document.querySelectorAll(sel).forEach((group) => {
           Array.from(group.children).forEach((child, idx) => {

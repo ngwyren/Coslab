@@ -1,9 +1,7 @@
 /* ==========================================================
-   COSLAB — Home Page (Orchard Studio® Minimalist Architecture)
-   Exact aesthetic of https://orchard.framer.website/
-   Giant display typography, screen-filling editorial media,
-   3D PBR WebGL center stage, standards table, and atelier journal.
-   Fully internationalized with reactive multi-language switching.
+   COSLAB — Home Page (Minimalist Swiss / Bento Grid Architecture)
+   High-contrast editorial layout, optimized WebP media, concise specs,
+   zero prose clutter, and reactive multi-language switching.
    ========================================================== */
 (function (CL) {
   CL.pages = CL.pages || {};
@@ -15,169 +13,115 @@
     render(container) {
       const root = CL.h('div.page.page-home');
 
-      // 1. Hero Section (Orchard Studio Style)
+      // 1. Hero Section (2-Column Swiss Architectural Grid)
       const hero = CL.h('section.hero', null,
-        CL.h('div.container.hero-inner', null,
-          // Massive Editorial Headline (Orchard Style)
+        CL.h('div.container.hero-grid', null,
           CL.h('div.hero-title-block', null,
-            CL.h('h1.hero-giant-title.reveal-up', { text: 'COSLAB ATELIER' }),
-            CL.h('p.orchard-manifesto.reveal-up.stagger-1', {
+            CL.h('span.orchard-eyebrow', { 'data-i18n': 'home.eyebrow', text: t('home.eyebrow') }),
+            CL.h('h1.hero-giant-title.reveal-up', { text: 'COSLAB ATELIER' })
+          ),
+          CL.h('div.hero-aside-block.reveal-up.stagger-1', null,
+            CL.h('p.orchard-manifesto', {
               'data-i18n': 'home.manifesto1',
               text: t('home.manifesto1'),
-            })
-          ),
-
-          // Action buttons
-          CL.h('div.hero-actions-bar.reveal-up.stagger-2', { style: { justifyContent: 'flex-start', marginTop: '24px' } },
-            CL.h('a.btn.btn-primary.btn-lg', {
-              href: '#/design',
-              html: `<span data-i18n="home.launchStudio">${t('home.launchStudio')}</span>` + CL.icon('arrowRight'),
             }),
-            CL.h('button.btn.btn-outline.btn-lg', {
-              onclick: () => {
-                document.getElementById('worksSection')?.scrollIntoView({ behavior: 'smooth' });
-              },
-              html: `<span data-i18n="home.exploreWorks">${t('home.exploreWorks')}</span>`,
-            })
+            CL.h('div.hero-actions-bar', null,
+              CL.h('a.btn.btn-primary.btn-lg', {
+                href: '#/design',
+                html: `<span data-i18n="home.launchStudio">${t('home.launchStudio')}</span>`,
+              }),
+              CL.h('button.btn.btn-outline.btn-lg', {
+                onclick: () => {
+                  document.getElementById('worksSection')?.scrollIntoView({ behavior: 'smooth' });
+                },
+                html: `<span data-i18n="home.exploreWorks">${t('home.exploreWorks')}</span>`,
+              })
+            )
           )
         )
       );
 
-      // 2. Orchard Works Showcase (Full-Screen & Split Large Media Cards)
+      // 2. Silhouettes & Finishes (12-Column Asymmetric Bento Grid)
+      const worksData = [
+        {
+          span: 'bento-span-7',
+          tpl: 'dewy-glass',
+          model: 'dewy-crystal',
+          img: 'https://images.unsplash.com/photo-1586495777744-4413f21062fa?auto=format&fit=crop&fm=webp&w=900&q=75',
+          badge: 'home.work1Badge',
+          title: 'home.work1Title',
+          desc: 'home.work1Desc',
+          eager: true,
+        },
+        {
+          span: 'bento-span-5',
+          tpl: 'velvet-rose',
+          model: 'velvet-round',
+          img: 'https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&fm=webp&w=700&q=75',
+          badge: 'home.work2Badge',
+          title: 'home.work2Title',
+          desc: 'home.work2Desc',
+          eager: true,
+        },
+        {
+          span: 'bento-span-4',
+          tpl: 'seoul-noir',
+          model: 'square-monolith',
+          img: 'https://images.unsplash.com/photo-1512496015851-a90fb38ba796?auto=format&fit=crop&fm=webp&w=600&q=75',
+          badge: 'home.work3Badge',
+          title: 'home.work3Title',
+          desc: 'home.work3Desc',
+        },
+        {
+          span: 'bento-span-4',
+          tpl: 'chrome-minimal',
+          model: 'slim-atelier',
+          img: 'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&fm=webp&w=600&q=75',
+          badge: 'home.work4Badge',
+          title: 'home.work4Title',
+          desc: 'home.work4Desc',
+        },
+        {
+          span: 'bento-span-4',
+          tpl: 'porcelain-ivory',
+          model: 'velvet-round',
+          img: 'https://images.unsplash.com/photo-1571781926291-c477ebfd024b?auto=format&fit=crop&fm=webp&w=600&q=75',
+          badge: 'home.work5Badge',
+          title: 'home.work5Title',
+          desc: 'home.work5Desc',
+        },
+      ];
+
       const worksSection = CL.h('section.orchard-works-section#worksSection', null,
         CL.h('div.container', null,
           CL.h('div.section-meta-head', null,
-            CL.h('h2', { 'data-i18n': 'home.worksHeading', text: t('home.worksHeading') })
+            CL.h('h2', { 'data-i18n': 'home.worksHeading', text: t('home.worksHeading') }),
+            CL.h('span.mono.muted', { 'data-i18n': 'home.worksSectionNum', text: t('home.worksSectionNum') })
           ),
 
-          CL.h('div.orchard-works-grid', null,
-            // Work 01: Full-Width Massive Hero Showcase (Orchard style)
-            CL.h('div.orchard-work-card.full-width', {
-              onclick: () => {
-                const d = CL.templates.createDesign('dewy-glass', 'dewy-crystal');
-                CL.store.saveDraft(d);
-                CL.go('#/editor');
-              },
-            },
-              CL.h('img.orchard-work-img', {
-                src: 'https://images.unsplash.com/photo-1586495777744-4413f21062fa?auto=format&fit=crop&w=1200&q=80',
-                alt: t('home.work1Title'),
-                loading: 'eager',
-                decoding: 'async',
-              }),
-              CL.h('div.orchard-work-overlay', null,
-                CL.h('span.orchard-work-badge', { 'data-i18n': 'home.work1Badge', text: t('home.work1Badge') }),
-                CL.h('div.orchard-work-info', null,
-                  CL.h('div', null,
-                    CL.h('h3.orchard-work-title', { 'data-i18n': 'home.work1Title', text: t('home.work1Title') }),
-                    CL.h('p.orchard-work-desc', { 'data-i18n': 'home.work1Desc', text: t('home.work1Desc') })
-                  ),
-                  CL.h('span.orchard-work-btn', { html: `<span data-i18n="home.customize3d">${t('home.customize3d')}</span>` + CL.icon('arrowRight') })
-                )
-              )
-            ),
-
-            // Work 02 & 03: Split 2-Column Row (Orchard style)
-            CL.h('div.orchard-works-row', null,
-              CL.h('div.orchard-work-card.half-width', {
+          CL.h('div.orchard-bento-grid', null,
+            worksData.map((w) =>
+              CL.h(`div.orchard-work-card.${w.span}`, {
                 onclick: () => {
-                  const d = CL.templates.createDesign('velvet-rose', 'velvet-round');
+                  const d = CL.templates.createDesign(w.tpl, w.model);
                   CL.store.saveDraft(d);
                   CL.go('#/editor');
                 },
               },
                 CL.h('img.orchard-work-img', {
-                  src: 'https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&w=800&q=80',
-                  alt: t('home.work2Title'),
-                  loading: 'lazy',
+                  src: w.img,
+                  alt: t(w.title),
+                  loading: w.eager ? 'eager' : 'lazy',
                   decoding: 'async',
                 }),
                 CL.h('div.orchard-work-overlay', null,
-                  CL.h('span.orchard-work-badge', { 'data-i18n': 'home.work2Badge', text: t('home.work2Badge') }),
+                  CL.h('span.orchard-work-badge', { 'data-i18n': w.badge, text: t(w.badge) }),
                   CL.h('div.orchard-work-info', null,
                     CL.h('div', null,
-                      CL.h('h3.orchard-work-title', { 'data-i18n': 'home.work2Title', text: t('home.work2Title') }),
-                      CL.h('p.orchard-work-desc', { 'data-i18n': 'home.work2Desc', text: t('home.work2Desc') })
+                      CL.h('h3.orchard-work-title', { 'data-i18n': w.title, text: t(w.title) }),
+                      CL.h('p.orchard-work-desc', { 'data-i18n': w.desc, text: t(w.desc) })
                     ),
-                    CL.h('span.orchard-work-btn', { html: `<span data-i18n="home.design3d">${t('home.design3d')}</span>` + CL.icon('arrowRight') })
-                  )
-                )
-              ),
-
-              CL.h('div.orchard-work-card.half-width', {
-                onclick: () => {
-                  const d = CL.templates.createDesign('seoul-noir', 'square-monolith');
-                  CL.store.saveDraft(d);
-                  CL.go('#/editor');
-                },
-              },
-                CL.h('img.orchard-work-img', {
-                  src: 'https://images.unsplash.com/photo-1512496015851-a90fb38ba796?auto=format&fit=crop&w=800&q=80',
-                  alt: t('home.work3Title'),
-                  loading: 'lazy',
-                  decoding: 'async',
-                }),
-                CL.h('div.orchard-work-overlay', null,
-                  CL.h('span.orchard-work-badge', { 'data-i18n': 'home.work3Badge', text: t('home.work3Badge') }),
-                  CL.h('div.orchard-work-info', null,
-                    CL.h('div', null,
-                      CL.h('h3.orchard-work-title', { 'data-i18n': 'home.work3Title', text: t('home.work3Title') }),
-                      CL.h('p.orchard-work-desc', { 'data-i18n': 'home.work3Desc', text: t('home.work3Desc') })
-                    ),
-                    CL.h('span.orchard-work-btn', { html: `<span data-i18n="home.design3d">${t('home.design3d')}</span>` + CL.icon('arrowRight') })
-                  )
-                )
-              )
-            ),
-
-            // Work 04 & 05: Split 2-Column Row (Orchard style)
-            CL.h('div.orchard-works-row', null,
-              CL.h('div.orchard-work-card.half-width', {
-                onclick: () => {
-                  const d = CL.templates.createDesign('chrome-minimal', 'slim-atelier');
-                  CL.store.saveDraft(d);
-                  CL.go('#/editor');
-                },
-              },
-                CL.h('img.orchard-work-img', {
-                  src: 'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=800&q=80',
-                  alt: t('home.work4Title'),
-                  loading: 'lazy',
-                  decoding: 'async',
-                }),
-                CL.h('div.orchard-work-overlay', null,
-                  CL.h('span.orchard-work-badge', { 'data-i18n': 'home.work4Badge', text: t('home.work4Badge') }),
-                  CL.h('div.orchard-work-info', null,
-                    CL.h('div', null,
-                      CL.h('h3.orchard-work-title', { 'data-i18n': 'home.work4Title', text: t('home.work4Title') }),
-                      CL.h('p.orchard-work-desc', { 'data-i18n': 'home.work4Desc', text: t('home.work4Desc') })
-                    ),
-                    CL.h('span.orchard-work-btn', { html: `<span data-i18n="home.design3d">${t('home.design3d')}</span>` + CL.icon('arrowRight') })
-                  )
-                )
-              ),
-
-              CL.h('div.orchard-work-card.half-width', {
-                onclick: () => {
-                  const d = CL.templates.createDesign('porcelain-ivory', 'velvet-round');
-                  CL.store.saveDraft(d);
-                  CL.go('#/editor');
-                },
-              },
-                CL.h('img.orchard-work-img', {
-                  src: 'https://images.unsplash.com/photo-1571781926291-c477ebfd024b?auto=format&fit=crop&w=800&q=80',
-                  alt: t('home.work5Title'),
-                  loading: 'lazy',
-                  decoding: 'async',
-                }),
-                CL.h('div.orchard-work-overlay', null,
-                  CL.h('span.orchard-work-badge', { 'data-i18n': 'home.work5Badge', text: t('home.work5Badge') }),
-                  CL.h('div.orchard-work-info', null,
-                    CL.h('div', null,
-                      CL.h('h3.orchard-work-title', { 'data-i18n': 'home.work5Title', text: t('home.work5Title') }),
-                      CL.h('p.orchard-work-desc', { 'data-i18n': 'home.work5Desc', text: t('home.work5Desc') })
-                    ),
-                    CL.h('span.orchard-work-btn', { html: `<span data-i18n="home.design3d">${t('home.design3d')}</span>` + CL.icon('arrowRight') })
+                    CL.h('span.orchard-work-icon-btn', { html: CL.icon('arrowRight') })
                   )
                 )
               )
@@ -186,33 +130,34 @@
         )
       );
 
-      // 4. Orchard Standards & Foundry Table (Orchard Client Table Style)
+      // 3. Lab Standards (3x2 Architectural Hairline Grid)
       const standardsSection = CL.h('section.orchard-standards-section', null,
         CL.h('div.container', null,
           CL.h('div.section-meta-head', null,
-            CL.h('h2', { 'data-i18n': 'home.standardsHeading', text: t('home.standardsHeading') })
+            CL.h('h2', { 'data-i18n': 'home.standardsHeading', text: t('home.standardsHeading') }),
+            CL.h('span.mono.muted', { 'data-i18n': 'home.standardsBadge', text: t('home.standardsBadge') })
           ),
 
-          CL.h('div.orchard-table', null,
+          CL.h('div.standards-bento-grid', null,
             [
-              ['home.std1Title', 'home.std1Desc', 'home.std1Tag'],
-              ['home.std2Title', 'home.std2Desc', 'home.std2Tag'],
-              ['home.std3Title', 'home.std3Desc', 'home.std3Tag'],
-              ['home.std4Title', 'home.std4Desc', 'home.std4Tag'],
-              ['home.std5Title', 'home.std5Desc', 'home.std5Tag'],
-              ['home.std6Title', 'home.std6Desc', 'home.std6Tag'],
-            ].map(([titleKey, descKey, tagKey]) =>
-              CL.h('div.orchard-table-row', null,
+              ['home.std1Tag', 'home.std1Title', 'home.std1Desc'],
+              ['home.std2Tag', 'home.std2Title', 'home.std2Desc'],
+              ['home.std3Tag', 'home.std3Title', 'home.std3Desc'],
+              ['home.std4Tag', 'home.std4Title', 'home.std4Desc'],
+              ['home.std5Tag', 'home.std5Title', 'home.std5Desc'],
+              ['home.std6Tag', 'home.std6Title', 'home.std6Desc'],
+            ].map(([tagKey, titleKey, descKey]) =>
+              CL.h('div.orchard-std-cell.orchard-table-row', null,
+                CL.h('span.orchard-table-tag', { 'data-i18n': tagKey, text: t(tagKey) }),
                 CL.h('h3', { 'data-i18n': titleKey, text: t(titleKey) }),
-                CL.h('p', { 'data-i18n': descKey, text: t(descKey) }),
-                CL.h('span.orchard-table-tag', { 'data-i18n': tagKey, text: t(tagKey) })
+                CL.h('p', { 'data-i18n': descKey, text: t(descKey) })
               )
             )
           )
         )
       );
 
-      // 5. Orchard Studio Journal & Insights (Orchard News/Blog 4-Card Grid)
+      // 4. Archive Notes / Engineering (Compact 3-Column Grid)
       const journalSection = CL.h('section.orchard-journal-section', null,
         CL.h('div.container', null,
           CL.h('div.section-meta-head', null,
@@ -229,10 +174,13 @@
               const articleTitle = t(titleKey);
               return CL.h('div.orchard-journal-card', {
                 onclick: () => {
-                  CL.toast('Atelier Journal: ' + articleTitle);
+                  CL.toast(articleTitle);
                 },
               },
-                CL.h('span.orchard-journal-date', { 'data-i18n': dateKey, text: t(dateKey) }),
+                CL.h('div.journal-card-top', null,
+                  CL.h('span.orchard-journal-date', { 'data-i18n': dateKey, text: t(dateKey) }),
+                  CL.h('span.journal-arrow', { html: '↗' })
+                ),
                 CL.h('h4', { 'data-i18n': titleKey, text: articleTitle }),
                 CL.h('p', { 'data-i18n': descKey, text: t(descKey) })
               );
@@ -241,13 +189,15 @@
         )
       );
 
-      // 6. Orchard Connect / Newsletter Callout (Orchard Stay Connected Box)
+      // 5. Connect Bar (Horizontal 2-Column Split Grid)
       const emailInput = CL.h('input.input', { placeholder: t('home.connectPlaceholder'), 'data-i18n-ph': 'home.connectPlaceholder', type: 'email' });
       const connectSection = CL.h('section.orchard-connect-section', null,
         CL.h('div.container', null,
           CL.h('div.orchard-connect-box', null,
-            CL.h('h2', { 'data-i18n': 'home.connectHeading', text: t('home.connectHeading') }),
-            CL.h('p', { 'data-i18n': 'home.connectDesc', text: t('home.connectDesc') }),
+            CL.h('div.connect-copy', null,
+              CL.h('h2', { 'data-i18n': 'home.connectHeading', text: t('home.connectHeading') }),
+              CL.h('p', { 'data-i18n': 'home.connectDesc', text: t('home.connectDesc') })
+            ),
             CL.h('div.orchard-connect-form', null,
               emailInput,
               CL.h('button.btn.btn-primary', {

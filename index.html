@@ -7,14 +7,15 @@
   <meta name="description" content="COSLAB lipstick factory — design your own lipstick online." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <!-- UI & K-Beauty Editorial typography (Optimized lightweight weights) -->
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Cinzel:wght@400;600&family=Italiana&family=Instrument+Serif:ital@0;1&family=Playfair+Display:wght@400;600&family=Montserrat:wght@500;700&family=Cormorant+Garamond:wght@400;600&family=Bebas+Neue&family=Dancing+Script:wght@400;700&family=Noto+Sans+KR:wght@400;500;700&family=Noto+Sans+SC:wght@400;700&family=Noto+Sans+JP:wght@400;700&family=Noto+Naskh+Arabic:wght@400;700&display=swap" />
+  <!-- Primary UI font (fast non-blocking load) + async decorative/international fonts -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Italiana&family=Instrument+Serif:ital@0;1&family=Playfair+Display:wght@400;600&family=Montserrat:wght@500;700&family=Cormorant+Garamond:wght@400;600&family=Bebas+Neue&family=Dancing+Script:wght@400;700&family=Noto+Sans+KR:wght@400;500;700&family=Noto+Sans+SC:wght@400;700&family=Noto+Sans+JP:wght@400;700&family=Noto+Naskh+Arabic:wght@400;700&display=swap" media="print" onload="this.media='all'" />
 
-  <link rel="stylesheet" href="css/tokens.css?v=2" />
-  <link rel="stylesheet" href="css/base.css?v=2" />
-  <link rel="stylesheet" href="css/layout.css?v=2" />
-  <link rel="stylesheet" href="css/pages.css?v=2" />
-  <link rel="stylesheet" href="css/editor.css?v=2" />
+  <link rel="stylesheet" href="css/tokens.css?v=3" />
+  <link rel="stylesheet" href="css/base.css?v=3" />
+  <link rel="stylesheet" href="css/layout.css?v=3" />
+  <link rel="stylesheet" href="css/pages.css?v=3" />
+  <link rel="stylesheet" href="css/editor.css?v=3" />
 </head>
 <body>
   <a class="skip-link" href="#app" data-i18n="common.skip">Skip to content</a>
@@ -55,15 +56,12 @@
             </a>
             <span class="pill-tag">KOREA</span>
           </div>
-          <p class="footer-tagline" data-i18n="footer.tagline">
-            Of the lips by the people for the beauty.
-          </p>
           <div class="footer-status-badge">
             <span class="status-dot"></span>
-            <span data-i18n="footer.status">KOREA'S ONE AND ONLY LIP COLOR LAB</span>
+            <span data-i18n="footer.status">SEOUL · INCHEON LIP LAB</span>
           </div>
           <div class="footer-location mono muted">
-            INCHEON · 032-715-4277 · coslabkorea@gmail.com
+            032-715-4277 · coslabkorea@gmail.com
           </div>
         </div>
 
@@ -94,14 +92,12 @@
         <!-- Col 4: MANUFACTURING -->
         <div class="footer-col">
           <div class="footer-col-header">
-            <h4 data-i18n="footer.mfg">Factory &amp; Lab</h4>
+            <h4 data-i18n="footer.mfg">Lab</h4>
           </div>
           <div class="footer-links">
             <span class="mono" style="font-size: 11px; color: var(--muted); line-height: 1.6;">
-              COSLAB KOREA<br>
-              20, 423 CHEONGCHEON-DONG<br>
-              BUPYEONG-GU, INCHEON<br>
-              BIZ REG: 337-88-03756
+              INCHEON, KOREA<br>
+              CGMP · ISO 22716
             </span>
           </div>
         </div>
@@ -110,16 +106,13 @@
       <!-- Footer Bottom Bar -->
       <div class="footer-bottom">
         <div class="footer-bottom-left">
-          <span>© <span id="year">2026</span> COSLAB KOREA.</span>
+          <span>© <span id="year">2026</span> COSLAB.</span>
           <span class="muted-dot">·</span>
-          <span class="muted" data-i18n="footer.rights">All rights reserved.</span>
-          <span class="muted-dot">·</span>
-          <span class="muted">INCHEON · SEOUL</span>
+          <span class="muted">SEOUL · INCHEON</span>
         </div>
         <div class="footer-bottom-right">
           <button type="button" class="footer-back-to-top" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
-            <span data-i18n="footer.backToTop">BACK TO TOP</span>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15l-6-6-6 6"/></svg>
+            <span data-i18n="footer.backToTop">TOP ↑</span>
           </button>
         </div>
       </div>
@@ -129,41 +122,41 @@
   <div class="toast-host" id="toastHost" aria-live="polite"></div>
   <div class="modal-host" id="modalHost"></div>
 
-  <!-- Vendor -->
-  <script src="vendor/three.min.js"></script>
-  <script src="vendor/jspdf.umd.min.js"></script>
+  <!-- Heavy 3D & PDF Vendor (async non-blocking load) -->
+  <script async src="vendor/three.min.js"></script>
+  <script async src="vendor/jspdf.umd.min.js"></script>
 
   <!-- i18n -->
-  <script src="js/i18n/i18n.js"></script>
-  <script src="js/i18n/en.js"></script>
-  <script src="js/i18n/vi.js"></script>
-  <script src="js/i18n/zh.js"></script>
-  <script src="js/i18n/ko.js"></script>
-  <script src="js/i18n/ja.js"></script>
-  <script src="js/i18n/ar.js"></script>
-  <script src="js/i18n/fr.js"></script>
-  <script src="js/i18n/es.js"></script>
+  <script src="js/i18n/i18n.js?v=3"></script>
+  <script src="js/i18n/en.js?v=3"></script>
+  <script src="js/i18n/vi.js?v=3"></script>
+  <script src="js/i18n/zh.js?v=3"></script>
+  <script src="js/i18n/ko.js?v=3"></script>
+  <script src="js/i18n/ja.js?v=3"></script>
+  <script src="js/i18n/ar.js?v=3"></script>
+  <script src="js/i18n/fr.js?v=3"></script>
+  <script src="js/i18n/es.js?v=3"></script>
 
   <!-- Core -->
-  <script src="js/core/utils.js"></script>
-  <script src="js/core/icons.js"></script>
-  <script src="js/core/store.js"></script>
-  <script src="js/core/ui.js"></script>
-  <script src="js/data/models.js"></script>
-  <script src="js/data/templates.js"></script>
-  <script src="js/render/lipstick-svg.js"></script>
-  <script src="js/render/exporter.js"></script>
-  <script src="js/render/preview3d.js"></script>
-  <script src="js/components/color-picker.js"></script>
+  <script src="js/core/utils.js?v=3"></script>
+  <script src="js/core/icons.js?v=3"></script>
+  <script src="js/core/store.js?v=3"></script>
+  <script src="js/core/ui.js?v=3"></script>
+  <script src="js/data/models.js?v=3"></script>
+  <script src="js/data/templates.js?v=3"></script>
+  <script src="js/render/lipstick-svg.js?v=3"></script>
+  <script src="js/render/exporter.js?v=3"></script>
+  <script src="js/render/preview3d.js?v=3"></script>
+  <script src="js/components/color-picker.js?v=3"></script>
 
   <!-- Pages -->
-  <script src="js/pages/home.js"></script>
-  <script src="js/pages/design.js"></script>
-  <script src="js/pages/editor.js"></script>
-  <script src="js/pages/gallery.js"></script>
-  <script src="js/pages/my-designs.js"></script>
-  <script src="js/pages/settings.js"></script>
+  <script src="js/pages/home.js?v=3"></script>
+  <script src="js/pages/design.js?v=3"></script>
+  <script src="js/pages/editor.js?v=3"></script>
+  <script src="js/pages/gallery.js?v=3"></script>
+  <script src="js/pages/my-designs.js?v=3"></script>
+  <script src="js/pages/settings.js?v=3"></script>
 
-  <script src="js/app.js?v=2"></script>
+  <script src="js/app.js?v=3"></script>
 </body>
 </html>
