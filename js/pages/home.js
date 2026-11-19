@@ -1,6 +1,6 @@
 /* ==========================================================
    COSLAB — Home Page
-   Visual-first landing: hero with live tubes, marquee,
+   Visual-first landing: hero with live tubes,
    expanding image cards, silhouette rail, 4-step flow,
    stat strip and a closing CTA. Minimal copy throughout.
    ========================================================== */
@@ -13,7 +13,6 @@
     { src: 'assets/campaign-detail.jpg', title: 'Crystal & Silk', descKey: 'landing.c3', alt: 'Crystal glass applicator on silk' },
   ];
 
-  const MARQUEE = ['Velvet', 'Dewy', 'Satin', 'Chrome', 'Glass', 'MLBB', 'OEM / ODM', '72h Prototype', 'Made in Korea'];
 
   const STEPS = [
     { key: 'landing.step1', viz: 'shape' },
@@ -110,12 +109,6 @@
           )
         )
       );
-
-      /* ---------- 2. Marquee ---------- */
-      const marqueeRow = () => CL.h('div.lp-marquee-row', null,
-        MARQUEE.map((w) => CL.h('span.lp-marquee-item', null, CL.h('span', { text: w }), CL.h('i', { text: '✦' }))));
-      const marquee = CL.h('section.lp-marquee', { 'aria-hidden': 'true' },
-        CL.h('div.lp-marquee-track', null, marqueeRow(), marqueeRow()));
 
       /* ---------- 3. Expanding collection cards ---------- */
       let activeCard = 0;
@@ -233,7 +226,7 @@
         )
       );
 
-      root.append(hero, marquee, collection, silhouettes, steps, stats, cta);
+      root.append(hero, collection, silhouettes, steps, stats, cta);
       container.appendChild(root);
 
       return () => {
