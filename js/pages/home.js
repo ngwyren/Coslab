@@ -104,7 +104,7 @@
           ),
           CL.h('div.lp-steps', null,
             STEPS.map((s, i) =>
-              CL.h('a.lp-step.framer-reveal', { href: `#/editor?step=${i + 1}` },
+              CL.h('a.lp-step.framer-reveal', { href: i === 0 ? '#/design' : `#/editor?step=${i}` },
                 CL.h('span.lp-step-num', { text: String(i + 1).padStart(2, '0') }),
                 CL.h('div.lp-step-viz', { html: stepVisual(s.viz) }),
                 CL.h('span.lp-step-name', { 'data-i18n': s.key, text: t(s.key) })

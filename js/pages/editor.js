@@ -10,10 +10,9 @@
   CL.pages = CL.pages || {};
 
   const STEPS = [
-    { id: 'model', num: '01', vi: 'Model', en: 'Model' },
-    { id: 'colors', num: '02', vi: 'Màu', en: 'Color' },
-    { id: 'text', num: '03', vi: 'Chữ', en: 'Text' },
-    { id: 'graphics', num: '04', vi: 'Logo', en: 'Logo' },
+    { id: 'colors', num: '01', vi: 'Màu', en: 'Color' },
+    { id: 'text', num: '02', vi: 'Chữ', en: 'Text' },
+    { id: 'graphics', num: '03', vi: 'Logo', en: 'Logo' },
   ];
 
   // Curated minimalist K-Beauty & Packaging color grid (17 swatches + 1 custom)
@@ -195,7 +194,7 @@
         }
 
         const queryStep = ctx.query && ctx.query.step;
-        let activeStepIdx = queryStep ? Math.max(0, Math.min(3, parseInt(queryStep, 10) - 1)) : (defaultStep || 0);
+        let activeStepIdx = queryStep ? Math.max(0, Math.min(STEPS.length - 1, parseInt(queryStep, 10) - 1)) : (defaultStep || 0);
         let activeView = '2d';
         let activePart = 'base'; // strictly 'base' | 'cap'
         let selectedLayerId = null;
@@ -269,8 +268,8 @@
         const topbar = CL.h('header.editor-topbar', null,
           CL.h('div.editor-topbar-left', null,
             CL.h('a.studio-back-link', {
-              href: '#/',
-              html: CL.icon('arrowLeft') + '<span>Atelier</span>',
+              href: '#/design',
+              html: CL.icon('arrowLeft') + `<span>${t('nav.design')}</span>`,
             }),
             CL.h('div.editor-title-wrap', null, titleInput),
             CL.h('span.topbar-sep'),
@@ -459,7 +458,7 @@
         }
 
         function syncPartChips() {
-          partQuickBar.style.display = activeStepIdx > 0 && activeView === '2d' ? 'flex' : 'none';
+          partQuickBar.style.display = activeView === '2d' ? 'flex' : 'none';
           partQuickBar.querySelectorAll('.canvas-part-chip').forEach((btn) => {
             const pId = btn.dataset.partChip;
             btn.classList.toggle('is-active', pId === activePart);
@@ -517,9 +516,9 @@
             targetLayer = design.layers.find((l) => l.id === selectedLayerId);
           }
           if (!targetLayer) {
-            if (activeStepIdx === 2) {
+            if (STEPS[activeStepIdx].id === 'text') {
               targetLayer = design.layers.find((l) => l.type === 'text' && l.part === activePart);
-            } else if (activeStepIdx === 3) {
+            } else if (STEPS[activeStepIdx].id === 'graphics') {
               targetLayer = design.layers.find((l) => (l.type === 'image' || l.type === 'shape') && l.part === activePart);
             }
           }
@@ -533,7 +532,7 @@
           const holder = document.getElementById('canvasSvgHolder');
           if (!holder) return;
 
-          const showSafeZone = (activeStepIdx === 2 || activeStepIdx === 3) ? activePart : null;
+          const showSafeZone = STEPS[activeStepIdx].id !== 'colors' ? activePart : null;
 
           const svg = CL.render.renderSVG(design, {
             interactive: true,
@@ -551,7 +550,7 @@
           // Clicking Cap or Base selects that part (when past Step 1)
           svgEl.querySelectorAll('[data-part]').forEach((el) => {
             el.addEventListener('click', (e) => {
-              if (activeStepIdx === 0 || isSpaceDown) return;
+              if (isSpaceDown) return;
               e.stopPropagation();
               const p = el.getAttribute('data-part');
               if (p === 'cap' || p === 'base') {
@@ -565,7 +564,7 @@
           });
 
           // Interactive On-Surface Figma Transform Gizmo (Move, Rotate, Corner Resize, Smart Guides)
-          const targetLayer = (activeStepIdx === 2 || activeStepIdx === 3) ? getActiveTargetLayer() : null;
+          const targetLayer = STEPS[activeStepIdx].id !== 'colors' ? getActiveTargetLayer() : null;
 
           if (targetLayer && targetLayer.visible !== false) {
             const layout = CL.models.layout(design.model);
@@ -917,7 +916,7 @@
                 if (lyr) {
                   activePart = lyr.part;
                   syncPartChips();
-                  const targetStep = lyr.type === 'text' ? 2 : 3;
+                  const targetStep = STEPS.findIndex((s) => s.id === (lyr.type === 'text' ? 'text' : 'graphics'));
                   if (activeStepIdx !== targetStep) goToStep(targetStep);
                   else {
                     render2DCanvas();
@@ -950,12 +949,11 @@
           stepHeader.innerHTML = '';
           stepHeader.append(
             CL.h('h2.studio-step-title', { text: TITLES[step.id] }),
-            CL.h('span.studio-step-eyebrow', { text: isVi ? `Bước ${activeStepIdx + 1} / 4` : `Step ${activeStepIdx + 1} / 4` })
+            CL.h('span.studio-step-eyebrow', { text: isVi ? `Bước ${activeStepIdx + 1} / ${STEPS.length}` : `Step ${activeStepIdx + 1} / ${STEPS.length}` })
           );
 
           stepBody.innerHTML = '';
-          if (step.id === 'model') buildModelStep();
-          else if (step.id === 'colors') buildColorStep();
+          if (step.id === 'colors') buildColorStep();
           else if (step.id === 'text') buildTextStep();
           else if (step.id === 'graphics') buildLogoStep();
 
@@ -987,63 +985,6 @@
 
           if (backBtn) stepFooter.append(backBtn);
           stepFooter.append(nextBtn);
-        }
-
-        // ======================================================
-        // STEP 01: MODEL (SPACIOUS FIGMA ASSET LIST)
-        // ======================================================
-        function buildModelStep() {
-          // Big name list (same language as the home "5 silhouettes" showcase):
-          // active name dark, others faded. Hover previews the shape on the
-          // canvas without touching history; click commits it.
-          const MODELS = CL.models.MODELS;
-          const activeIdx = Math.max(0, MODELS.findIndex((m) => m.id === design.model));
-
-          // Same entrance as the home showcase: the new tube rises, untilts and fades in
-          let shownModel = design.model;
-          const swapCanvas = (id) => {
-            if (id === shownModel) return;
-            shownModel = id;
-            const keep = design.model;
-            design.model = id;
-            render2DCanvas();
-            design.model = keep;
-            const svg = document.querySelector('#canvasSvgHolder svg');
-            if (svg) { svg.classList.remove('cl-swap-in'); void svg.offsetWidth; svg.classList.add('cl-swap-in'); }
-          };
-          const previewModel = (id) => swapCanvas(id);
-
-          const list = CL.h('div.studio-model-list', {
-            onmouseleave: () => swapCanvas(design.model),
-          },
-            MODELS.map((m, i) =>
-              CL.h('button.studio-model-name' + (i === activeIdx ? '.is-active' : ''), {
-                type: 'button',
-                'aria-pressed': String(i === activeIdx),
-                onmouseenter: () => previewModel(m.id),
-                onfocus: () => previewModel(m.id),
-                onclick: () => {
-                  if (m.id === design.model) return;
-                  swapCanvas(m.id); // animate (no-op if hover already showed it)
-                  design.model = m.id;
-                  pushHistory();
-                  // re-render the panel only; keep the animated canvas as-is
-                  renderStepPanel();
-                },
-              },
-                CL.h('span.studio-model-label', { text: t(m.nameKey) }),
-                CL.h('span.studio-model-desc', { text: t(m.descKey) })
-              ))
-          );
-
-          stepBody.append(
-            CL.h('div.studio-model-pick', null,
-              CL.h('span.studio-model-count', {
-                text: `${String(activeIdx + 1).padStart(2, '0')} / ${String(MODELS.length).padStart(2, '0')}`,
-              }),
-              list
-            )
-          );
         }
 
         // ======================================================
