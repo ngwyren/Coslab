@@ -94,7 +94,7 @@
     current = { route, r };
     cleanup = page.render(app, { query: r.query, sub: r.sub, anchor: route.anchor, rerender: !!opts.rerender });
     I18N.apply(document);
-    document.title = `${t(page.titleKey || 'nav.home')} — COSLAB`;
+    document.title = route.page === 'home' ? 'CosLab' : `${t(page.titleKey || 'nav.home')} — CosLab`;
     if (!opts.rerender) {
       if (route.anchor) setTimeout(() => { const el = document.getElementById(route.anchor); el && el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 60);
       else window.scrollTo({ top: 0 });

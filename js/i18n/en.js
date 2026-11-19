@@ -7,7 +7,7 @@
       next: 'Next', apply: 'Apply', search: 'Search...', all: 'All', loading: 'Loading...', actions: 'Actions',
     },
     nav: {
-      home: 'Atelier', design: 'Design', gallery: 'Archive', myDesigns: 'Vault', settings: 'Setting', start: 'Start Design',
+      home: 'CosLab', design: 'Design', gallery: 'Archive', myDesigns: 'Vault', settings: 'Setting', start: 'Start Design',
     },
     footer: {
       tagline: 'Korea Lip Color Lab · OEM / ODM',

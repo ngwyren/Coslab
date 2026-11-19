@@ -7,7 +7,7 @@
       next: 'Siguiente', apply: 'Aplicar', search: 'Buscar...', all: 'Todos', loading: 'Cargando...', actions: 'Acciones',
     },
     nav: {
-      home: 'Inicio', design: 'Diseño', gallery: 'Galería', myDesigns: 'Mis diseños', settings: 'Ajustes', start: 'Diseñar labial',
+      home: 'CosLab', design: 'Diseño', gallery: 'Galería', myDesigns: 'Mis diseños', settings: 'Ajustes', start: 'Diseñar labial',
     },
     footer: {
       tagline: 'Estudio de formulación e ingeniería OEM/ODM de liptint a medida. Laboratorio en Seúl, tolerancia de molde de 0.1mm.',

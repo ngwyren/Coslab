@@ -7,11 +7,6 @@
 (function (CL) {
   CL.pages = CL.pages || {};
 
-  const COLLECTION = [
-    { src: 'assets/campaign-hero.jpg', title: 'Triad', descKey: 'landing.c1', alt: 'COSLAB lip tint trio' },
-    { src: 'assets/campaign-duo.jpg', title: 'Velvet & Chrome', descKey: 'landing.c2', alt: 'Velvet and chrome lip tint duo' },
-    { src: 'assets/campaign-detail.jpg', title: 'Crystal & Silk', descKey: 'landing.c3', alt: 'Crystal glass applicator on silk' },
-  ];
 
 
   const STEPS = [
@@ -34,6 +29,44 @@
   function openInStudio(tplId, modelId) {
     CL.store.saveDraft(CL.templates.createDesign(tplId, modelId));
     CL.go('#/editor');
+  }
+
+  /**
+   * Scroll-driven pinned section: `stage` is position:sticky inside a taller `track`.
+   * Scroll progress through the track is split into n equal steps; onIndex(i)
+   * fires whenever the step changes (and once on start / after resize).
+   */
+  function pinScroll(track, stage, n, onIndex) {
+    let current = -1, ticking = false;
+    const range = () => {
+      const r = track.getBoundingClientRect();
+      const stickyTop = parseFloat(getComputedStyle(stage).top) || 0;
+      return { r, stickyTop, span: Math.max(1, track.offsetHeight - stage.offsetHeight) };
+    };
+    const update = (force) => {
+      const { r, stickyTop, span } = range();
+      const i = Math.floor(CL.clamp((stickyTop - r.top) / span, 0, 0.9999) * n);
+      if (force || i !== current) { current = i; onIndex(i); }
+    };
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => { ticking = false; update(false); });
+    };
+    const onResize = () => requestAnimationFrame(() => update(true));
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onResize, { passive: true });
+    requestAnimationFrame(() => update(true));
+    return {
+      scrollTo(i) {
+        const { r, stickyTop, span } = range();
+        window.scrollTo({ top: window.scrollY + r.top - stickyTop + ((i + 0.5) / n) * span, behavior: 'smooth' });
+      },
+      destroy() {
+        window.removeEventListener('scroll', onScroll);
+        window.removeEventListener('resize', onResize);
+      },
+    };
   }
 
   /** Animate numbers from 0 → value once visible. */
@@ -79,16 +112,13 @@
 
     render(container) {
       const observers = [];
+      const pins = [];
       const root = CL.h('div.page.page-home.lp');
 
       /* ---------- 1. Hero ---------- */
       const hero = CL.h('section.lp-hero', null,
         CL.h('div.container.lp-hero-grid', null,
           CL.h('div.lp-hero-copy', null,
-            CL.h('span.lp-eyebrow', null,
-              CL.h('span.lp-dot'),
-              CL.h('span', { 'data-i18n': 'home.eyebrow', text: t('home.eyebrow') })
-            ),
             CL.h('h1.lp-title', { html: 'COSLAB<br/>ATELIER' }),
             CL.h('p.lp-tagline', { 'data-i18n': 'landing.tagline', text: t('landing.tagline') }),
             CL.h('div.lp-actions', null,
@@ -110,70 +140,54 @@
         )
       );
 
-      /* ---------- 3. Expanding collection cards ---------- */
-      let activeCard = 0;
-      const cards = COLLECTION.map((c, idx) =>
-        CL.h('article.lp-xcard' + (idx === 0 ? '.is-open' : ''), {
-          tabindex: '0',
-          role: 'button',
-          'aria-expanded': idx === 0 ? 'true' : 'false',
-          'aria-label': c.title,
-          onmouseenter: () => openCard(idx),
-          onfocus: () => openCard(idx),
-          onclick: () => (activeCard === idx ? CL.go('#/design') : openCard(idx)),
-          onkeydown: (e) => { if (e.key === 'Enter') CL.go('#/design'); },
-        },
-          CL.h('img', { src: c.src, alt: c.alt, loading: idx === 0 ? 'eager' : 'lazy', decoding: 'async' }),
-          CL.h('span.lp-xcard-index', { text: String(idx + 1).padStart(2, '0') }),
-          CL.h('span.lp-xcard-plus', { html: '+' }),
-          CL.h('div.lp-xcard-body', null,
-            CL.h('h3', { text: c.title }),
-            CL.h('p', { 'data-i18n': c.descKey, text: t(c.descKey) }),
-            CL.h('span.lp-xcard-cta', { html: `<span data-i18n="landing.start">${t('landing.start')}</span>` + CL.icon('arrowRight') })
-          )
-        ));
-      function openCard(idx) {
-        if (idx === activeCard) return;
-        activeCard = idx;
-        cards.forEach((el, i) => {
-          el.classList.toggle('is-open', i === idx);
-          el.setAttribute('aria-expanded', i === idx ? 'true' : 'false');
-        });
-      }
-      const collection = CL.h('section.lp-section#worksSection', null,
-        CL.h('div.container', null,
-          CL.h('div.lp-head.framer-reveal', null,
-            CL.h('h2', { 'data-i18n': 'landing.collection', text: t('landing.collection') }),
-            CL.h('span.lp-count', { text: '03' })
-          ),
-          CL.h('div.lp-xcards', null, cards)
-        )
-      );
 
-      /* ---------- 4. Silhouette rail (live SVG renders) ---------- */
-      const rail = CL.h('div.lp-rail', null,
-        CL.templates.SAMPLES.slice(0, 5).map(([tplId, modelId]) => {
-          const m = CL.models.getModel(modelId);
-          return CL.h('button.lp-rail-item.framer-reveal', {
-            type: 'button',
-            title: t(m.nameKey),
-            onclick: () => openInStudio(tplId, modelId),
-          },
-            // Bottom-aligned so every tube sits on the same baseline across the grid
-            CL.h('div.lp-rail-media', { html: tube(tplId, modelId, 150, { preserveAspectRatio: 'xMidYMax meet' }) }),
-            CL.h('span.lp-rail-name', { text: t(m.nameKey) })
-          );
-        })
-      );
-      const silhouettes = CL.h('section.lp-section', null,
-        CL.h('div.container', null,
-          CL.h('div.lp-head.framer-reveal', null,
+      /* ---------- 3. Silhouettes — scroll-synced showcase ----------
+         Pinned stage: a list of names on one side (active one dark,
+         the rest faded) and a large live tube render on the other. */
+      const FORMS = CL.templates.SAMPLES.slice(0, 5);
+      const names = FORMS.map(([, modelId], i) => {
+        const m = CL.models.getModel(modelId);
+        return CL.h('button.lp-ss-name', { type: 'button', onclick: () => forms.scrollTo(i) }, t(m.nameKey));
+      });
+      const visuals = FORMS.map(([tplId, modelId]) => {
+        const d = CL.templates.createDesign(tplId, modelId);
+        return CL.h('div.lp-ss-visual', { style: { '--tint': CL.render.tintOf(d, 0.86) } },
+          CL.h('div.lp-ss-tube', { html: CL.render.renderTight(d, { width: 220 }) }));
+      });
+      const metas = FORMS.map(([, modelId]) => {
+        const m = CL.models.getModel(modelId);
+        return CL.h('span.lp-ss-meta', { text: t(m.descKey) });
+      });
+      const ssCount = CL.h('span.lp-ss-count');
+      let activeForm = 0;
+      const ssStage = CL.h('div.lp-ss-stage', null,
+        CL.h('div.lp-ss-side', null,
+          CL.h('div.lp-ss-head', null,
             CL.h('h2', { 'data-i18n': 'landing.forms', text: t('landing.forms') }),
-            CL.h('a.lp-link', { href: '#/gallery', html: `<span data-i18n="landing.explore">${t('landing.explore')}</span>` + CL.icon('arrowRight') })
+            ssCount
           ),
-          rail
+          CL.h('div.lp-ss-names', null, names)
+        ),
+        CL.h('div.lp-ss-card', null,
+          visuals,
+          CL.h('div.lp-ss-card-foot', null,
+            CL.h('div.lp-ss-metas', null, metas),
+            CL.h('button.lp-ss-cta', {
+              type: 'button',
+              onclick: () => openInStudio(FORMS[activeForm][0], FORMS[activeForm][1]),
+              html: `<span data-i18n="landing.start">${t('landing.start')}</span>` + CL.icon('arrowRight'),
+            })
+          )
         )
       );
+      const ssTrack = CL.h('div.lp-ss', { style: { '--n': String(FORMS.length) } }, ssStage);
+      const forms = pinScroll(ssTrack, ssStage, FORMS.length, (i) => {
+        activeForm = i;
+        [names, visuals, metas].forEach((list) => list.forEach((el, k) => el.classList.toggle('is-active', k === i)));
+        ssCount.textContent = `${String(i + 1).padStart(2, '0')} / ${String(FORMS.length).padStart(2, '0')}`;
+      });
+      pins.push(forms);
+      const silhouettes = CL.h('section.lp-section#worksSection', null, CL.h('div.container', null, ssTrack));
 
       /* ---------- 5. Four steps ---------- */
       const steps = CL.h('section.lp-section', null,
@@ -226,11 +240,12 @@
         )
       );
 
-      root.append(hero, collection, silhouettes, steps, stats, cta);
+      root.append(hero, silhouettes, steps, stats, cta);
       container.appendChild(root);
 
       return () => {
         observers.forEach((io) => io && io.disconnect());
+        pins.forEach((p) => p.destroy());
       };
     },
   };

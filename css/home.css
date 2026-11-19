@@ -39,7 +39,7 @@
   transition: gap var(--dur-fast) var(--ease);
 }
 .lp-link:hover { gap: 10px; }
-.lp-link svg, .lp-xcard-cta svg, .lp-actions svg, .lp-cta-btn svg { width: 16px; height: 16px; }
+.lp-link svg, .lp-actions svg, .lp-cta-btn svg { width: 16px; height: 16px; }
 
 /* ---------- 1. Hero ---------- */
 .lp-hero { padding-block: clamp(40px, 6vw, 88px) clamp(40px, 5vw, 72px); overflow: hidden; }
@@ -49,25 +49,8 @@
   align-items: center;
   gap: clamp(24px, 4vw, 64px);
 }
-.lp-eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 12px;
-  border-radius: var(--r-pill);
-  background: var(--surface-2);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.1em;
-  color: var(--text-2);
-}
-.lp-dot {
-  width: 6px; height: 6px; border-radius: 50%;
-  background: #b85c66;
-  box-shadow: 0 0 0 4px rgba(184, 92, 102, 0.16);
-}
 .lp-title {
-  margin-top: 22px;
+  margin-top: 0;
   font-size: clamp(56px, 9.4vw, 148px);
   font-weight: 700;
   line-height: 0.88;
@@ -117,142 +100,118 @@
 }
 
 
-/* ---------- 3. Expanding image cards ---------- */
-.lp-xcards {
-  display: flex;
-  gap: 12px;
-  height: clamp(420px, 44vw, 600px);
-}
-.lp-xcard {
+
+/* ---------- 3. Silhouettes — scroll-synced showcase ---------- */
+.lp-ss {
   position: relative;
-  flex: 1 1 0;
-  min-width: 0;
+  height: calc(var(--n, 5) * 45vh + 100vh);
+}
+.lp-ss-stage {
+  position: sticky;
+  top: calc(var(--header-h) + 12px);
+  height: calc(100vh - var(--header-h) - 24px);
+  min-height: 460px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+  align-items: stretch;
+  gap: clamp(20px, 4vw, 64px);
+}
+.lp-ss-side {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding-block: clamp(8px, 2vw, 24px);
+}
+.lp-ss-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+}
+.lp-ss-head h2 {
+  font-size: clamp(16px, 1.4vw, 18px);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.lp-ss-count { font-family: var(--font-mono); font-size: 12px; color: var(--muted); letter-spacing: 0.08em; }
+.lp-ss-names { display: flex; flex-direction: column; align-items: flex-start; }
+.lp-ss-name {
+  font-size: clamp(36px, 5.2vw, 80px);
+  font-weight: 600;
+  line-height: 1.04;
+  letter-spacing: -0.05em;
+  color: #d9d6d2;
+  text-align: start;
+  white-space: nowrap;
+  transition: color 0.45s var(--ease), transform 0.6s var(--ease);
+}
+.lp-ss-name:hover { color: #9d9893; }
+.lp-ss-name.is-active { color: var(--text); transform: translateX(10px); }
+[dir="rtl"] .lp-ss-name.is-active { transform: translateX(-10px); }
+
+.lp-ss-card {
+  position: relative;
   overflow: hidden;
-  border-radius: var(--r-lg);
-  background: var(--surface-3);
-  cursor: pointer;
-  transition: flex-grow 0.7s var(--ease);
-  isolation: isolate;
-  outline-offset: 3px;
+  border-radius: var(--r-xl);
+  background: var(--surface-2);
 }
-.lp-xcard.is-open { flex-grow: 4.2; cursor: default; }
-.lp-xcard img {
+.lp-ss-visual {
   position: absolute;
   inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transform: scale(1.06);
-  transition: transform 1.1s var(--ease), filter 0.6s var(--ease);
-  filter: saturate(0.85);
-}
-.lp-xcard.is-open img { transform: scale(1); filter: none; }
-.lp-xcard::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, rgba(0,0,0,0.18) 0%, rgba(0,0,0,0) 30%, rgba(0,0,0,0) 50%, rgba(0,0,0,0.55) 100%);
-  z-index: 0;
-}
-.lp-xcard::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  background: rgba(0, 0, 0, 0.32);
-  opacity: 1;
-  transition: opacity 0.6s var(--ease);
-  pointer-events: none;
-}
-.lp-xcard.is-open::before { opacity: 0; }
-.lp-xcard-index, .lp-xcard-plus {
-  position: absolute;
-  top: 16px;
-  z-index: 1;
-  color: #fff;
-}
-.lp-xcard-index { inset-inline-start: 18px; font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.08em; }
-.lp-xcard-plus {
-  inset-inline-end: 14px;
   display: grid;
   place-items: center;
-  width: 30px; height: 30px;
-  border-radius: 50%;
-  border: 1px solid rgba(255,255,255,0.6);
-  font-size: 16px;
-  line-height: 1;
-  transition: transform 0.5s var(--ease), opacity 0.4s var(--ease);
-}
-.lp-xcard.is-open .lp-xcard-plus { transform: rotate(45deg); opacity: 0; }
-.lp-xcard-body {
-  position: absolute;
-  inset-inline: 0;
-  bottom: 0;
-  z-index: 1;
-  padding: clamp(18px, 2.4vw, 32px);
-  color: #fff;
-}
-.lp-xcard-body h3 {
-  font-size: clamp(20px, 2.4vw, 34px);
-  font-weight: 600;
-  letter-spacing: -0.03em;
-  line-height: 1.05;
-  white-space: nowrap;
-}
-.lp-xcard-body p,
-.lp-xcard-cta {
+  background: var(--tint, var(--surface-2));
   opacity: 0;
-  transform: translateY(10px);
+  transition: opacity 0.7s var(--ease);
+}
+.lp-ss-visual.is-active { opacity: 1; }
+.lp-ss-tube {
+  height: 72%;
+  display: grid;
+  place-items: center;
+  transform: translateY(40px) rotate(-6deg) scale(0.92);
+  transition: transform 0.9s var(--ease);
+}
+.lp-ss-visual.is-active .lp-ss-tube { transform: none; }
+.lp-ss-tube svg { height: 100%; width: auto; }
+
+.lp-ss-card-foot {
+  position: absolute;
+  inset-inline: clamp(16px, 2.4vw, 28px);
+  bottom: clamp(16px, 2.4vw, 28px);
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.lp-ss-metas { display: grid; }
+.lp-ss-meta {
+  grid-area: 1 / 1;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-2);
+  opacity: 0;
+  transform: translateY(6px);
   transition: opacity 0.4s var(--ease), transform 0.5s var(--ease);
 }
-.lp-xcard-body p { margin-top: 8px; font-size: 15px; color: rgba(255,255,255,0.85); max-width: 32ch; }
-.lp-xcard-cta {
+.lp-ss-meta.is-active { opacity: 1; transform: none; transition-delay: 0.1s; }
+.lp-ss-cta {
+  white-space: nowrap;
+  flex-shrink: 0;
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  margin-top: 18px;
-  padding: 10px 16px;
+  padding: 12px 18px;
   border-radius: var(--r-pill);
-  background: #fff;
-  color: #000;
+  background: #000;
+  color: #fff;
   font-weight: 600;
-  font-size: 13px;
+  font-size: 14px;
+  transition: gap var(--dur-fast) var(--ease);
 }
-.lp-xcard.is-open .lp-xcard-body p,
-.lp-xcard.is-open .lp-xcard-cta { opacity: 1; transform: none; transition-delay: 0.22s; }
-.lp-xcard:not(.is-open) .lp-xcard-body h3 { font-size: 18px; }
-
-/* ---------- 4. Silhouette rail ---------- */
-.lp-rail {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 12px;
-}
-.lp-rail-item {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 12px;
-  text-align: start;
-}
-.lp-rail-media {
-  position: relative;
-  aspect-ratio: 3 / 4;
-  border-radius: var(--r-lg);
-  background: var(--surface-2);
-  overflow: hidden;
-  transition: background var(--dur-base) var(--ease);
-}
-.lp-rail-media svg {
-  position: absolute;
-  inset: 9% 12% 5%;
-  width: 76%;
-  height: 86%;
-  transition: transform 0.7s var(--ease);
-}
-.lp-rail-item:hover .lp-rail-media { background: #f1e6e3; }
-.lp-rail-item:hover .lp-rail-media svg { transform: translateY(-6px) scale(1.04); }
-.lp-rail-name { font-size: 15px; font-weight: 600; letter-spacing: -0.01em; padding-inline: 4px; }
+.lp-ss-cta:hover { gap: 12px; }
+.lp-ss-cta svg { width: 16px; height: 16px; }
 
 /* ---------- 5. Steps ---------- */
 .lp-steps {
@@ -369,9 +328,6 @@
 @media (max-width: 960px) {
   .lp-hero-grid { grid-template-columns: 1fr; }
   .lp-hero-stage { min-height: 300px; max-width: 520px; width: 100%; margin-inline: auto; }
-  .lp-rail { grid-template-columns: repeat(5, minmax(150px, 1fr)); overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 8px; scrollbar-width: none; }
-  .lp-rail::-webkit-scrollbar { display: none; }
-  .lp-rail-item { scroll-snap-align: start; }
   .lp-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .lp-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .lp-stat:nth-child(3) { border-inline-start: 0; }
@@ -381,13 +337,16 @@
 
 @media (max-width: 640px) {
   .lp-title { font-size: clamp(48px, 16vw, 80px); }
-  .lp-xcards { flex-direction: column; height: auto; }
-  .lp-xcard { flex: none; height: 92px; transition: height 0.7s var(--ease); }
-  .lp-xcard.is-open { height: 380px; }
-  .lp-xcard:not(.is-open) .lp-xcard-body { padding-block: 0; top: 0; display: flex; align-items: center; padding-inline-start: 56px; }
-  .lp-xcard-index { top: 50%; translate: 0 -50%; }
-  .lp-xcard.is-open .lp-xcard-index { top: 16px; translate: none; }
-  .lp-xcard-plus { top: 50%; translate: 0 -50%; }
+  .lp-ss { height: calc(var(--n, 5) * 40vh + 100vh); }
+  .lp-ss-stage { grid-template-columns: 1fr; grid-template-rows: auto minmax(0, 1fr); gap: 16px; }
+  .lp-ss-side { padding-block: 0; gap: 12px; }
+  .lp-ss-names { flex-direction: row; gap: 14px; overflow: hidden; }
+  .lp-ss-name { font-size: 26px; }
+  .lp-ss-name:not(.is-active) { display: none; }
+  .lp-ss-name.is-active { transform: none; }
+  .lp-ss-card { border-radius: var(--r-lg); }
+  .lp-ss-tube { height: 60%; margin-bottom: 14%; }
+  .lp-ss-meta { font-size: 13px; }
   .lp-step { aspect-ratio: auto; min-height: 168px; padding: 16px; }
   .lp-step-viz { width: 48px; height: 48px; }
   .lp-head h2 { font-size: 34px; }
@@ -396,5 +355,4 @@
 
 @media (prefers-reduced-motion: reduce) {
   .lp-hero-tube, .lp-title, .lp-tagline, .lp-actions { animation: none !important; }
-  .lp-xcard, .lp-xcard img { transition: none; }
 }

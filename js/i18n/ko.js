@@ -7,7 +7,7 @@
       next: '다음', apply: '적용', search: '검색...', all: '전체', loading: '로딩 중...', actions: '작업',
     },
     nav: {
-      home: '홈', design: '디자인', gallery: '갤러리', myDesigns: '내 디자인', settings: '설정', start: '디자인 시작하기',
+      home: 'CosLab', design: '디자인', gallery: '갤러리', myDesigns: '내 디자인', settings: '설정', start: '디자인 시작하기',
     },
     footer: {
       tagline: 'Of the lips by the people for the beauty. 한국 유일의 립 컬러 전문 연구소 (OEM / ODM).',

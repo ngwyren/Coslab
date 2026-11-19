@@ -7,7 +7,7 @@
       next: 'Suivant', apply: 'Appliquer', search: 'Rechercher...', all: 'Tous', loading: 'Chargement...', actions: 'Actions',
     },
     nav: {
-      home: 'Accueil', design: 'Conception', gallery: 'Galerie', myDesigns: 'Mes créations', settings: 'Paramètres', start: 'Créer un rouge',
+      home: 'CosLab', design: 'Conception', gallery: 'Galerie', myDesigns: 'Mes créations', settings: 'Paramètres', start: 'Créer un rouge',
     },
     footer: {
       tagline: 'Studio d\'ingénierie et de fabrication OEM/ODM de liptint sur mesure. Laboratoire à Séoul, tolérance moule 0,1 mm.',

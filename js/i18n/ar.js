@@ -7,7 +7,7 @@
       next: 'التالي', apply: 'تطبيق', search: 'بحث...', all: 'الكل', loading: 'جارٍ التحميل...', actions: 'إجراءات',
     },
     nav: {
-      home: 'الرئيسية', design: 'التصميم', gallery: 'المعرض', myDesigns: 'تصاميمي', settings: 'الإعدادات', start: 'ابدأ التصميم',
+      home: 'CosLab', design: 'التصميم', gallery: 'المعرض', myDesigns: 'تصاميمي', settings: 'الإعدادات', start: 'ابدأ التصميم',
     },
     footer: {
       tagline: 'استوديو تصنيع وهندسة ملمع الشفاه OEM / ODM المخصص. تم تطويره في سيول بدقة قوالب 0.1 مم للعلامات العالمية.',

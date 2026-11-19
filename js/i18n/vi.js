@@ -7,7 +7,7 @@
       next: 'Tiếp', apply: 'Áp dụng', search: 'Tìm kiếm...', all: 'Tất cả', loading: 'Đang tải...', actions: 'Thao tác',
     },
     nav: {
-      home: 'Atelier', design: 'Design', gallery: 'Archive', myDesigns: 'Vault', settings: 'Setting', start: 'Start Design',
+      home: 'CosLab', design: 'Design', gallery: 'Archive', myDesigns: 'Vault', settings: 'Setting', start: 'Start Design',
     },
     footer: {
       tagline: 'Lab Son Tint Hàn Quốc · OEM / ODM',

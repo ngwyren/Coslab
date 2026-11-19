@@ -7,7 +7,7 @@
       next: '次へ', apply: '適用', search: '検索...', all: 'すべて', loading: '読み込み中...', actions: '操作',
     },
     nav: {
-      home: 'ホーム', design: 'デザイン', gallery: 'ギャラリー', myDesigns: '保存作品', settings: '設定', start: 'デザイン開始',
+      home: 'CosLab', design: 'デザイン', gallery: 'ギャラリー', myDesigns: '保存作品', settings: '設定', start: 'デザイン開始',
     },
     footer: {
       tagline: 'グローバルリップティントOEM/ODM製造工場および3Dパッケージングスタジオ。ソウル研究所発0.1mm公差の金型精密技術。',

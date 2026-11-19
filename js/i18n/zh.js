@@ -7,7 +7,7 @@
       next: '下一步', apply: '应用', search: '搜索...', all: '全部', loading: '加载中...', actions: '操作',
     },
     nav: {
-      home: '首页', design: '定制设计', gallery: '样品库', myDesigns: '我的设计', settings: '系统设置', start: '开始设计',
+      home: 'CosLab', design: '定制设计', gallery: '样品库', myDesigns: '我的设计', settings: '系统设置', start: '开始设计',
     },
     footer: {
       tagline: '专业唇釉彩妆代工厂 (OEM/ODM) 及 3D 包装定制工作室。首尔研发实验室，0.1mm 严苛公差标准。',
