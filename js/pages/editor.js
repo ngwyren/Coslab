@@ -993,40 +993,55 @@
         // STEP 01: MODEL (SPACIOUS FIGMA ASSET LIST)
         // ======================================================
         function buildModelStep() {
-          const isVi = I18N.lang === 'vi';
-          const modelGrid = CL.h('div.studio-model-grid', null,
-            CL.models.MODELS.map((m) => {
-              const active = m.id === design.model;
-              const previewDsn = CL.clone(design);
-              previewDsn.model = m.id;
-              return CL.h('button.studio-model-card' + (active ? '.is-active' : ''), {
+          // Big name list (same language as the home "5 silhouettes" showcase):
+          // active name dark, others faded. Hover previews the shape on the
+          // canvas without touching history; click commits it.
+          const MODELS = CL.models.MODELS;
+          const activeIdx = Math.max(0, MODELS.findIndex((m) => m.id === design.model));
+
+          // Same entrance as the home showcase: the new tube rises, untilts and fades in
+          let shownModel = design.model;
+          const swapCanvas = (id) => {
+            if (id === shownModel) return;
+            shownModel = id;
+            const keep = design.model;
+            design.model = id;
+            render2DCanvas();
+            design.model = keep;
+            const svg = document.querySelector('#canvasSvgHolder svg');
+            if (svg) { svg.classList.remove('cl-swap-in'); void svg.offsetWidth; svg.classList.add('cl-swap-in'); }
+          };
+          const previewModel = (id) => swapCanvas(id);
+
+          const list = CL.h('div.studio-model-list', {
+            onmouseleave: () => swapCanvas(design.model),
+          },
+            MODELS.map((m, i) =>
+              CL.h('button.studio-model-name' + (i === activeIdx ? '.is-active' : ''), {
                 type: 'button',
+                'aria-pressed': String(i === activeIdx),
+                onmouseenter: () => previewModel(m.id),
+                onfocus: () => previewModel(m.id),
                 onclick: () => {
+                  if (m.id === design.model) return;
+                  swapCanvas(m.id); // animate (no-op if hover already showed it)
                   design.model = m.id;
                   pushHistory();
-                  render2DCanvas();
+                  // re-render the panel only; keep the animated canvas as-is
                   renderStepPanel();
                 },
               },
-                CL.h('div.studio-model-thumb', {
-                  html: CL.render.renderSVG(previewDsn, { width: 72, height: 102, shadow: false }),
-                }),
-                CL.h('div.studio-model-meta', null,
-                  CL.h('strong', { text: t(m.nameKey) }),
-                  CL.h('span', { text: t(m.descKey) })
-                ),
-                active ? CL.h('span.model-active-check', { text: '✓' }) : null
-              );
-            })
+                CL.h('span.studio-model-label', { text: t(m.nameKey) }),
+                CL.h('span.studio-model-desc', { text: t(m.descKey) })
+              ))
           );
 
           stepBody.append(
-            CL.h('div.fg-section', null,
-              CL.h('div.fg-section-head', null,
-                CL.h('span.fg-section-title', { text: isVi ? 'Dáng vỏ son' : 'Silhouettes' }),
-                CL.h('span.fg-badge-pill', { text: `${CL.models.MODELS.length} mẫu` })
-              ),
-              modelGrid
+            CL.h('div.studio-model-pick', null,
+              CL.h('span.studio-model-count', {
+                text: `${String(activeIdx + 1).padStart(2, '0')} / ${String(MODELS.length).padStart(2, '0')}`,
+              }),
+              list
             )
           );
         }
@@ -1979,6 +1994,5 @@
     };
   }
 
-  CL.pages.design = createStudioPage(0);
   CL.pages.editor = createStudioPage(0);
 })(window.CL);

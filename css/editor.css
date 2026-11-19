@@ -1180,3 +1180,66 @@
     grid-template-rows: 45% 55%;
   }
 }
+
+/* ---------- Step 01: big name list (matches home silhouette showcase) ---------- */
+.studio-model-pick {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 18px;
+  flex: 1;
+  padding: 22px;
+}
+.studio-model-count {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: var(--fg-text-2, #888);
+}
+.studio-model-list { display: flex; flex-direction: column; align-items: stretch; }
+.studio-model-name {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 6px 0;
+  text-align: start;
+  cursor: pointer;
+}
+.studio-model-label {
+  font-size: clamp(28px, 2.6vw, 38px);
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -0.05em;
+  color: #d9d6d2;
+  white-space: nowrap;
+  transition: color 0.35s var(--ease-framer), transform 0.5s var(--ease-framer);
+}
+.studio-model-name:hover .studio-model-label,
+.studio-model-name:focus-visible .studio-model-label { color: #9d9893; }
+.studio-model-name.is-active .studio-model-label { color: #000; transform: translateX(8px); }
+[dir="rtl"] .studio-model-name.is-active .studio-model-label { transform: translateX(-8px); }
+.studio-model-desc {
+  max-height: 0;
+  overflow: hidden;
+  font-size: 13px;
+  color: var(--fg-text-2, #888);
+  opacity: 0;
+  padding-inline-start: 10px;
+  transition: max-height 0.4s var(--ease-framer), opacity 0.3s ease;
+}
+.studio-model-name.is-active .studio-model-desc { max-height: 24px; opacity: 1; }
+.studio-model-name:focus-visible { outline: none; }
+
+/* Model swap entrance on the 2D canvas (mirrors the home silhouette showcase) */
+@keyframes clSwapIn {
+  from { opacity: 0; transform: translateY(36px) rotate(-6deg) scale(0.92); }
+  to { opacity: 1; transform: none; }
+}
+#canvasSvgHolder svg.cl-swap-in {
+  transform-origin: 50% 70%;
+  animation: clSwapIn 0.85s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  #canvasSvgHolder svg.cl-swap-in { animation: none; }
+}

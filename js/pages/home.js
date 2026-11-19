@@ -1,13 +1,11 @@
 /* ==========================================================
    COSLAB — Home Page
-   Visual-first landing: hero with live tubes,
-   expanding image cards, silhouette rail, 4-step flow,
-   stat strip and a closing CTA. Minimal copy throughout.
+   Visual-first landing: hero with live tubes, 4-step flow,
+   stat strip, three campaign photos and a closing CTA.
+   Minimal copy throughout.
    ========================================================== */
 (function (CL) {
   CL.pages = CL.pages || {};
-
-
 
   const STEPS = [
     { key: 'landing.step1', viz: 'shape' },
@@ -26,48 +24,6 @@
   const tube = (tplId, modelId, w, opts = {}) =>
     CL.render.renderTight(CL.templates.createDesign(tplId, modelId), Object.assign({ width: w }, opts));
 
-  function openInStudio(tplId, modelId) {
-    CL.store.saveDraft(CL.templates.createDesign(tplId, modelId));
-    CL.go('#/editor');
-  }
-
-  /**
-   * Scroll-driven pinned section: `stage` is position:sticky inside a taller `track`.
-   * Scroll progress through the track is split into n equal steps; onIndex(i)
-   * fires whenever the step changes (and once on start / after resize).
-   */
-  function pinScroll(track, stage, n, onIndex) {
-    let current = -1, ticking = false;
-    const range = () => {
-      const r = track.getBoundingClientRect();
-      const stickyTop = parseFloat(getComputedStyle(stage).top) || 0;
-      return { r, stickyTop, span: Math.max(1, track.offsetHeight - stage.offsetHeight) };
-    };
-    const update = (force) => {
-      const { r, stickyTop, span } = range();
-      const i = Math.floor(CL.clamp((stickyTop - r.top) / span, 0, 0.9999) * n);
-      if (force || i !== current) { current = i; onIndex(i); }
-    };
-    const onScroll = () => {
-      if (ticking) return;
-      ticking = true;
-      requestAnimationFrame(() => { ticking = false; update(false); });
-    };
-    const onResize = () => requestAnimationFrame(() => update(true));
-    window.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('resize', onResize, { passive: true });
-    requestAnimationFrame(() => update(true));
-    return {
-      scrollTo(i) {
-        const { r, stickyTop, span } = range();
-        window.scrollTo({ top: window.scrollY + r.top - stickyTop + ((i + 0.5) / n) * span, behavior: 'smooth' });
-      },
-      destroy() {
-        window.removeEventListener('scroll', onScroll);
-        window.removeEventListener('resize', onResize);
-      },
-    };
-  }
 
   /** Animate numbers from 0 → value once visible. */
   function countUp(el, value, decimals = 0, suffix = '') {
@@ -112,7 +68,6 @@
 
     render(container) {
       const observers = [];
-      const pins = [];
       const root = CL.h('div.page.page-home.lp');
 
       /* ---------- 1. Hero ---------- */
@@ -140,54 +95,6 @@
         )
       );
 
-
-      /* ---------- 3. Silhouettes — scroll-synced showcase ----------
-         Pinned stage: a list of names on one side (active one dark,
-         the rest faded) and a large live tube render on the other. */
-      const FORMS = CL.templates.SAMPLES.slice(0, 5);
-      const names = FORMS.map(([, modelId], i) => {
-        const m = CL.models.getModel(modelId);
-        return CL.h('button.lp-ss-name', { type: 'button', onclick: () => forms.scrollTo(i) }, t(m.nameKey));
-      });
-      const visuals = FORMS.map(([tplId, modelId]) => {
-        const d = CL.templates.createDesign(tplId, modelId);
-        return CL.h('div.lp-ss-visual', { style: { '--tint': CL.render.tintOf(d, 0.86) } },
-          CL.h('div.lp-ss-tube', { html: CL.render.renderTight(d, { width: 220 }) }));
-      });
-      const metas = FORMS.map(([, modelId]) => {
-        const m = CL.models.getModel(modelId);
-        return CL.h('span.lp-ss-meta', { text: t(m.descKey) });
-      });
-      const ssCount = CL.h('span.lp-ss-count');
-      let activeForm = 0;
-      const ssStage = CL.h('div.lp-ss-stage', null,
-        CL.h('div.lp-ss-side', null,
-          CL.h('div.lp-ss-head', null,
-            CL.h('h2', { 'data-i18n': 'landing.forms', text: t('landing.forms') }),
-            ssCount
-          ),
-          CL.h('div.lp-ss-names', null, names)
-        ),
-        CL.h('div.lp-ss-card', null,
-          visuals,
-          CL.h('div.lp-ss-card-foot', null,
-            CL.h('div.lp-ss-metas', null, metas),
-            CL.h('button.lp-ss-cta', {
-              type: 'button',
-              onclick: () => openInStudio(FORMS[activeForm][0], FORMS[activeForm][1]),
-              html: `<span data-i18n="landing.start">${t('landing.start')}</span>` + CL.icon('arrowRight'),
-            })
-          )
-        )
-      );
-      const ssTrack = CL.h('div.lp-ss', { style: { '--n': String(FORMS.length) } }, ssStage);
-      const forms = pinScroll(ssTrack, ssStage, FORMS.length, (i) => {
-        activeForm = i;
-        [names, visuals, metas].forEach((list) => list.forEach((el, k) => el.classList.toggle('is-active', k === i)));
-        ssCount.textContent = `${String(i + 1).padStart(2, '0')} / ${String(FORMS.length).padStart(2, '0')}`;
-      });
-      pins.push(forms);
-      const silhouettes = CL.h('section.lp-section#worksSection', null, CL.h('div.container', null, ssTrack));
 
       /* ---------- 5. Four steps ---------- */
       const steps = CL.h('section.lp-section', null,
@@ -223,6 +130,32 @@
         )
       );
 
+      /* ---------- 6b. Collection — three large photos ---------- */
+      const PHOTOS = [
+        { src: 'assets/campaign-hero.jpg', title: 'Triad', key: 'landing.c1', alt: 'COSLAB lip tint trio' },
+        { src: 'assets/campaign-duo.jpg', title: 'Velvet & Chrome', key: 'landing.c2', alt: 'Velvet and chrome lip tint duo' },
+        { src: 'assets/campaign-detail.jpg', title: 'Crystal & Silk', key: 'landing.c3', alt: 'Crystal glass applicator on silk' },
+      ];
+      const photos = CL.h('section.lp-section#worksSection', null,
+        CL.h('div.container', null,
+          CL.h('div.lp-head.framer-reveal', null,
+            CL.h('h2', { 'data-i18n': 'landing.collection', text: t('landing.collection') }),
+            CL.h('a.lp-link', { href: '#/gallery', html: `<span data-i18n="landing.explore">${t('landing.explore')}</span>` + CL.icon('arrowRight') })
+          ),
+          CL.h('div.lp-photos', null,
+            PHOTOS.map((p) =>
+              CL.h('a.lp-photo.framer-reveal', { href: '#/design' },
+                CL.h('div.lp-photo-media', null,
+                  CL.h('img', { src: p.src, alt: p.alt, loading: 'lazy', decoding: 'async' })),
+                CL.h('div.lp-photo-cap', null,
+                  CL.h('strong', { text: p.title }),
+                  CL.h('span', { 'data-i18n': p.key, text: t(p.key) })
+                )
+              ))
+          )
+        )
+      );
+
       /* ---------- 7. Closing CTA ---------- */
       const cta = CL.h('section.lp-section', null,
         CL.h('div.container', null,
@@ -240,12 +173,11 @@
         )
       );
 
-      root.append(hero, silhouettes, steps, stats, cta);
+      root.append(hero, steps, stats, photos, cta);
       container.appendChild(root);
 
       return () => {
         observers.forEach((io) => io && io.disconnect());
-        pins.forEach((p) => p.destroy());
       };
     },
   };

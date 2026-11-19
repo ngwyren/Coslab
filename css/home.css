@@ -276,6 +276,30 @@
 .lp-stat-value.is-text { font-size: clamp(26px, 3vw, 44px); padding-block: 0.12em; }
 .lp-stat-label { font-size: 14px; color: var(--muted); }
 
+/* ---------- 6b. Collection — three large photos ---------- */
+.lp-photos {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(12px, 1.6vw, 20px);
+}
+.lp-photo { display: flex; flex-direction: column; gap: 14px; }
+.lp-photo-media {
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  border-radius: var(--r-lg);
+  background: var(--surface-2);
+}
+.lp-photo-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 1s var(--ease);
+}
+.lp-photo:hover .lp-photo-media img { transform: scale(1.04); }
+.lp-photo-cap { display: flex; flex-direction: column; gap: 2px; padding-inline: 2px; }
+.lp-photo-cap strong { font-size: clamp(17px, 1.5vw, 20px); font-weight: 600; letter-spacing: -0.02em; }
+.lp-photo-cap span { font-size: 14px; color: var(--muted); }
+
 /* ---------- 7. CTA ---------- */
 .lp-section:last-child { padding-bottom: var(--lp-section); }
 .lp-cta {
@@ -345,6 +369,7 @@
   .lp-ss-name:not(.is-active) { display: none; }
   .lp-ss-name.is-active { transform: none; }
   .lp-ss-card { border-radius: var(--r-lg); }
+  .lp-photos { grid-template-columns: 1fr; }
   .lp-ss-tube { height: 60%; margin-bottom: 14%; }
   .lp-ss-meta { font-size: 13px; }
   .lp-step { aspect-ratio: auto; min-height: 168px; padding: 16px; }
@@ -355,4 +380,38 @@
 
 @media (prefers-reduced-motion: reduce) {
   .lp-hero-tube, .lp-title, .lp-tagline, .lp-actions { animation: none !important; }
+}
+
+/* ---------- Design route: static silhouette picker ---------- */
+.design-pick { padding-block: 12px 24px; }
+.lp-ss-stage.is-static {
+  position: relative;
+  top: auto;
+  height: calc(100vh - var(--header-h) - 36px);
+  min-height: 520px;
+  outline: none;
+}
+.lp-ss-stage.is-static .lp-ss-head h2 { font-size: 15px; }
+.lp-ss-stage.is-static .lp-ss-name { cursor: pointer; }
+/* tube entrance replays every time a visual becomes active */
+.lp-ss-visual.is-active .lp-ss-tube { animation: lpSsIn 0.9s cubic-bezier(0.22, 1, 0.36, 1) both; }
+@keyframes lpSsIn {
+  from { transform: translateY(40px) rotate(-6deg) scale(0.92); }
+  to { transform: none; }
+}
+@media (max-width: 640px) {
+  .lp-ss-stage.is-static {
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: 16px;
+    height: calc(100svh - var(--header-h) - 28px);
+    min-height: 480px;
+  }
+  .lp-ss-stage.is-static .lp-ss-names { flex-direction: row; gap: 14px; overflow-x: auto; scrollbar-width: none; }
+  .lp-ss-stage.is-static .lp-ss-name { font-size: 26px; }
+  .lp-ss-stage.is-static .lp-ss-name:not(.is-active) { display: inline; color: #d9d6d2; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lp-ss-visual.is-active .lp-ss-tube { animation: none; }
 }
