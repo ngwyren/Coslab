@@ -244,6 +244,12 @@
       body += `<rect x="${sf.x}" y="${sf.y}" width="${sf.w}" height="${sf.h}" rx="4" fill="none" stroke="rgba(0,0,0,0.35)" stroke-width="1" stroke-dasharray="4 3" stroke-dashoffset="3.5" pointer-events="none"/>`;
     }
 
+    // Vector die-line: hairline outline paths of cap & base for AI / CAD (Settings → Vector Outline)
+    if (opts.dieline) {
+      const cut = ` stroke="#ec008c" stroke-width="0.5" vector-effect="non-scaling-stroke"`;
+      body += `<g id="dieline" pointer-events="none">${capShape(L.cap, 'none', cut)}${baseShape(L.base, 'none', cut)}</g>`;
+    }
+
     const vb = opts.viewBox || `0 0 ${L.scene.w} ${L.scene.h}`;
     const size = (opts.width ? ` width="${opts.width}"` : '') + (opts.height ? ` height="${opts.height}"` : '');
     const style = opts.fontCSS ? `<style>${opts.fontCSS}</style>` : '';

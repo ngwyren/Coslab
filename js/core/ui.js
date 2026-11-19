@@ -14,7 +14,16 @@
     return new Promise((resolve) => {
       const host = document.getElementById('modalHost');
       const close = (v) => { host.innerHTML = ''; document.removeEventListener('keydown', onKey); resolve(v); };
-      const onKey = (e) => { if (e.key === 'Escape') close(false); if (e.key === 'Enter') close(true); };
+      const onKey = (e) => {
+        if (e.key === 'Escape') { e.preventDefault(); close(false); return; }
+        if (e.key === 'Enter') {
+          // A focused modal button handles Enter itself (native click) — don't override Cancel.
+          const f = document.activeElement;
+          if (f && f.tagName === 'BUTTON' && host.contains(f)) return;
+          e.preventDefault();
+          close(true);
+        }
+      };
       const bd = CL.h('div.modal-backdrop', { onclick: (e) => { if (e.target === bd) close(false); } },
         CL.h('div.modal', { role: 'dialog', 'aria-modal': 'true' },
           CL.h('h3', { text: title }),

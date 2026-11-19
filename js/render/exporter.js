@@ -169,7 +169,11 @@
 
   async function buildSpecPages(design) {
     const fonts = await fontCSS(design);
-    const W = 3508, H = 2480; // A4 landscape @300dpi
+    const W = 3508, H = 2480; // A4 landscape layout units (@300dpi)
+    const settings = CL.store.settings || {};
+    const dpi = [150, 300, 600].includes(settings.exportDPI) ? settings.exportDPI : 300;
+    const K = dpi / 300; // canvas pixel scale vs. 300dpi layout units
+    const showCropMarks = settings.cropMarks !== false;
     const UI = "'Plus Jakarta Sans', 'Noto Sans KR', 'Noto Serif KR', sans-serif";
     const rtl = I18N.meta.dir === 'rtl';
     const author = CL.store.settings.author || {};
@@ -177,8 +181,9 @@
 
     // Page 1: Product Presentation Sheet
     const c1 = document.createElement('canvas');
-    c1.width = W; c1.height = H;
+    c1.width = Math.round(W * K); c1.height = Math.round(H * K);
     const ctx = c1.getContext('2d');
+    ctx.scale(K, K);
     ctx.fillStyle = '#fcfbf9';
     ctx.fillRect(0, 0, W, H);
     ctx.direction = rtl ? 'rtl' : 'ltr';
@@ -201,7 +206,7 @@
     roundRectPath(ctx, 160, 320, 1400, 1920, 40);
     ctx.fill();
 
-    const prod = await renderCanvas(design, { scale: 3.2, fonts });
+    const prod = await renderCanvas(design, { scale: 3.2 * K, fonts });
     const k = Math.min(1280 / prod.width, 1800 / prod.height);
     ctx.drawImage(prod, 160 + (1400 - prod.width * k) / 2, 320 + (1920 - prod.height * k) / 2, prod.width * k, prod.height * k);
 
@@ -217,7 +222,7 @@
     ctx.fillText(`Batch Ref: COSLAB-${(design.model || '').toUpperCase()} · ${CL.formatDate(Date.now())}`, x, y);
 
     const rows = [
-      [t('pdf.model'), t('models.' + (design.model || 'velvet-round'))],
+      [t('pdf.model'), t(CL.models.getModel(design.model).nameKey)],
       [t('pdf.template'), t('templates.' + (design.templateId || 'velvet-rose'))],
       [t('pdf.author'), author.name || '—'],
       [t('pdf.brand'), author.brand || '—'],
@@ -246,9 +251,8 @@
 
     const partsList = [
       ['cap', t('editor.upPart'), design.parts.cap],
-      ['ring', 'Khớp viền (Divider Ring)', design.parts.ring || { fill: { color: '#c5a367' }, finish: 'metallic' }],
       ['base', t('editor.btnPart'), design.parts.base],
-    ];
+    ].filter(([, , part]) => part);
 
     partsList.forEach(([pKey, pLabel, part]) => {
       paintSwatch(ctx, part.fill, x + 30, y - 14, 28);
@@ -304,8 +308,9 @@
 
     // Page 2: Unwrapped Print Flats for Cap & Base (1:1 Ratio)
     const c2 = document.createElement('canvas');
-    c2.width = W; c2.height = H;
+    c2.width = Math.round(W * K); c2.height = Math.round(H * K);
     const g = c2.getContext('2d');
+    g.scale(K, K);
     g.fillStyle = '#fcfbf9';
     g.fillRect(0, 0, W, H);
 
@@ -322,8 +327,8 @@
     g.fillRect(160, 255, W - 320, 2);
 
     const flats = [
-      await renderFlatCanvas(design, 'cap', { scale: 6, fonts }),
-      await renderFlatCanvas(design, 'base', { scale: 6, fonts })
+      await renderFlatCanvas(design, 'cap', { scale: 6 * K, fonts }),
+      await renderFlatCanvas(design, 'base', { scale: 6 * K, fonts })
     ];
     const labels = [t('editor.upPart'), t('editor.btnPart')];
     const maxH = 1700, colW = (W - 320) / 2;
@@ -336,16 +341,18 @@
 
       g.drawImage(f.canvas, cx - w / 2, top, w, h);
 
-      // Crop marks
-      g.strokeStyle = '#171615';
-      g.lineWidth = 3;
-      [[cx - w / 2, top], [cx + w / 2, top], [cx - w / 2, top + h], [cx + w / 2, top + h]].forEach(([px, py]) => {
-        const dx = px < cx ? -1 : 1, dy = py < top + 1 ? -1 : 1;
-        g.beginPath();
-        g.moveTo(px + dx * 20, py); g.lineTo(px + dx * 80, py);
-        g.moveTo(px, py + dy * 20); g.lineTo(px, py + dy * 80);
-        g.stroke();
-      });
+      // Crop marks (Settings → Crop & Bleed Marks)
+      if (showCropMarks) {
+        g.strokeStyle = '#171615';
+        g.lineWidth = 3;
+        [[cx - w / 2, top], [cx + w / 2, top], [cx - w / 2, top + h], [cx + w / 2, top + h]].forEach(([px, py]) => {
+          const dx = px < cx ? -1 : 1, dy = py < top + 1 ? -1 : 1;
+          g.beginPath();
+          g.moveTo(px + dx * 20, py); g.lineTo(px + dx * 80, py);
+          g.moveTo(px, py + dy * 20); g.lineTo(px, py + dy * 80);
+          g.stroke();
+        });
+      }
 
       g.fillStyle = '#171615';
       g.font = `600 44px ${UI}`;
@@ -370,7 +377,12 @@
     CL.toast(t('editor.exporting'), 'download');
     try {
       if (fmt === 'svg') {
-        const svg = CL.render.renderSVG(design, { fontCSS: await fontCSS(design), width: 920, height: 1280 });
+        const svg = CL.render.renderSVG(design, {
+          fontCSS: await fontCSS(design),
+          width: 920,
+          height: 1280,
+          dieline: (CL.store.settings || {}).outlineVector !== false,
+        });
         const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }));
         CL.download(url, base + '.svg');
         setTimeout(() => URL.revokeObjectURL(url), 4000);

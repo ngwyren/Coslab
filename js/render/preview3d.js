@@ -115,7 +115,7 @@
   class Preview3D {
     constructor(container, opts = {}) {
       this.container = container;
-      this.opts = Object.assign({ autoRotate: true, interactive: true }, opts);
+      this.opts = Object.assign({ autoRotate: true, interactive: true, highQuality: true, bloom: true }, opts);
       this.ok = !!window.THREE;
 
       if (!this.ok) {
@@ -124,10 +124,12 @@
       }
 
       const r = (this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true }));
-      r.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      const hq = this.opts.highQuality;
+      r.setPixelRatio(Math.min(window.devicePixelRatio || 1, hq ? 2 : 1));
       r.outputEncoding = THREE.sRGBEncoding;
       r.toneMapping = THREE.ACESFilmicToneMapping;
-      r.toneMappingExposure = 1.08;
+      // "Studio Soft Bloom": brighter, more diffused exposure
+      r.toneMappingExposure = this.opts.bloom ? 1.08 : 0.96;
       r.shadowMap.enabled = true;
       r.shadowMap.type = THREE.PCFSoftShadowMap;
 
@@ -135,7 +137,8 @@
       r.domElement.classList.add('three-canvas');
 
       this.scene = new THREE.Scene();
-      this.scene.environment = makeEnv(r);
+      // "PBR Reflections": environment map drives glass/chrome reflections
+      this.scene.environment = hq ? makeEnv(r) : null;
 
       this.camera = new THREE.PerspectiveCamera(26, 1, 0.1, 100);
       this.target = new THREE.Vector3(0, 2.8, 0);
@@ -147,7 +150,7 @@
       this.targetRotX = 0.08;
 
       // K-Beauty Studio Lights & Softbox Highlights
-      const hemi = new THREE.HemisphereLight(0xffffff, 0xf6f6f6, 0.85);
+      const hemi = new THREE.HemisphereLight(0xffffff, 0xf6f6f6, this.opts.bloom ? 0.85 : 0.6);
       this.scene.add(hemi);
 
       const key = new THREE.DirectionalLight(0xffffff, 1.35);

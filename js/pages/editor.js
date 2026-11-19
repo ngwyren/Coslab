@@ -492,7 +492,13 @@
 
           if (view === '3d') {
             if (!preview3DInstance && window.THREE) {
-              preview3DInstance = new CL.Preview3D(p3d, { autoRotate: false, interactive: true });
+              const s = CL.store.settings || {};
+              preview3DInstance = new CL.Preview3D(p3d, {
+                autoRotate: s.autoRotate3D !== false,
+                highQuality: s.highQuality3D !== false,
+                bloom: s.studioBloom !== false,
+                interactive: true,
+              });
             }
             if (preview3DInstance) {
               preview3DInstance.setDesign(design);
@@ -571,6 +577,13 @@
               const cx = partRect.x + curX * partRect.w;
               const cy = partRect.y + curY * partRect.h;
               const rot = targetLayer.rotation || 0;
+
+              // Map SVG user units (viewBox 460×640, fitted + zoomed) to screen px
+              const svgToScreen = (x, y) => {
+                const m = svgEl.getScreenCTM();
+                if (!m) return [x, y];
+                return [m.a * x + m.c * y + m.e, m.b * x + m.d * y + m.f];
+              };
 
               const domLyr = svgEl.querySelector(`[data-layer="${targetLayer.id}"]`);
               let bW = 60, bH = 22;
@@ -677,9 +690,10 @@
                   selectedLayerId = targetLayer.id;
                   activePart = targetLayer.part;
 
-                  const svgRect = svgEl.getBoundingClientRect();
-                  const scaleX = svgRect.width / 440;
-                  const scaleY = svgRect.height / 600;
+                  // Screen px per SVG user unit (accounts for viewBox fit + canvas zoom)
+                  const ctm = svgEl.getScreenCTM();
+                  const scaleX = ctm ? ctm.a : 1;
+                  const scaleY = ctm ? ctm.d : 1;
                   const startX = e.clientX, startY = e.clientY;
                   const origX = targetLayer.x ?? 0.5, origY = targetLayer.y ?? 0.5;
 
@@ -706,7 +720,7 @@
 
                     gizmoG.setAttribute('transform', `translate(${CL.round(liveCx, 2)} ${CL.round(liveCy, 2)}) rotate(${CL.round(liveRot, 2)})`);
                     if (domLyr) {
-                      domLyr.setAttribute('transform', `translate(${CL.round(liveCx, 2)} ${CL.round(liveCy, 2)}) rotate(${CL.round(liveRot, 2)})`);
+                      domLyr.setAttribute('transform', CL.render.layerTransform(targetLayer, partRect));
                     }
 
                     const pctX = Math.round(nx * 100);
@@ -750,11 +764,9 @@
                   rotHandle.style.cursor = 'grabbing';
                   document.body.style.cursor = 'grabbing';
 
-                  const svgRect = svgEl.getBoundingClientRect();
-                  const curCenterCx = partRect.x + (targetLayer.x ?? 0.5) * partRect.w;
-                  const curCenterCy = partRect.y + (targetLayer.y ?? 0.5) * partRect.h;
-                  const screenCx = svgRect.left + (curCenterCx / 440) * svgRect.width;
-                  const screenCy = svgRect.top + (curCenterCy / 600) * svgRect.height;
+                  const curCenterCx = cx;
+                  const curCenterCy = cy;
+                  const [screenCx, screenCy] = svgToScreen(cx, cy);
 
                   const onRotMove = (ev) => {
                     const dx = ev.clientX - screenCx;
@@ -774,7 +786,7 @@
 
                     gizmoG.setAttribute('transform', `translate(${CL.round(curCenterCx, 2)} ${CL.round(curCenterCy, 2)}) rotate(${rounded})`);
                     if (domLyr) {
-                      domLyr.setAttribute('transform', `translate(${CL.round(curCenterCx, 2)} ${CL.round(curCenterCy, 2)}) rotate(${rounded})`);
+                      domLyr.setAttribute('transform', CL.render.layerTransform(targetLayer, partRect));
                     }
 
                     showHud(`${rounded}°`);
@@ -814,11 +826,7 @@
                   e.preventDefault();
                   selectedLayerId = targetLayer.id;
 
-                  const svgRect = svgEl.getBoundingClientRect();
-                  const curCenterCx = partRect.x + (targetLayer.x ?? 0.5) * partRect.w;
-                  const curCenterCy = partRect.y + (targetLayer.y ?? 0.5) * partRect.h;
-                  const screenCx = svgRect.left + (curCenterCx / 440) * svgRect.width;
-                  const screenCy = svgRect.top + (curCenterCy / 600) * svgRect.height;
+                  const [screenCx, screenCy] = svgToScreen(cx, cy);
 
                   const startDist = Math.max(12, Math.hypot(e.clientX - screenCx, e.clientY - screenCy));
                   const origSize = targetLayer.type === 'text'
@@ -1881,8 +1889,14 @@
         updateUndoRedoUI();
 
         // Figma Workspace Keyboard Shortcuts (Undo/Redo, Zoom +/-/0, Space Pan, Arrow Nudge)
+        let nudgePending = false;
         const onKeyDown = (e) => {
-          const isEditingInput = ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName);
+          const ae = document.activeElement;
+          const isEditingInput = ['INPUT', 'TEXTAREA', 'SELECT'].includes(ae?.tagName) || !!ae?.isContentEditable;
+
+          // Let text fields keep their native undo/redo while typing
+          const isTextUndo = (e.ctrlKey || e.metaKey) && ['z', 'y'].includes(e.key.toLowerCase());
+          if (isEditingInput && isTextUndo) return;
 
           if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
             if (e.shiftKey) redo(); else undo();
@@ -1931,6 +1945,7 @@
               if (e.key === 'ArrowUp') lyr.y = CL.clamp((lyr.y ?? 0.5) - step, safe.minY, safe.maxY);
               if (e.key === 'ArrowDown') lyr.y = CL.clamp((lyr.y ?? 0.5) + step, safe.minY, safe.maxY);
               e.preventDefault();
+              nudgePending = true;
               render2DCanvas();
               const inX = document.getElementById('fgInputX');
               const inY = document.getElementById('fgInputY');
@@ -1941,6 +1956,11 @@
         };
 
         const onKeyUp = (e) => {
+          // Commit arrow-key nudges as one undo step (and persist the draft) once the key is released
+          if (nudgePending && e.key.startsWith('Arrow')) {
+            nudgePending = false;
+            pushHistory();
+          }
           if (e.code === 'Space') {
             isSpaceDown = false;
             canvasContainer.style.cursor = '';
