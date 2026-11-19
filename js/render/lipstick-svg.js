@@ -98,17 +98,20 @@
     }
   }
 
-  /* Auto-fit text inside Safe Zone so it never overflows */
+  /* Auto-fit text inside Safe Zone smoothly for any rotation angle */
   function textMarkup(tx, rect, rotation = 0) {
     const lines = String(tx.content || '').split('\n');
     const maxChars = Math.max(1, ...lines.map((l) => l.length));
     const safe = rect && rect.safe ? rect.safe : { w: (rect?.w || 110) * 0.72, h: (rect?.h || 220) * 0.74 };
-    const isVert = Math.abs(Math.round(rotation)) % 180 === 90;
-    const maxSpan = (isVert ? safe.h : safe.w) - 8;
+    const rad = ((rotation || 0) * Math.PI) / 180;
+    const cosA = Math.abs(Math.cos(rad));
+    const sinA = Math.abs(Math.sin(rad));
+    const chord = Math.min(cosA > 0.001 ? safe.w / cosA : Infinity, sinA > 0.001 ? safe.h / sinA : Infinity);
+    const maxSpan = Math.max(24, chord - 6);
 
     let size = tx.size || 13;
     let spacing = tx.spacing || 0;
-    const estWidth = maxChars * (size * 0.64) + Math.max(0, maxChars - 1) * spacing;
+    const estWidth = maxChars * (size * 0.62) + Math.max(0, maxChars - 1) * spacing;
     if (estWidth > maxSpan && estWidth > 0) {
       const ratio = maxSpan / estWidth;
       size = Math.max(7, CL.round(size * ratio, 1));
