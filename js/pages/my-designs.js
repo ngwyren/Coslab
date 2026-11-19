@@ -47,12 +47,13 @@
           const card = CL.h('div.gallery-card', null,
             CL.h('div.gallery-media', {
               title: t('myDesigns.editDesign'),
+              style: { '--tint': CL.render.tintOf(dsn) },
               onclick: () => {
                 CL.store.saveDraft(dsn);
                 CL.go('#/editor');
               },
             },
-              CL.h('div', { html: CL.render.renderSVG(dsn, { width: 220, height: 280, shadow: true }) })
+              CL.h('div.gallery-tube', { html: CL.render.renderTight(dsn, { width: 120 }) })
             ),
             CL.h('div.gallery-body', null,
               CL.h('div.gallery-meta', null,

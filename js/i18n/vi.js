@@ -72,6 +72,14 @@
       subscribeSuccess: 'Đã đăng ký thành công!',
       subscribeError: 'Email không hợp lệ.',
     },
+    landing: {
+      tagline: 'Bạn thiết kế. Chúng tôi sản xuất.', start: 'Bắt đầu thiết kế', explore: 'Khám phá',
+      collection: 'Bộ sưu tập', c1: 'Bộ ba đặc trưng.', c2: 'Nhung lì gặp kim loại gương.', c3: 'Kính trong, màu căng mọng.',
+      forms: '5 dáng vỏ', howTitle: '4 bước',
+      step1: 'Dáng', step2: 'Màu', step3: 'Chữ', step4: 'Logo',
+      s1: 'Mẫu thử', s2: 'Độ chính xác', s3: 'Lab đạt chuẩn', s4: 'Chất liệu',
+      ctaTitle: 'Son của bạn, theo cách của bạn.',
+    },
     design: {
       title: 'Khởi Tạo Thiết Kế.', subtitle: '01 DÁNG VỎ · 02 BẢNG MÀU',
       step1: '01 / Dáng vỏ', step2: '02 / Phối màu mẫu',

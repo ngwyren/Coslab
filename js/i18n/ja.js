@@ -72,6 +72,14 @@
       subscribeSuccess: 'Coslabへのご登録ありがとうございます！',
       subscribeError: '有効なメールアドレスを入力してください。',
     },
+    landing: {
+      tagline: 'デザインはあなた、製造は私たち。', start: 'デザインを始める', explore: '見る',
+      collection: 'コレクション', c1: 'シグネチャーの3本。', c2: 'ベルベットとミラーメタル。', c3: '透明ガラスに、みずみずしい色。',
+      forms: '5つのシルエット', howTitle: '4ステップ',
+      step1: '形', step2: 'カラー', step3: '文字', step4: 'ロゴ',
+      s1: '試作', s2: '精度', s3: '認証ラボ', s4: '仕上げ',
+      ctaTitle: 'あなただけのティントを。',
+    },
     design: {
       title: 'リップスティックのデザイン作成', subtitle: '容器の形状とベースとなるスタイルをお選びください。',
       step1: '1. 容器モデルを選択 (Choose Model)', step2: '2. テンプレートを選択 (Choose Template)',

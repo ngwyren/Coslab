@@ -72,6 +72,14 @@
       subscribeSuccess: 'Coslab과 연결해 주셔서 감사합니다!',
       subscribeError: '유효한 이메일 주소를 입력해 주세요.',
     },
+    landing: {
+      tagline: '디자인은 당신이, 생산은 우리가.', start: '디자인 시작', explore: '둘러보기',
+      collection: '컬렉션', c1: '시그니처 트리오.', c2: '벨벳 매트와 미러 메탈.', c3: '투명한 글라스, 촉촉한 컬러.',
+      forms: '5가지 실루엣', howTitle: '4단계',
+      step1: '형태', step2: '컬러', step3: '타이포', step4: '로고',
+      s1: '프로토타입', s2: '정밀도', s3: '인증 연구소', s4: '마감',
+      ctaTitle: '나만의 틴트를.',
+    },
     design: {
       title: '립틴트 디자인 시작', subtitle: '선호하는 용기 실루엣과 시작 템플릿을 선택하세요.',
       step1: '용기 실루엣', step2: '제형 및 피니시',

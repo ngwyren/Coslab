@@ -72,6 +72,14 @@
       subscribeSuccess: '¡Gracias por conectar con Coslab!',
       subscribeError: 'Por favor, ingresa un correo electrónico válido.',
     },
+    landing: {
+      tagline: 'Tú diseñas. Nosotros fabricamos.', start: 'Empezar', explore: 'Explorar',
+      collection: 'Colección', c1: 'El trío insignia.', c2: 'Terciopelo mate y metal espejo.', c3: 'Cristal claro, color jugoso.',
+      forms: '5 siluetas', howTitle: '4 pasos',
+      step1: 'Forma', step2: 'Color', step3: 'Texto', step4: 'Logo',
+      s1: 'Prototipo', s2: 'Precisión', s3: 'Laboratorio certificado', s4: 'Acabados',
+      ctaTitle: 'Tu tinta, a tu manera.',
+    },
     design: {
       title: 'Creación de Labial', subtitle: 'Selecciona la silueta del envase y un estilo inicial.',
       step1: '1. Elegir modelo (Choose Model)', step2: '2. Elegir plantilla (Choose Template)',

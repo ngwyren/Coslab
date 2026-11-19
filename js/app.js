@@ -90,7 +90,7 @@
     app.innerHTML = '';
     document.body.classList.toggle('app-mode', !!page.appMode);
     document.querySelectorAll('.main-nav a').forEach((a) => a.classList.toggle('is-active', a.dataset.route === route.nav));
-    document.getElementById('mainNav').classList.remove('open');
+    if (CL.nav) { CL.nav.close(); CL.nav.sync(); }
     current = { route, r };
     cleanup = page.render(app, { query: r.query, sub: r.sub, anchor: route.anchor, rerender: !!opts.rerender });
     I18N.apply(document);
@@ -133,8 +133,7 @@
 
   function init() {
     document.getElementById('year').textContent = new Date().getFullYear();
-    document.getElementById('navToggle').innerHTML = CL.icon('menu');
-    document.getElementById('navToggle').addEventListener('click', () => document.getElementById('mainNav').classList.toggle('open'));
+    CL.nav.init();
     const header = document.getElementById('siteHeader');
     window.addEventListener('scroll', () => header.classList.toggle('scrolled', window.scrollY > 4), { passive: true });
 

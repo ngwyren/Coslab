@@ -72,6 +72,14 @@
       subscribeSuccess: 'Merci de vous être connecté à Coslab !',
       subscribeError: 'Veuillez saisir une adresse email valide.',
     },
+    landing: {
+      tagline: 'Vous dessinez. Nous fabriquons.', start: 'Commencer', explore: 'Explorer',
+      collection: 'Collection', c1: 'Le trio signature.', c2: 'Velours mat et métal miroir.', c3: 'Verre clair, couleur rosée.',
+      forms: '5 silhouettes', howTitle: '4 étapes',
+      step1: 'Forme', step2: 'Couleur', step3: 'Texte', step4: 'Logo',
+      s1: 'Prototype', s2: 'Précision', s3: 'Labo certifié', s4: 'Finitions',
+      ctaTitle: 'Votre teinte, à votre façon.',
+    },
     design: {
       title: 'Configuration du Rouge à Lèvres', subtitle: 'Sélectionnez la silhouette du tube et votre modèle esthétique de départ.',
       step1: '1. Choisir le modèle (Choose Model)', step2: '2. Choisir le style (Choose Template)',

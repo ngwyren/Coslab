@@ -4,6 +4,16 @@
 (function (CL) {
   CL.pages = CL.pages || {};
 
+  const FILTERS = [
+    ['all', 'gallery.filterAll'],
+    ['k-velvet', 'gallery.filterKVelvet'],
+    ['k-dewy', 'gallery.filterKDewy'],
+    ['k-luxury', 'gallery.filterKLuxury'],
+    ['k-tamburins', 'gallery.filterKTamburins'],
+    ['k-gradient', 'gallery.filterKGradient'],
+    ['k-minimal', 'gallery.filterKMinimal'],
+  ];
+
   CL.pages.gallery = {
     titleKey: 'nav.gallery',
     appMode: false,
@@ -20,15 +30,7 @@
             CL.h('span.mono.muted', { text: t('gallery.subtitle') })
           ),
           CL.h('div.chips#galleryFilter', null,
-            [
-              ['all', 'gallery.filterAll'],
-              ['k-velvet', 'gallery.filterKVelvet'],
-              ['k-dewy', 'gallery.filterKDewy'],
-              ['k-luxury', 'gallery.filterKLuxury'],
-              ['k-tamburins', 'gallery.filterKTamburins'],
-              ['k-gradient', 'gallery.filterKGradient'],
-              ['k-minimal', 'gallery.filterKMinimal'],
-            ].map(([k, key]) =>
+            FILTERS.map(([k, key]) =>
               CL.h('button.chip' + (k === activeFilter ? '.is-active' : ''), {
                 text: t(key),
                 'data-filter': k,
@@ -63,13 +65,14 @@
           const card = CL.h('div.gallery-card', null,
             CL.h('div.gallery-media', {
               title: t('gallery.editAsTemplate'),
+              style: { '--tint': CL.render.tintOf(design) },
               onclick: () => {
                 CL.store.saveDraft(design);
                 CL.go('#/editor');
               },
             },
-              CL.h('div.gallery-badge', { text: tpl.category.replace('k-', '') }),
-              CL.h('div', { html: CL.render.renderSVG(design, { width: 190, height: 250, shadow: true }) })
+              CL.h('div.gallery-badge', { text: t(FILTERS.find(([k]) => k === tpl.category)?.[1] || 'gallery.filterAll') }),
+              CL.h('div.gallery-tube', { html: CL.render.renderTight(design, { width: 120 }) })
             ),
             CL.h('div.gallery-body', null,
               CL.h('div.gallery-meta', null,

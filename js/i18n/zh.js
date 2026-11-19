@@ -72,6 +72,14 @@
       subscribeSuccess: '感谢您关注 Coslab！',
       subscribeError: '请输入有效的邮箱地址。',
     },
+    landing: {
+      tagline: '你来设计，我们生产。', start: '开始设计', explore: '浏览',
+      collection: '系列', c1: '招牌三件套。', c2: '丝绒哑光遇上镜面金属。', c3: '透亮玻璃，水润色彩。',
+      forms: '5 种瓶型', howTitle: '4 个步骤',
+      step1: '瓶型', step2: '颜色', step3: '文字', step4: '标志',
+      s1: '打样', s2: '精度', s3: '认证实验室', s4: '质感',
+      ctaTitle: '打造你的专属唇釉。',
+    },
     design: {
       title: '创建口红设计', subtitle: '请挑选口红外壳管型结构与初始设计模板。',
       step1: '1. 选择管型款式 (Choose Model)', step2: '2. 选择设计模板 (Choose Template)',

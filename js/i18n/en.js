@@ -72,6 +72,14 @@
       subscribeSuccess: 'Connected with Coslab!',
       subscribeError: 'Invalid email.',
     },
+    landing: {
+      tagline: 'Design your lip tint. We make it.', start: 'Start designing', explore: 'Explore',
+      collection: 'Collection', c1: 'The signature trio.', c2: 'Soft matte meets mirror metal.', c3: 'Clear glass, dewy color.',
+      forms: '5 silhouettes', howTitle: '4 steps',
+      step1: 'Shape', step2: 'Color', step3: 'Type', step4: 'Logo',
+      s1: 'Prototype', s2: 'Precision', s3: 'Certified lab', s4: 'Finishes',
+      ctaTitle: 'Your tint, your way.',
+    },
     design: {
       title: 'Initialize Liptint.', subtitle: '01 SILHOUETTE · 02 STYLE',
       step1: '01 / Silhouette', step2: '02 / Formula & Style',

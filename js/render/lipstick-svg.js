@@ -254,7 +254,7 @@
     const size = (opts.width ? ` width="${opts.width}"` : '') + (opts.height ? ` height="${opts.height}"` : '');
     const style = opts.fontCSS ? `<style>${opts.fontCSS}</style>` : '';
 
-    return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="${vb}"${size} preserveAspectRatio="xMidYMid meet">${style}<defs>${defs.join('')}</defs>${body}</svg>`;
+    return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="${vb}"${size} preserveAspectRatio="${opts.preserveAspectRatio || 'xMidYMid meet'}">${style}<defs>${defs.join('')}</defs>${body}</svg>`;
   }
 
   function renderPartFlat(design, part, opts = {}) {
@@ -274,8 +274,35 @@
     };
   }
 
+  /** renderSVG with a viewBox cropped tight around the tube (the scene itself has lots of empty space). */
+  function renderTight(design, opts = {}) {
+    const L = CL.models.layout(design.model);
+    const padX = 34, padTop = 10, padBottom = 22;
+    const x = L.cap.x - padX;
+    const y = L.cap.y - padTop;
+    const vw = L.cap.w + padX * 2;
+    const vh = (L.base.y + L.base.h) - L.cap.y + padTop + padBottom;
+    const w = opts.width || 160;
+    return renderSVG(design, Object.assign({ shadow: true }, opts, {
+      width: w,
+      height: Math.round((w * vh) / vw),
+      viewBox: `${x} ${y} ${vw} ${vh}`,
+    }));
+  }
+
+  /** Very light background tint derived from a design's body colour. */
+  function tintOf(design, amount = 0.9) {
+    const f = design && design.parts && design.parts.base && design.parts.base.fill;
+    const c = f ? (f.type === 'linear' ? (f.stops && f.stops[0] && f.stops[0].c) : f.color) : null;
+    // Near-white bodies would vanish on a white page — fall back to a warm neutral.
+    if (!c || CL.color.luminance(c) > 0.86) return '#f1eeea';
+    return CL.color.mix(c, '#ffffff', amount);
+  }
+
   CL.render = {
     renderSVG,
+    renderTight,
+    tintOf,
     renderPartFlat,
     layerMarkup,
     layerCenter,
