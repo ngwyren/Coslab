@@ -336,47 +336,225 @@
             });
           });
 
-          // Dragging text / logo strictly clamped inside Safe Zone
-          svgEl.querySelectorAll('[data-layer]').forEach((el) => {
-            el.addEventListener('pointerdown', (e) => {
-              const lid = el.getAttribute('data-layer');
-              const lyr = design.layers.find((l) => l.id === lid);
-              if (!lyr || lyr.locked) return;
+          // Interactive On-Surface Transform Gizmo (Move & Continuous Rotation)
+          let targetLayer = null;
+          if (selectedLayerId) {
+            targetLayer = design.layers.find((l) => l.id === selectedLayerId);
+          }
+          if (!targetLayer) {
+            if (activeStepIdx === 2) {
+              targetLayer = design.layers.find((l) => l.type === 'text' && l.part === activePart);
+            } else if (activeStepIdx === 3) {
+              targetLayer = design.layers.find((l) => (l.type === 'image' || l.type === 'shape') && l.part === activePart);
+            }
+          }
 
-              e.stopPropagation();
-              selectedLayerId = lid;
-              activePart = lyr.part === 'cap' ? 'cap' : 'base';
+          if (targetLayer && targetLayer.visible !== false) {
+            const layout = CL.models.layout(design.model);
+            const partRect = layout[targetLayer.part];
+            if (partRect) {
+              const safe = partRect.safe || { minX: 0.16, maxX: 0.84, minY: 0.14, maxY: 0.86 };
+              const curX = CL.clamp(targetLayer.x ?? 0.5, safe.minX, safe.maxX);
+              const curY = CL.clamp(targetLayer.y ?? 0.5, safe.minY, safe.maxY);
+              const cx = partRect.x + curX * partRect.w;
+              const cy = partRect.y + curY * partRect.h;
+              const rot = targetLayer.rotation || 0;
 
-              const targetStep = lyr.type === 'text' ? 2 : 3;
-              if (activeStepIdx !== targetStep) {
-                goToStep(targetStep);
-              } else {
-                syncPartChips();
-                renderStepPanel();
+              const domLyr = svgEl.querySelector(`[data-layer="${targetLayer.id}"]`);
+              let bW = 60, bH = 22;
+              if (domLyr) {
+                try {
+                  const bb = domLyr.getBBox();
+                  if (bb && bb.width > 0 && bb.height > 0) {
+                    bW = bb.width;
+                    bH = bb.height;
+                  }
+                } catch (err) {}
+              } else if (targetLayer.type === 'text') {
+                const textContent = (targetLayer.text && targetLayer.text.content) || 'COSLAB';
+                const sz = (targetLayer.text && targetLayer.text.size) || 12;
+                const sp = (targetLayer.text && targetLayer.text.spacing) || 0;
+                bW = Math.max(34, textContent.length * (sz * 0.65) + Math.max(0, textContent.length - 1) * sp);
+                bH = Math.max(16, sz * 1.35);
+              } else if (targetLayer.type === 'image') {
+                bW = (targetLayer.image && targetLayer.image.w) || 40;
+                bH = (targetLayer.image && targetLayer.image.h) || 40;
+              } else if (targetLayer.type === 'shape') {
+                bW = (targetLayer.shape && targetLayer.shape.w) || 30;
+                bH = (targetLayer.shape && targetLayer.shape.h) || 30;
               }
 
-              const layout = CL.models.layout(design.model);
-              const rect = layout[lyr.part];
-              const safe = rect.safe;
-              const startX = e.clientX, startY = e.clientY;
-              const origX = lyr.x, origY = lyr.y;
+              const padX = 8, padY = 5;
+              const boxW = Math.round(bW + padX * 2);
+              const boxH = Math.round(bH + padY * 2);
+              const stemLen = 22;
+              const handleY = -boxH / 2 - stemLen;
 
-              const onMove = (ev) => {
-                const dx = (ev.clientX - startX) / (zoomLevel * (svgEl.clientWidth / 440));
-                const dy = (ev.clientY - startY) / (zoomLevel * (svgEl.clientHeight / 600));
-                lyr.x = CL.clamp(origX + dx / rect.w, safe.minX, safe.maxX);
-                lyr.y = CL.clamp(origY + dy / rect.h, safe.minY, safe.maxY);
-                render2DCanvas();
+              const gizmoG = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+              gizmoG.setAttribute('class', 'cl-transform-gizmo');
+              gizmoG.setAttribute('data-gizmo-layer', targetLayer.id);
+              gizmoG.setAttribute('transform', `translate(${CL.round(cx, 2)} ${CL.round(cy, 2)}) rotate(${CL.round(rot, 2)})`);
+
+              gizmoG.innerHTML = `
+                <rect class="gizmo-hit" x="${-boxW/2}" y="${-boxH/2}" width="${boxW}" height="${boxH}" fill="rgba(255,255,255,0.01)"/>
+                <rect class="gizmo-box-dark" x="${-boxW/2}" y="${-boxH/2}" width="${boxW}" height="${boxH}" rx="3" fill="none"/>
+                <rect class="gizmo-box-light" x="${-boxW/2}" y="${-boxH/2}" width="${boxW}" height="${boxH}" rx="3" fill="none"/>
+                <line class="gizmo-stem-dark" x1="0" y1="${-boxH/2}" x2="0" y2="${handleY}"/>
+                <line class="gizmo-stem-light" x1="0" y1="${-boxH/2}" x2="0" y2="${handleY}"/>
+                <rect class="gizmo-corner" x="${-boxW/2 - 3}" y="${-boxH/2 - 3}" width="6" height="6" rx="1"/>
+                <rect class="gizmo-corner" x="${boxW/2 - 3}" y="${-boxH/2 - 3}" width="6" height="6" rx="1"/>
+                <rect class="gizmo-corner" x="${-boxW/2 - 3}" y="${boxH/2 - 3}" width="6" height="6" rx="1"/>
+                <rect class="gizmo-corner" x="${boxW/2 - 3}" y="${boxH/2 - 3}" width="6" height="6" rx="1"/>
+                <g class="gizmo-rot-handle" transform="translate(0 ${handleY})">
+                  <circle class="gizmo-rot-hit" r="14" fill="transparent"/>
+                  <circle class="gizmo-rot-bg" r="8"/>
+                  <path d="M -3 -1.2 A 3.6 3.6 0 1 1 -1 3.2 M -4.6 -2.6 L -3.2 -1 L -1.6 -2.4" fill="none" stroke="#171615" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <g class="gizmo-angle-badge" style="display: none;" transform="translate(0 -16)">
+                    <rect x="-18" y="-9" width="36" height="18" rx="4"/>
+                    <text x="0" y="1">${Math.round(rot)}°</text>
+                  </g>
+                </g>
+              `;
+
+              svgEl.appendChild(gizmoG);
+
+              // 1. Drag to Move (hit rect + layer DOM)
+              const bindMove = (hitEl) => {
+                hitEl.addEventListener('pointerdown', (e) => {
+                  if (targetLayer.locked) return;
+                  e.stopPropagation();
+                  e.preventDefault();
+                  selectedLayerId = targetLayer.id;
+                  activePart = targetLayer.part;
+
+                  const startX = e.clientX, startY = e.clientY;
+                  const origX = targetLayer.x ?? 0.5, origY = targetLayer.y ?? 0.5;
+
+                  const onMove = (ev) => {
+                    const dx = (ev.clientX - startX) / (zoomLevel * (svgEl.clientWidth / 440));
+                    const dy = (ev.clientY - startY) / (zoomLevel * (svgEl.clientHeight / 600));
+                    targetLayer.x = CL.clamp(origX + dx / partRect.w, safe.minX, safe.maxX);
+                    targetLayer.y = CL.clamp(origY + dy / partRect.h, safe.minY, safe.maxY);
+
+                    const liveCx = partRect.x + targetLayer.x * partRect.w;
+                    const liveCy = partRect.y + targetLayer.y * partRect.h;
+                    const liveRot = targetLayer.rotation || 0;
+
+                    gizmoG.setAttribute('transform', `translate(${CL.round(liveCx, 2)} ${CL.round(liveCy, 2)}) rotate(${CL.round(liveRot, 2)})`);
+                    if (domLyr) {
+                      domLyr.setAttribute('transform', `translate(${CL.round(liveCx, 2)} ${CL.round(liveCy, 2)}) rotate(${CL.round(liveRot, 2)})`);
+                    }
+                  };
+
+                  const onUp = () => {
+                    window.removeEventListener('pointermove', onMove);
+                    window.removeEventListener('pointerup', onUp);
+                    pushHistory();
+                    render2DCanvas();
+                  };
+
+                  window.addEventListener('pointermove', onMove);
+                  window.addEventListener('pointerup', onUp);
+                });
               };
 
-              const onUp = () => {
-                window.removeEventListener('pointermove', onMove);
-                window.removeEventListener('pointerup', onUp);
-                pushHistory();
-              };
+              const hitRect = gizmoG.querySelector('.gizmo-hit');
+              if (hitRect) bindMove(hitRect);
+              if (domLyr) bindMove(domLyr);
 
-              window.addEventListener('pointermove', onMove);
-              window.addEventListener('pointerup', onUp);
+              // 2. Drag to Rotate Handle
+              const rotHandle = gizmoG.querySelector('.gizmo-rot-handle');
+              const angleBadge = gizmoG.querySelector('.gizmo-angle-badge');
+              const angleText = angleBadge?.querySelector('text');
+
+              if (rotHandle) {
+                rotHandle.addEventListener('pointerdown', (e) => {
+                  if (targetLayer.locked) return;
+                  e.stopPropagation();
+                  e.preventDefault();
+                  selectedLayerId = targetLayer.id;
+
+                  if (angleBadge) angleBadge.style.display = 'block';
+                  rotHandle.style.cursor = 'grabbing';
+                  document.body.style.cursor = 'grabbing';
+
+                  const svgRect = svgEl.getBoundingClientRect();
+                  const curCenterCx = partRect.x + (targetLayer.x ?? 0.5) * partRect.w;
+                  const curCenterCy = partRect.y + (targetLayer.y ?? 0.5) * partRect.h;
+                  const screenCx = svgRect.left + (curCenterCx / 440) * svgRect.width;
+                  const screenCy = svgRect.top + (curCenterCy / 600) * svgRect.height;
+
+                  const onRotMove = (ev) => {
+                    const dx = ev.clientX - screenCx;
+                    const dy = ev.clientY - screenCy;
+                    let deg = Math.atan2(dy, dx) * (180 / Math.PI) + 90;
+                    deg = ((deg % 360) + 540) % 360 - 180;
+
+                    const snapAngles = [0, 45, 90, -90, 180, -180, -45, 135, -135];
+                    for (const snap of snapAngles) {
+                      if (Math.abs(deg - snap) < (ev.shiftKey ? 8 : 4)) {
+                        deg = snap;
+                        break;
+                      }
+                    }
+                    const rounded = Math.round(deg);
+                    targetLayer.rotation = rounded;
+
+                    gizmoG.setAttribute('transform', `translate(${CL.round(curCenterCx, 2)} ${CL.round(curCenterCy, 2)}) rotate(${rounded})`);
+                    if (domLyr) {
+                      domLyr.setAttribute('transform', `translate(${CL.round(curCenterCx, 2)} ${CL.round(curCenterCy, 2)}) rotate(${rounded})`);
+                    }
+
+                    if (angleText) angleText.textContent = `${rounded}°`;
+
+                    const rotSlider = document.getElementById('studioLayerRotSlider');
+                    const rotBadge = document.getElementById('studioLayerRotBadge');
+                    if (rotSlider) rotSlider.value = rounded;
+                    if (rotBadge) rotBadge.textContent = `${rounded}°`;
+
+                    document.querySelectorAll('.studio-rot-preset-btn').forEach((btn) => {
+                      const pDeg = parseInt(btn.dataset.presetDeg, 10);
+                      btn.classList.toggle('is-active', pDeg === rounded);
+                    });
+                  };
+
+                  const onRotUp = () => {
+                    window.removeEventListener('pointermove', onRotMove);
+                    window.removeEventListener('pointerup', onRotUp);
+                    if (angleBadge) angleBadge.style.display = 'none';
+                    rotHandle.style.cursor = 'grab';
+                    document.body.style.cursor = '';
+                    pushHistory();
+                    render2DCanvas();
+                    renderStepPanel();
+                  };
+
+                  window.addEventListener('pointermove', onRotMove);
+                  window.addEventListener('pointerup', onRotUp);
+                });
+              }
+            }
+          }
+
+          // Clicking on any other layer selects that layer
+          svgEl.querySelectorAll('[data-layer]').forEach((el) => {
+            el.addEventListener('click', (e) => {
+              const lid = el.getAttribute('data-layer');
+              if (lid && lid !== selectedLayerId) {
+                e.stopPropagation();
+                selectedLayerId = lid;
+                const lyr = design.layers.find((l) => l.id === lid);
+                if (lyr) {
+                  activePart = lyr.part;
+                  syncPartChips();
+                  const targetStep = lyr.type === 'text' ? 2 : 3;
+                  if (activeStepIdx !== targetStep) goToStep(targetStep);
+                  else {
+                    render2DCanvas();
+                    renderStepPanel();
+                  }
+                }
+              }
             });
           });
 
@@ -611,31 +789,70 @@
             onchange: pushHistory,
           });
 
-          const isVertical = curLayer ? Math.abs(curLayer.rotation || 0) === 90 : (targetPart === 'base');
-          const orientRow = CL.h('div.part-selector-segmented', { style: { gridTemplateColumns: '1fr 1fr' } },
-            CL.h('button.part-tab-btn' + (isVertical ? '.is-active' : ''), {
-              type: 'button',
-              text: isVi ? 'Dọc' : 'Vertical',
-              onclick: () => {
-                const lyr = ensureTextLayer(textInput.value || 'COSLAB');
-                lyr.rotation = -90;
-                pushHistory();
-                render2DCanvas();
-                renderStepPanel();
-              },
-            }),
-            CL.h('button.part-tab-btn' + (!isVertical ? '.is-active' : ''), {
-              type: 'button',
-              text: isVi ? 'Ngang' : 'Horizontal',
-              onclick: () => {
-                const lyr = ensureTextLayer(textInput.value || 'COSLAB');
-                lyr.rotation = 0;
-                pushHistory();
-                render2DCanvas();
-                renderStepPanel();
-              },
-            })
+          // Rotation & Orientation Controls (Continuous Slider + Quick Presets)
+          const curRot = curLayer ? (curLayer.rotation || 0) : (targetPart === 'base' ? -90 : 0);
+          const rotBadge = CL.h('span.studio-rot-badge#studioLayerRotBadge', { text: `${curRot}°` });
+
+          const rotSlider = CL.h('input.range#studioLayerRotSlider', {
+            type: 'range',
+            min: '-180',
+            max: '180',
+            step: '1',
+            value: curRot,
+            oninput: () => {
+              const lyr = ensureTextLayer(textInput.value || 'COSLAB');
+              const val = parseInt(rotSlider.value, 10);
+              lyr.rotation = val;
+              rotBadge.textContent = `${val}°`;
+              rotPresets.querySelectorAll('.studio-rot-preset-btn').forEach((btn) => {
+                btn.classList.toggle('is-active', parseInt(btn.dataset.presetDeg, 10) === val);
+              });
+              render2DCanvas();
+            },
+            onchange: pushHistory,
+          });
+
+          const PRESETS = [
+            { deg: 0, labelVi: '0° Ngang', labelEn: '0° Horiz' },
+            { deg: -90, labelVi: '-90° Dọc', labelEn: '-90° Vert' },
+            { deg: 90, labelVi: '90° Dọc', labelEn: '90° Vert' },
+            { deg: 180, labelVi: '180° Đảo', labelEn: '180° Flip' },
+          ];
+
+          const rotPresets = CL.h('div.studio-rot-presets', null,
+            PRESETS.map((p) =>
+              CL.h('button.studio-rot-preset-btn' + (curRot === p.deg ? '.is-active' : ''), {
+                type: 'button',
+                'data-preset-deg': p.deg,
+                text: isVi ? p.labelVi : p.labelEn,
+                onclick: (e) => {
+                  const lyr = ensureTextLayer(textInput.value || 'COSLAB');
+                  lyr.rotation = p.deg;
+                  rotSlider.value = p.deg;
+                  rotBadge.textContent = `${p.deg}°`;
+                  rotPresets.querySelectorAll('.studio-rot-preset-btn').forEach((b) => b.classList.remove('is-active'));
+                  e.currentTarget.classList.add('is-active');
+                  pushHistory();
+                  render2DCanvas();
+                },
+              })
+            )
           );
+
+          const resetPosBtn = CL.h('button.studio-reset-btn', {
+            type: 'button',
+            html: CL.icon('fit') + `<span>${isVi ? 'Đặt lại giữa mặt son' : 'Reset to Center'}</span>`,
+            onclick: () => {
+              if (curLayer) {
+                curLayer.x = 0.5;
+                curLayer.y = targetPart === 'base' ? 0.5 : 0.72;
+                curLayer.rotation = targetPart === 'base' ? -90 : 0;
+                pushHistory();
+                render2DCanvas();
+                renderStepPanel();
+              }
+            },
+          });
 
           const FONTS = [
             { f: 'Plus Jakarta Sans', label: 'Sans' },
@@ -699,15 +916,20 @@
           stepBody.append(
             CL.h('div.sidebar-section-title', { text: isVi ? 'Nội dung (Safe Zone)' : 'Text (Safe Zone)' }),
             textInput,
-            orientRow,
-            CL.h('div.sidebar-section-title', { text: 'Font', style: { marginTop: '10px' } }),
+            CL.h('div.sidebar-section-title', { text: isVi ? 'Xoay & Hướng chữ' : 'Rotation & Orientation', style: { marginTop: '12px' } },
+              rotBadge
+            ),
+            rotPresets,
+            CL.h('div.studio-rot-slider-wrap', null, rotSlider),
+            resetPosBtn,
+            CL.h('div.sidebar-section-title', { text: 'Font', style: { marginTop: '12px' } }),
             fontGrid,
-            CL.h('div.sidebar-section-title', { style: { marginTop: '10px' } },
+            CL.h('div.sidebar-section-title', { style: { marginTop: '12px' } },
               CL.h('span', { text: isVi ? 'Cỡ chữ' : 'Size' }),
               sizeValLabel
             ),
             sizeSlider,
-            CL.h('div.sidebar-section-title', { text: isVi ? 'Màu chữ' : 'Color', style: { marginTop: '10px' } }),
+            CL.h('div.sidebar-section-title', { text: isVi ? 'Màu chữ' : 'Color', style: { marginTop: '12px' } }),
             txtColorRow
           );
         }
@@ -797,7 +1019,23 @@
                 scaleValLabel
               ),
               scaleSlider,
-              CL.h('div', { style: { display: 'flex', gap: '8px', marginTop: '4px' } },
+              CL.h('div.sidebar-section-title', { text: isVi ? 'Xoay góc' : 'Rotation', style: { marginTop: '10px' } },
+                CL.h('span.studio-rot-badge#studioLayerRotBadge', { text: `${curGraphic.rotation || 0}°` })
+              ),
+              CL.h('div.studio-rot-slider-wrap', null,
+                CL.h('input.range#studioLayerRotSlider', {
+                  type: 'range', min: '-180', max: '180', step: '1', value: curGraphic.rotation || 0,
+                  oninput: (e) => {
+                    const val = parseInt(e.target.value, 10);
+                    curGraphic.rotation = val;
+                    const b = document.getElementById('studioLayerRotBadge');
+                    if (b) b.textContent = `${val}°`;
+                    render2DCanvas();
+                  },
+                  onchange: pushHistory,
+                })
+              ),
+              CL.h('div', { style: { display: 'flex', gap: '8px', marginTop: '10px' } },
                 isImg ? CL.h('button.btn.btn-sm.btn-primary', {
                   style: { flex: 1 },
                   text: isVi ? 'AI Xóa nền' : 'AI Remove BG',

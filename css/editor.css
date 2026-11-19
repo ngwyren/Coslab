@@ -870,6 +870,152 @@
   flex-shrink: 0;
 }
 
+/* ==========================================================
+   INTERACTIVE ON-CANVAS TRANSFORM GIZMO (MOVE & ROTATE)
+   ========================================================== */
+.cl-transform-gizmo {
+  pointer-events: none;
+  user-select: none;
+}
+
+.cl-transform-gizmo .gizmo-hit {
+  cursor: move;
+  pointer-events: all;
+}
+
+.cl-transform-gizmo .gizmo-box-dark {
+  stroke: #171615;
+  stroke-width: 1.2px;
+  stroke-dasharray: 4 3;
+}
+
+.cl-transform-gizmo .gizmo-box-light {
+  stroke: #ffffff;
+  stroke-width: 1.2px;
+  stroke-dasharray: 4 3;
+  stroke-dashoffset: 3.5;
+}
+
+.cl-transform-gizmo .gizmo-stem-dark {
+  stroke: #171615;
+  stroke-width: 1.2px;
+}
+
+.cl-transform-gizmo .gizmo-stem-light {
+  stroke: #ffffff;
+  stroke-width: 1px;
+  stroke-dasharray: 2 2;
+}
+
+.cl-transform-gizmo .gizmo-rot-handle {
+  cursor: grab;
+  pointer-events: all;
+  transition: transform 0.15s var(--ease-framer);
+}
+
+.cl-transform-gizmo .gizmo-rot-handle:hover {
+  transform: scale(1.15);
+}
+
+.cl-transform-gizmo .gizmo-rot-handle:active {
+  cursor: grabbing;
+}
+
+.cl-transform-gizmo .gizmo-rot-bg {
+  fill: #ffffff;
+  stroke: #171615;
+  stroke-width: 1.5px;
+  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.24));
+}
+
+.cl-transform-gizmo .gizmo-corner {
+  fill: #ffffff;
+  stroke: #171615;
+  stroke-width: 1px;
+}
+
+.cl-transform-gizmo .gizmo-angle-badge rect {
+  fill: #171615;
+  rx: 4px;
+}
+
+.cl-transform-gizmo .gizmo-angle-badge text {
+  fill: #ffffff;
+  font-family: var(--font-mono, monospace);
+  font-size: 10px;
+  font-weight: 700;
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+
+/* Studio Rotation Slider & Presets in Sidebar */
+.studio-rot-presets {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+.studio-rot-preset-btn {
+  height: 32px;
+  padding: 0 4px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  transition: all 0.2s var(--ease-framer);
+}
+.studio-rot-preset-btn:hover {
+  border-color: var(--text);
+  background: var(--surface-2);
+}
+.studio-rot-preset-btn.is-active {
+  background: var(--text);
+  color: var(--bg);
+  border-color: var(--text);
+}
+.studio-rot-slider-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 4px;
+}
+.studio-rot-slider-wrap .range {
+  flex: 1;
+}
+.studio-rot-badge {
+  min-width: 44px;
+  text-align: right;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text);
+}
+.studio-reset-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 0;
+  margin-top: 4px;
+  transition: color 0.2s ease;
+}
+.studio-reset-btn:hover {
+  color: var(--text);
+}
+
 /* ---------- Responsive Studio ---------- */
 @media (max-width: 960px) {
   .studio-workspace {
