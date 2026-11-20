@@ -76,6 +76,10 @@
       title: 'Surface type', clear: 'Clear · tint inside', shimmer: 'Shimmer layers', solid: 'Solid', solidGradient: 'Solid gradient', clearGradient: 'Gradient on clear',
       color1: 'Colour 1', color2: 'Colour 2', inside: 'Tint colour inside',
     },
+    prefs: {
+      pdfQuality: 'PDF quality', q150: 'Standard', q300: 'High', q600: 'Print', brandNote: 'Shown on your PDF spec sheet',
+      data: 'Your data', backup: 'Back up designs', restore: 'Restore', reset: 'Reset settings', resetConfirm: 'Reset all settings?', restoreFail: 'This file cannot be restored.',
+    },
     flow: {
       stepOf: 'Step {n} of {t}', pickShape: 'Choose a shape', colorCode: 'Colour code', cap: 'Cap', body: 'Body',
       noteTitle: 'Colour note', summary: 'Your design',

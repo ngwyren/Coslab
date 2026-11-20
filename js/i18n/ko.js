@@ -76,6 +76,10 @@
       title: '표면 타입', clear: '투명 · 내용물 컬러', shimmer: '다층 글리터', solid: '단색', solidGradient: '단색 그라데이션', clearGradient: '투명 그라데이션',
       color1: '컬러 1', color2: '컬러 2', inside: '내용물 컬러',
     },
+    prefs: {
+      pdfQuality: 'PDF 품질', q150: '표준', q300: '고화질', q600: '인쇄용', brandNote: 'PDF 사양서에 표시됩니다',
+      data: '데이터', backup: '디자인 백업', restore: '복원', reset: '설정 초기화', resetConfirm: '모든 설정을 초기화할까요?', restoreFail: '이 파일은 복원할 수 없습니다.',
+    },
     flow: {
       stepOf: '{t}단계 중 {n}단계', pickShape: '용기 형태 선택', colorCode: '색상 코드', cap: '캡', body: '바디',
       noteTitle: '색상 안내', summary: '나의 디자인',

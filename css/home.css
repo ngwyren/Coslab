@@ -1,7 +1,7 @@
 /* ==========================================================
    COSLAB — Home (landing) page
-   Visual-first sections inspired by common Framer patterns:
-   expanding image cards, stat strip, step cards.
+   Typographic hero, full-bleed renders, and the Design-page
+   silhouette picker styles.
    ========================================================== */
 
 .lp { --lp-gap: clamp(16px, 2vw, 24px); --lp-section: clamp(72px, 9vw, 128px); }
@@ -39,30 +39,33 @@
   transition: gap var(--dur-fast) var(--ease);
 }
 .lp-link:hover { gap: 10px; }
-.lp-link svg, .lp-actions svg, .lp-cta-btn svg { width: 16px; height: 16px; }
+.lp-link svg, .lp-actions svg { width: 16px; height: 16px; }
 
-/* ---------- 1. Hero ---------- */
-.lp-hero { padding-block: clamp(40px, 6vw, 88px) clamp(40px, 5vw, 72px); overflow: hidden; }
-.lp-hero-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
-  align-items: center;
-  gap: clamp(24px, 4vw, 64px);
-}
+/* ---------- 1. Hero: one full-width line + tagline/actions row ---------- */
+.lp-hero { padding-block: clamp(28px, 4vw, 56px) clamp(32px, 4vw, 56px); overflow: hidden; }
+.lp-hero-grid { display: flex; flex-direction: column; gap: clamp(20px, 2.6vw, 36px); }
 .lp-title {
-  margin-top: 0;
-  font-size: clamp(56px, 9.4vw, 148px);
+  margin: 0;
+  font-size: clamp(48px, 11.6vw, 220px); /* JS refines this to fit the width exactly */
   font-weight: 700;
-  line-height: 0.88;
-  letter-spacing: -0.065em;
-  text-wrap: nowrap;
+  line-height: 0.86;
+  letter-spacing: -0.06em;
+  white-space: nowrap;
+  width: max-content;
   animation: lpRise var(--dur-editorial) var(--ease) both;
 }
+.lp-hero-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  padding-top: clamp(16px, 2vw, 24px);
+  border-top: 1px solid var(--border);
+}
 .lp-tagline {
-  margin-top: 24px;
-  max-width: 26ch;
-  font-size: clamp(18px, 1.6vw, 22px);
-  line-height: 1.35;
+  font-size: clamp(18px, 1.7vw, 24px);
+  line-height: 1.3;
   color: var(--text-2);
   animation: lpRise var(--dur-editorial) var(--ease) 0.08s both;
 }
@@ -70,36 +73,11 @@
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  margin-top: 32px;
   animation: lpRise var(--dur-editorial) var(--ease) 0.16s both;
 }
 .lp-actions .btn { gap: 8px; }
 
-.lp-hero-stage {
-  position: relative;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  min-height: clamp(320px, 36vw, 500px);
-  border-radius: var(--r-xl);
-  background:
-    radial-gradient(120% 80% at 50% 110%, #f1e6e3 0%, rgba(241, 230, 227, 0) 60%),
-    var(--surface-2);
-  padding-bottom: 6%;
-}
-.lp-hero-tube { transition: transform 0.9s var(--ease); will-change: transform; }
-.lp-hero-tube svg { width: 100%; height: auto; }
-.lp-hero-tube.t1 { width: 17%; margin-right: 1%; transform: rotate(-8deg) translateY(3%); animation: lpFloat 7s ease-in-out infinite; }
-.lp-hero-tube.t2 { width: 21%; position: relative; z-index: 1; animation: lpFloat 7s ease-in-out -2.3s infinite; }
-.lp-hero-tube.t3 { width: 17%; margin-left: 1%; transform: rotate(8deg) translateY(3%); animation: lpFloat 7s ease-in-out -4.6s infinite; }
-
 @keyframes lpRise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
-@keyframes lpFloat {
-  0%, 100% { translate: 0 0; }
-  50% { translate: 0 -10px; }
-}
-
-
 
 /* ---------- 3. Silhouettes — scroll-synced showcase ---------- */
 .lp-ss {
@@ -213,154 +191,8 @@
 .lp-ss-cta:hover { gap: 12px; }
 .lp-ss-cta svg { width: 16px; height: 16px; }
 
-/* ---------- 5. Steps ---------- */
-.lp-steps {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
-  counter-reset: lpstep;
-}
-.lp-step {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  gap: 32px;
-  aspect-ratio: 1 / 1;
-  padding: 20px;
-  border-radius: var(--r-lg);
-  border: 1px solid var(--border);
-  background: var(--bg);
-  transition: background var(--dur-base) var(--ease), color var(--dur-base) var(--ease), border-color var(--dur-base) var(--ease), transform var(--dur-base) var(--ease);
-}
-.lp-step:hover { background: #000; color: #fff; border-color: #000; transform: translateY(-4px); }
-.lp-step-num { font-family: var(--font-mono); font-size: 12px; color: var(--muted); letter-spacing: 0.08em; }
-.lp-step:hover .lp-step-num { color: rgba(255,255,255,0.6); }
-.lp-step-viz { width: 84px; height: 84px; }
-.lp-step-viz svg { width: 100%; height: 100%; }
-.lp-step-name { font-size: clamp(22px, 2.2vw, 30px); font-weight: 600; letter-spacing: -0.03em; }
-.lp-step::after {
-  content: '→';
-  position: absolute;
-  top: 16px;
-  inset-inline-end: 20px;
-  font-size: 18px;
-  opacity: 0;
-  transform: translateX(-6px);
-  transition: opacity var(--dur-fast) var(--ease), transform var(--dur-base) var(--ease);
-}
-.lp-step:hover::after { opacity: 1; transform: none; }
-[dir="rtl"] .lp-step::after { content: '←'; transform: translateX(6px); }
-
-/* ---------- 6. Stats ---------- */
-.lp-stats {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  border-block: 1px solid var(--border);
-}
-.lp-stat {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: clamp(24px, 3vw, 40px) clamp(12px, 2vw, 28px);
-}
-.lp-stat + .lp-stat { border-inline-start: 1px solid var(--border); }
-.lp-stat-value {
-  font-size: clamp(36px, 4.6vw, 64px);
-  font-weight: 600;
-  letter-spacing: -0.05em;
-  line-height: 1;
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-}
-.lp-stat-value.is-text { font-size: clamp(26px, 3vw, 44px); padding-block: 0.12em; }
-.lp-stat-label { font-size: 14px; color: var(--muted); }
-
-/* ---------- 6b. Collection — three large photos ---------- */
-.lp-photos {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: clamp(12px, 1.6vw, 20px);
-}
-.lp-photo { display: flex; flex-direction: column; gap: 14px; }
-.lp-photo-media {
-  aspect-ratio: 4 / 5;
-  overflow: hidden;
-  border-radius: var(--r-lg);
-  background: var(--surface-2);
-}
-.lp-photo-media img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 1s var(--ease);
-}
-.lp-photo:hover .lp-photo-media img { transform: scale(1.04); }
-.lp-photo-cap { display: flex; flex-direction: column; gap: 2px; padding-inline: 2px; }
-.lp-photo-cap strong { font-size: clamp(17px, 1.5vw, 20px); font-weight: 600; letter-spacing: -0.02em; }
-.lp-photo-cap span { font-size: 14px; color: var(--muted); }
-
-/* ---------- 7. CTA ---------- */
-.lp-section:last-child { padding-bottom: var(--lp-section); }
-.lp-cta {
-  position: relative;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 28px;
-  padding: clamp(36px, 6vw, 80px);
-  border-radius: var(--r-xl);
-  background: #0c0b0b;
-  color: #fff;
-  min-height: 320px;
-}
-.lp-cta h2 {
-  max-width: 12ch;
-  font-size: clamp(36px, 5.4vw, 76px);
-  font-weight: 600;
-  line-height: 0.98;
-  letter-spacing: -0.045em;
-  position: relative;
-  z-index: 1;
-}
-.lp-cta-btn {
-  position: relative;
-  z-index: 1;
-  gap: 8px;
-  background: #fff;
-  color: #000;
-  border: 0;
-}
-.lp-cta-btn:hover { background: #f1e6e3; }
-.lp-cta-tubes {
-  position: absolute;
-  inset-inline-end: clamp(16px, 6vw, 96px);
-  bottom: -16%;
-  display: flex;
-  align-items: flex-end;
-  gap: 0;
-  width: clamp(130px, 15vw, 200px);
-  pointer-events: none;
-}
-.lp-cta-tubes > div { flex: 1; }
-.lp-cta-tubes > div:first-child { transform: rotate(-8deg) translateY(8%); margin-right: -14%; }
-.lp-cta-tubes > div:last-child { transform: rotate(6deg); }
-.lp-cta-tubes svg { width: 100%; height: auto; }
-
 /* ---------- Responsive ---------- */
-@media (max-width: 960px) {
-  .lp-hero-grid { grid-template-columns: 1fr; }
-  .lp-hero-stage { min-height: 300px; max-width: 520px; width: 100%; margin-inline: auto; }
-  .lp-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .lp-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .lp-stat:nth-child(3) { border-inline-start: 0; }
-  .lp-stat:nth-child(n+3) { border-top: 1px solid var(--border); }
-  .lp-cta-tubes { opacity: 0.45; }
-}
-
 @media (max-width: 640px) {
-  .lp-title { font-size: clamp(48px, 16vw, 80px); }
   .lp-ss { height: calc(var(--n, 5) * 40vh + 100vh); }
   .lp-ss-stage { grid-template-columns: 1fr; grid-template-rows: auto minmax(0, 1fr); gap: 16px; }
   .lp-ss-side { padding-block: 0; gap: 12px; }
@@ -369,17 +201,13 @@
   .lp-ss-name:not(.is-active) { display: none; }
   .lp-ss-name.is-active { transform: none; }
   .lp-ss-card { border-radius: var(--r-lg); }
-  .lp-photos { grid-template-columns: 1fr; }
   .lp-ss-tube { height: 60%; margin-bottom: 14%; }
   .lp-ss-meta { font-size: 13px; }
-  .lp-step { aspect-ratio: auto; min-height: 168px; padding: 16px; }
-  .lp-step-viz { width: 48px; height: 48px; }
   .lp-head h2 { font-size: 34px; }
-  .lp-cta-tubes { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .lp-hero-tube, .lp-title, .lp-tagline, .lp-actions { animation: none !important; }
+  .lp-title, .lp-tagline, .lp-actions { animation: none !important; }
 }
 
 /* ---------- Design route: static silhouette picker ---------- */

@@ -714,76 +714,6 @@
 .gallery-card:focus-within .gallery-actions .btn-sm { opacity: 1; transform: none; }
 @media (hover: none) { .gallery-actions .btn-sm { opacity: 1; transform: none; } }
 
-/* ---------- Settings (2-Column Bento Grid) ---------- */
-.settings-bento-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 18px;
-}
-.settings-section {
-  padding: 22px 24px;
-  border-radius: var(--r-lg);
-  border: 1px solid var(--border);
-  background: var(--surface);
-  display: grid;
-  gap: 16px;
-  align-content: start;
-}
-.settings-section.bento-full {
-  grid-column: 1 / -1;
-}
-h3.setting-title {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--text);
-  margin: 0;
-}
-.lang-grid-pills {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
-}
-.lang-grid-pills .chip {
-  justify-content: space-between;
-  width: 100%;
-  padding: 8px 12px;
-}
-.setting-list {
-  display: grid;
-  gap: 12px;
-}
-.setting-list .setting-row {
-  padding-block: 6px;
-  border-bottom: 1px solid var(--border);
-}
-.setting-list .setting-row:last-child {
-  border-bottom: 0;
-  padding-bottom: 0;
-}
-.setting-info h4 {
-  font-size: 13px;
-  font-weight: 600;
-  margin-bottom: 2px;
-}
-.setting-info span.mono {
-  font-size: 10px;
-}
-.settings-brand-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-}
-.settings-vault-actions {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  padding-top: 8px;
-  border-top: 1px solid var(--border);
-}
-
 /* ---------- Responsive Breakpoints ---------- */
 @media (max-width: 1040px) {
   .setup-grid.grid-5 {
@@ -848,113 +778,6 @@ h3.setting-title {
     flex-direction: column;
     align-items: stretch;
   }
-}
-
-/* ---------- Archive: fan / arc carousel ---------- */
-.fan-wrap { margin-bottom: clamp(32px, 4vw, 56px); }
-.fan-stage {
-  position: relative;
-  height: clamp(380px, 40vw, 540px);
-  overflow: hidden;
-  border-radius: var(--r-xl);
-  background: #f3f2f0;
-  touch-action: pan-y;
-  user-select: none;
-  outline-offset: 4px;
-}
-/* white curved "ground" the cards rise out of */
-.fan-stage::after {
-  content: '';
-  position: absolute;
-  left: -10%;
-  right: -10%;
-  bottom: -62%;
-  height: 90%;
-  border-radius: 50%;
-  background: #fff;
-  z-index: 150;
-  pointer-events: none;
-}
-.fan-ring { position: absolute; inset: 0; }
-.fan-card {
-  position: absolute;
-  left: 50%;
-  top: 9%;
-  width: clamp(150px, 16vw, 230px);
-  aspect-ratio: 3 / 4;
-  margin-left: calc(clamp(150px, 16vw, 230px) / -2);
-  border-radius: 16px;
-  overflow: hidden;
-  background: var(--tint, #e9e4df);
-  box-shadow: 0 24px 50px -24px rgba(0, 0, 0, 0.4);
-  transform-origin: 50% 330%;
-  transform: rotate(var(--a, 0deg)) scale(var(--s, 1));
-  transition: transform 0.75s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.4s ease, box-shadow 0.4s ease;
-  cursor: pointer;
-}
-.fan-card.is-active { box-shadow: 0 34px 70px -26px rgba(0, 0, 0, 0.5); }
-.fan-tube {
-  position: absolute;
-  inset: 9% 0 8%;
-  display: grid;
-  place-items: center;
-  pointer-events: none;
-}
-.fan-tube svg { height: 100%; width: auto; transition: transform 0.6s var(--ease-framer); }
-.fan-card.is-active:hover .fan-tube svg { transform: translateY(-6px); }
-
-.fan-bar {
-  position: absolute;
-  left: 50%;
-  bottom: 18px;
-  z-index: 160;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  translate: -50% 0;
-}
-.fan-arrow {
-  display: grid;
-  place-items: center;
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  background: #000;
-  color: #fff;
-  transition: transform 0.25s var(--ease-framer);
-}
-.fan-arrow:hover { transform: scale(1.08); }
-.fan-arrow svg { width: 15px; height: 15px; }
-[dir="rtl"] .fan-arrow svg { transform: scaleX(-1); }
-.fan-dots { display: flex; gap: 6px; }
-.fan-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 99px;
-  background: #cfcac4;
-  transition: width 0.35s var(--ease-framer), background 0.3s ease;
-}
-.fan-dot.is-active { width: 22px; background: #b85c66; }
-
-.fan-info {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 16px 4px 0;
-}
-.fan-info > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.fan-name { font-size: clamp(20px, 2vw, 26px); font-weight: 600; letter-spacing: -0.03em; }
-.fan-model { font-size: 13px; color: var(--muted); }
-.fan-info .btn { gap: 8px; flex-shrink: 0; }
-.fan-info .btn svg { width: 15px; height: 15px; }
-
-@media (max-width: 640px) {
-  .fan-stage { height: 360px; border-radius: var(--r-lg); }
-  .fan-card { width: 140px; margin-left: -70px; top: 8%; transform-origin: 50% 300%; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .fan-card, .fan-dot { transition: none; }
 }
 
 /* ---------- Archive: showcase cards (expand in place) ---------- */
@@ -1081,4 +904,28 @@ h3.setting-title {
 
 @media (prefers-reduced-motion: reduce) {
   .sc-card, .sc-expand, .sc-row, .sc-actions, .sc-toggle, .sc-tube svg { transition: none !important; }
+}
+
+/* ---------- Settings: one column, four plain groups ---------- */
+.prefs { max-width: 880px; }
+.prefs-group {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: 24px;
+  padding-block: 28px;
+  border-top: 1px solid var(--border);
+}
+.prefs-label h3 { font-size: 16px; font-weight: 600; letter-spacing: -0.01em; }
+.prefs-label p { margin-top: 4px; font-size: 13px; color: var(--muted); }
+.prefs-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.prefs-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.prefs-field { display: flex; flex-direction: column; gap: 6px; }
+.prefs-field span { font-size: 12px; color: var(--muted); }
+.prefs-seg { width: max-content; }
+.prefs-seg button { min-width: 96px; }
+.prefs-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.prefs-danger { color: var(--danger, #c0392b); }
+@media (max-width: 720px) {
+  .prefs-group { grid-template-columns: 1fr; gap: 14px; padding-block: 22px; }
+  .prefs-fields { grid-template-columns: 1fr; }
 }

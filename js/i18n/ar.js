@@ -76,6 +76,10 @@
       title: 'نوع السطح', clear: 'شفاف · لون داخلي', shimmer: 'لمعان متعدد الطبقات', solid: 'سادة', solidGradient: 'تدرج سادة', clearGradient: 'تدرج على شفاف',
       color1: 'اللون 1', color2: 'اللون 2', inside: 'اللون الداخلي',
     },
+    prefs: {
+      pdfQuality: 'جودة PDF', q150: 'قياسية', q300: 'عالية', q600: 'للطباعة', brandNote: 'يظهر في ملف PDF',
+      data: 'البيانات', backup: 'نسخ احتياطي', restore: 'استعادة', reset: 'إعادة الضبط', resetConfirm: 'إعادة ضبط كل الإعدادات؟', restoreFail: 'تعذر استعادة هذا الملف.',
+    },
     flow: {
       stepOf: 'الخطوة {n} من {t}', pickShape: 'اختر الشكل', colorCode: 'رمز اللون', cap: 'الغطاء', body: 'الجسم',
       noteTitle: 'ملاحظة حول اللون', summary: 'تصميمك',

@@ -76,6 +76,10 @@
       title: 'Kiểu bề mặt', clear: 'Trong suốt · son bên trong', shimmer: 'Nhiều lớp lấp lánh', solid: 'Trơn', solidGradient: 'Trơn gradient', clearGradient: 'Gradient trên nền trong',
       color1: 'Màu 1', color2: 'Màu 2', inside: 'Màu son bên trong',
     },
+    prefs: {
+      pdfQuality: 'Chất lượng PDF', q150: 'Thường', q300: 'Cao', q600: 'In ấn', brandNote: 'Hiển thị trên file PDF',
+      data: 'Dữ liệu', backup: 'Sao lưu thiết kế', restore: 'Khôi phục', reset: 'Đặt lại cài đặt', resetConfirm: 'Đặt lại toàn bộ cài đặt?', restoreFail: 'Không khôi phục được file này.',
+    },
     flow: {
       stepOf: 'Bước {n}/{t}', pickShape: 'Chọn mẫu vỏ', colorCode: 'Mã màu', cap: 'Nắp', body: 'Thân',
       noteTitle: 'Lưu ý về màu', summary: 'Thiết kế của bạn',

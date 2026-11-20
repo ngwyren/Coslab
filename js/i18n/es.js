@@ -76,6 +76,10 @@
       title: 'Tipo de superficie', clear: 'Transparente · color interior', shimmer: 'Brillo multicapa', solid: 'Liso', solidGradient: 'Degradado liso', clearGradient: 'Degradado transparente',
       color1: 'Color 1', color2: 'Color 2', inside: 'Color interior',
     },
+    prefs: {
+      pdfQuality: 'Calidad PDF', q150: 'Estándar', q300: 'Alta', q600: 'Impresión', brandNote: 'Se muestra en tu ficha PDF',
+      data: 'Datos', backup: 'Copia de seguridad', restore: 'Restaurar', reset: 'Restablecer', resetConfirm: '¿Restablecer todos los ajustes?', restoreFail: 'No se puede restaurar este archivo.',
+    },
     flow: {
       stepOf: 'Paso {n} de {t}', pickShape: 'Elige una forma', colorCode: 'Código de color', cap: 'Tapa', body: 'Cuerpo',
       noteTitle: 'Nota sobre el color', summary: 'Tu diseño',

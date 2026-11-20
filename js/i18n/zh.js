@@ -76,6 +76,10 @@
       title: '表面类型', clear: '透明 · 内含唇色', shimmer: '多层闪粉', solid: '纯色', solidGradient: '纯色渐变', clearGradient: '透明渐变',
       color1: '颜色 1', color2: '颜色 2', inside: '内含唇色',
     },
+    prefs: {
+      pdfQuality: 'PDF 质量', q150: '标准', q300: '高清', q600: '印刷级', brandNote: '显示在 PDF 规格表上',
+      data: '数据', backup: '备份设计', restore: '恢复', reset: '重置设置', resetConfirm: '重置所有设置？', restoreFail: '无法恢复此文件。',
+    },
     flow: {
       stepOf: '第 {n}/{t} 步', pickShape: '选择瓶型', colorCode: '颜色代码', cap: '盖', body: '瓶身',
       noteTitle: '颜色说明', summary: '你的设计',

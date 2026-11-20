@@ -76,6 +76,10 @@
       title: '表面タイプ', clear: 'クリア・中身の色', shimmer: '多層ラメ', solid: 'ソリッド', solidGradient: 'ソリッドグラデーション', clearGradient: 'クリアグラデーション',
       color1: 'カラー1', color2: 'カラー2', inside: '中身の色',
     },
+    prefs: {
+      pdfQuality: 'PDF品質', q150: '標準', q300: '高画質', q600: '印刷用', brandNote: 'PDF仕様書に表示されます',
+      data: 'データ', backup: 'デザインをバックアップ', restore: '復元', reset: '設定をリセット', resetConfirm: 'すべての設定をリセットしますか？', restoreFail: 'このファイルは復元できません。',
+    },
     flow: {
       stepOf: 'ステップ {n}/{t}', pickShape: '容器の形を選ぶ', colorCode: 'カラーコード', cap: 'キャップ', body: 'ボディ',
       noteTitle: '色についての注意', summary: 'あなたのデザイン',
