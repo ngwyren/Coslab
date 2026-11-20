@@ -978,42 +978,97 @@
         // ======================================================
         // STEP 02: COLOR & FINISH (FIGMA FILL + MATERIAL)
         // ======================================================
+        // Which colour of a 2-colour surface the palette edits (kept across panel re-renders)
+        let colorSlot = 0;
+        const SURFACES = [
+          { id: 'clear', key: 'surface.clear' },
+          { id: 'shimmer', key: 'surface.shimmer' },
+          { id: 'solid', key: 'surface.solid' },
+          { id: 'solid-gradient', key: 'surface.solidGradient' },
+          { id: 'clear-gradient', key: 'surface.clearGradient' },
+        ];
+        const isGradientSurface = (s) => s === 'solid-gradient' || s === 'clear-gradient';
+        const stopEntry = (s) => CL.pantone.of({ color: s.c, pantone: s.pantone });
+
         function buildColorStep() {
           const isVi = I18N.lang === 'vi';
-          const curPart = design.parts[activePart] || (design.parts[activePart] = { fill: CL.pantone.fillFor(CL.pantone.LIST[4]), finish: 'matte' });
-          const current = CL.pantone.of(curPart.fill);
+          const curPart = design.parts[activePart] || (design.parts[activePart] = { fill: CL.pantone.fillFor(CL.pantone.byCode.get('7418 C')), finish: 'matte' });
+          const surface = curPart.surface || (CL.models.getModel(design.model).style === 'glass' && activePart === 'base' ? 'clear' : 'solid');
+          const twoColour = isGradientSurface(surface);
+          if (!twoColour) colorSlot = 0;
           const partName = t(activePart === 'base' ? 'flow.body' : 'flow.cap');
 
-          // 1. Finish — each option shows a small illustrated sphere of the finish
-          const FINISH_LIST = ['matte', 'gloss', 'satin', 'metallic'];
-          const finishRow = CL.h('div.finish-grid', null,
-            FINISH_LIST.map((id) =>
-              CL.h('button.finish-card-btn.has-chip' + (curPart.finish === id ? '.is-active' : ''), {
+          // Current colour(s) as Pantone entries
+          const stops = curPart.fill && curPart.fill.type === 'linear' ? curPart.fill.stops : null;
+          const colours = stops ? [stopEntry(stops[0]), stopEntry(stops[stops.length - 1])] : [CL.pantone.of(curPart.fill), CL.pantone.of(curPart.fill)];
+          const current = colours[colorSlot] || colours[0];
+
+          const toSolid = (p) => CL.pantone.fillFor(p);
+          const toLinear = (a, b) => ({ type: 'linear', angle: 180, stops: [{ o: 0, c: a.screen, pantone: a.code }, { o: 1, c: b.screen, pantone: b.code }] });
+          const commit = () => { pushHistory(); syncPartChips(); render2DCanvas(); renderStepPanel(); };
+
+          // 1. Surface type — each option previews the tube with that surface in the current colours
+          const surfaceRow = CL.h('div.surface-grid', null,
+            SURFACES.map((s) => {
+              const preview = CL.clone(design);
+              preview.parts[activePart] = Object.assign({}, curPart, {
+                surface: s.id,
+                fill: isGradientSurface(s.id)
+                  ? toLinear(colours[0], colours[1].code === colours[0].code ? CL.pantone.byCode.get('7430 C') : colours[1])
+                  : toSolid(colours[0]),
+              });
+              return CL.h('button.surface-card' + (surface === s.id ? '.is-active' : ''), {
                 type: 'button',
+                'aria-pressed': String(surface === s.id),
                 onclick: () => {
-                  curPart.finish = id;
-                  pushHistory();
-                  render2DCanvas();
-                  renderStepPanel();
+                  if (surface === s.id) return;
+                  curPart.surface = s.id;
+                  curPart.fill = preview.parts[activePart].fill;
+                  colorSlot = 0;
+                  commit();
                 },
               },
-                CL.h('i.finish-chip.finish-chip--' + id, { style: { '--chip': current ? current.screen : '#b85c66' } }),
-                CL.h('span', { text: t('editor.finishesShort.' + id) })
-              )
-            )
+                CL.h('span.surface-thumb', { html: CL.render.renderTight(preview, { width: 34, shadow: false }) }),
+                CL.h('span.surface-name', { text: t(s.key) })
+              );
+            })
           );
 
-          // 2. Selected colour — shown by Pantone code (no HEX anywhere)
+          // 2. Colour slot switch for 2-colour surfaces
+          const slotSwitch = twoColour
+            ? CL.h('div.colour-slots', null,
+                [0, 1].map((i) => CL.h('button.colour-slot' + (colorSlot === i ? '.is-active' : ''), {
+                  type: 'button',
+                  onclick: () => { colorSlot = i; renderStepPanel(); },
+                },
+                  CL.h('i', { style: { background: colours[i].screen } }),
+                  CL.h('span', { text: t(i === 0 ? 'surface.color1' : 'surface.color2') }),
+                  CL.h('strong', { text: CL.pantone.label(colours[i]) })
+                )))
+            : null;
+
+          // 3. Selected colour — shown by Pantone code (no HEX anywhere)
+          const slotLabel = surface === 'clear' ? t('surface.inside') : twoColour ? t(colorSlot === 0 ? 'surface.color1' : 'surface.color2') : t('flow.colorCode');
           const selected = CL.h('div.pt-selected', null,
             CL.h('i.pt-selected-swatch', { style: { background: current ? current.screen : '#ccc' } }),
             CL.h('div.pt-selected-text', null,
-              CL.h('span.pt-selected-label', { text: `${t('flow.colorCode')} · ${partName}` }),
+              CL.h('span.pt-selected-label', { text: `${slotLabel} · ${partName}` }),
               CL.h('strong.pt-selected-code', { text: CL.pantone.label(current) }),
               CL.h('span.pt-selected-name', { text: current ? current.name : '' })
             )
           );
 
-          // 3. Pantone palette (grouped), each chip labelled with its code
+          // 4. Pantone palette (grouped); a chip sets the whole colour, or the active slot of a gradient
+          const pick = (p) => {
+            if (twoColour) {
+              const next = [colours[0], colours[1]];
+              next[colorSlot] = p;
+              curPart.fill = toLinear(next[0], next[1]);
+            } else {
+              curPart.fill = toSolid(p);
+            }
+            commit();
+          };
           const group = (key, titleVi, titleEn) => CL.h('div.pt-group', null,
             CL.h('span.pt-group-title', { text: isVi ? titleVi : titleEn }),
             CL.h('div.pt-grid', null,
@@ -1022,18 +1077,25 @@
                   type: 'button',
                   title: `${CL.pantone.label(p)} — ${p.name}`,
                   'aria-pressed': String(!!(current && current.code === p.code)),
-                  onclick: () => {
-                    curPart.fill = CL.pantone.fillFor(p);
-                    pushHistory();
-                    syncPartChips();
-                    render2DCanvas();
-                    renderStepPanel();
-                  },
+                  onclick: () => pick(p),
                 },
                   CL.h('i.pt-chip-swatch', { style: { background: p.screen } }),
                   CL.h('span.pt-chip-code', { text: p.code })
                 ))
             )
+          );
+
+          // 5. Finish (sheen) — illustrated spheres
+          const FINISH_LIST = ['matte', 'gloss', 'satin', 'metallic'];
+          const finishRow = CL.h('div.finish-grid', null,
+            FINISH_LIST.map((id) =>
+              CL.h('button.finish-card-btn.has-chip' + (curPart.finish === id ? '.is-active' : ''), {
+                type: 'button',
+                onclick: () => { curPart.finish = id; pushHistory(); render2DCanvas(); renderStepPanel(); },
+              },
+                CL.h('i.finish-chip.finish-chip--' + id, { style: { '--chip': current ? current.screen : '#b85c66' } }),
+                CL.h('span', { text: t('editor.finishesShort.' + id) })
+              ))
           );
 
           const note = CL.h('div.color-note', { role: 'note' },
@@ -1044,8 +1106,15 @@
           stepBody.append(
             CL.h('div.fg-section', null,
               CL.h('div.fg-section-head', null,
+                CL.h('span.fg-section-title', { text: `${t('surface.title')} · ${partName}` })
+              ),
+              surfaceRow
+            ),
+            CL.h('div.fg-section', null,
+              CL.h('div.fg-section-head', null,
                 CL.h('span.fg-section-title', { text: isVi ? `Màu ${partName.toLowerCase()} (Pantone)` : `${partName} colour (Pantone)` })
               ),
+              slotSwitch,
               selected,
               note,
               group('tint', 'Tông son', 'Tint shades'),
@@ -1053,7 +1122,7 @@
             ),
             CL.h('div.fg-section', null,
               CL.h('div.fg-section-head', null,
-                CL.h('span.fg-section-title', { text: isVi ? 'Chất liệu bề mặt' : 'Surface finish' })
+                CL.h('span.fg-section-title', { text: isVi ? 'Độ bóng' : 'Finish' })
               ),
               finishRow
             )
@@ -1746,7 +1815,7 @@
             return CL.h('div.flow-summary-row', null,
               CL.h('i', { style: { background: pt ? pt.screen : '#ccc' } }),
               CL.h('span', { text: t(part === 'cap' ? 'flow.cap' : 'flow.body') }),
-              CL.h('strong', { text: `${CL.pantone.describeFill(p.fill)} · ${t('editor.finishesShort.' + (p.finish || 'matte'))}` })
+              CL.h('strong', { text: `${t(CL.pantone.surfaceKey(p))} · ${CL.pantone.describeFill(p.fill)} · ${t('editor.finishesShort.' + (p.finish || 'matte'))}` })
             );
           };
           const textLayers = (design.layers || []).filter((l) => l.type === 'text' && l.visible !== false);

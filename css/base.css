@@ -652,3 +652,7 @@ svg.ic {
 }
 
 .skip-link { position: absolute; left: -999px; top: 8px; z-index: 1000; }
+
+/* Hide scrollbars site-wide (page + inner panels); scrolling still works by wheel, keys and touch */
+html, body, * { scrollbar-width: none !important; -ms-overflow-style: none !important; }
+html::-webkit-scrollbar, body::-webkit-scrollbar, *::-webkit-scrollbar { width: 0 !important; height: 0 !important; display: none !important; }

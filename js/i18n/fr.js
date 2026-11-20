@@ -72,6 +72,10 @@
       subscribeSuccess: 'Merci de vous être connecté à Coslab !',
       subscribeError: 'Veuillez saisir une adresse email valide.',
     },
+    surface: {
+      title: 'Type de surface', clear: 'Transparent · teinte visible', shimmer: 'Paillettes multicouches', solid: 'Uni', solidGradient: 'Dégradé uni', clearGradient: 'Dégradé sur transparent',
+      color1: 'Couleur 1', color2: 'Couleur 2', inside: 'Teinte intérieure',
+    },
     flow: {
       stepOf: 'Étape {n} sur {t}', pickShape: 'Choisissez une forme', colorCode: 'Code couleur', cap: 'Capuchon', body: 'Corps',
       noteTitle: 'Note sur la couleur', summary: 'Votre création',

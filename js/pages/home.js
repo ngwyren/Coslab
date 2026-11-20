@@ -96,6 +96,28 @@
       );
 
 
+      /* ---------- 2. Full-bleed studio renders (edge to edge, no copy) ----------
+         Each image eases from a slight zoom to rest as it scrolls into view. */
+      const FB = (src, alt) => CL.h('figure.lp-fb-item', null,
+        CL.h('img', { src, alt, loading: 'lazy', decoding: 'async' }));
+      const fullbleed = CL.h('section.lp-fb', { 'aria-label': 'COSLAB studio' },
+        FB('assets/home/dmc-12.jpg', 'Lip gloss jars on a coffee table in a sunlit living room'),
+        CL.h('div.lp-fb-row', null,
+          FB('assets/home/dmc-346.jpg', 'Two eyeshadow palettes in clear cases'),
+          FB('assets/home/dmc-2355.jpg', 'Oversized lip gloss jar in a warm, sunlit room')
+        ),
+        FB('assets/home/dmc-12345.jpg', 'Lip gloss jar suspended between two rock forms')
+      );
+      if ('IntersectionObserver' in window) {
+        const fbIo = new IntersectionObserver((entries) => {
+          entries.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('is-in'); fbIo.unobserve(e.target); } });
+        }, { threshold: 0.15 });
+        fullbleed.querySelectorAll('.lp-fb-item').forEach((el) => fbIo.observe(el));
+        observers.push(fbIo);
+      } else {
+        fullbleed.querySelectorAll('.lp-fb-item').forEach((el) => el.classList.add('is-in'));
+      }
+
       /* ---------- 5. Four steps ---------- */
       const steps = CL.h('section.lp-section', null,
         CL.h('div.container', null,
@@ -173,7 +195,7 @@
         )
       );
 
-      root.append(hero, steps, stats, photos, cta);
+      root.append(hero, fullbleed, steps, stats, photos, cta);
       container.appendChild(root);
 
       return () => {

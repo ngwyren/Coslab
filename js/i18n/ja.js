@@ -72,6 +72,10 @@
       subscribeSuccess: 'Coslabへのご登録ありがとうございます！',
       subscribeError: '有効なメールアドレスを入力してください。',
     },
+    surface: {
+      title: '表面タイプ', clear: 'クリア・中身の色', shimmer: '多層ラメ', solid: 'ソリッド', solidGradient: 'ソリッドグラデーション', clearGradient: 'クリアグラデーション',
+      color1: 'カラー1', color2: 'カラー2', inside: '中身の色',
+    },
     flow: {
       stepOf: 'ステップ {n}/{t}', pickShape: '容器の形を選ぶ', colorCode: 'カラーコード', cap: 'キャップ', body: 'ボディ',
       noteTitle: '色についての注意', summary: 'あなたのデザイン',

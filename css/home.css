@@ -433,3 +433,33 @@
 .lp-ss-thumb svg { height: 100%; width: auto; }
 .lp-ss-name.is-active .lp-ss-thumb,
 .lp-ss-name:hover .lp-ss-thumb { opacity: 1; filter: none; }
+
+/* ---------- Full-bleed studio renders ---------- */
+.lp-fb { display: flex; flex-direction: column; gap: 6px; }
+.lp-fb-row { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.lp-fb-item {
+  position: relative;
+  margin: 0;
+  overflow: hidden;
+  aspect-ratio: 16 / 9;
+  max-height: 92vh;
+  background: #eceae6;
+}
+.lp-fb > .lp-fb-item { width: 100%; }
+.lp-fb-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(1.08);
+  opacity: 0.001;
+  transition: transform 1.6s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.9s ease;
+}
+.lp-fb-item.is-in img { transform: scale(1); opacity: 1; }
+.lp-fb-row .lp-fb-item { aspect-ratio: 4 / 5; max-height: none; }
+@media (max-width: 640px) {
+  .lp-fb-row { grid-template-columns: 1fr; }
+  .lp-fb-row .lp-fb-item { aspect-ratio: 16 / 10; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lp-fb-item img { transform: none; opacity: 1; transition: none; }
+}

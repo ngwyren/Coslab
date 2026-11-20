@@ -72,6 +72,10 @@
       subscribeSuccess: '感谢您关注 Coslab！',
       subscribeError: '请输入有效的邮箱地址。',
     },
+    surface: {
+      title: '表面类型', clear: '透明 · 内含唇色', shimmer: '多层闪粉', solid: '纯色', solidGradient: '纯色渐变', clearGradient: '透明渐变',
+      color1: '颜色 1', color2: '颜色 2', inside: '内含唇色',
+    },
     flow: {
       stepOf: '第 {n}/{t} 步', pickShape: '选择瓶型', colorCode: '颜色代码', cap: '盖', body: '瓶身',
       noteTitle: '颜色说明', summary: '你的设计',

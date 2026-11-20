@@ -78,7 +78,7 @@
   /** Human label for a part fill, e.g. "PANTONE 4995 C" or "PANTONE 7416 C → PANTONE 186 C". */
   function describeFill(fill) {
     if (!fill) return '—';
-    if (fill.type === 'linear' && fill.stops) return fill.stops.map((s) => label(nearest(s.c))).join(' → ');
+    if (fill.type === 'linear' && fill.stops) return fill.stops.map((s) => label(of({ color: s.c, pantone: s.pantone }))).join(' → ');
     return label(of(fill));
   }
 
@@ -116,5 +116,9 @@
     return d;
   }
 
-  CL.pantone = { LIST, byCode, nearest, of, label, describeFill, fillFor, normalizeDesign };
+  // i18n key for a part surface type (solid when unset)
+  const SURFACE_KEYS = { clear: "surface.clear", shimmer: "surface.shimmer", solid: "surface.solid", "solid-gradient": "surface.solidGradient", "clear-gradient": "surface.clearGradient" };
+  const surfaceKey = (part) => SURFACE_KEYS[(part && part.surface) || "solid"] || "surface.solid";
+
+  CL.pantone = { LIST, byCode, nearest, of, label, describeFill, fillFor, normalizeDesign, surfaceKey };
 })(window.CL);

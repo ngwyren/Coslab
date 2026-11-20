@@ -295,7 +295,7 @@
       ctx.fillText(pLabel, x + 84, y);
       ctx.fillStyle = '#59544c';
       ctx.font = `400 34px ${UI}`;
-      ctx.fillText(`${fillDesc(part.fill)} · ${t('editor.colors.' + (part.finish || 'matte'))}`, x + 620, y);
+      ctx.fillText(`${t(CL.pantone.surfaceKey(part))} · ${fillDesc(part.fill)} · ${t('editor.colors.' + (part.finish || 'matte'))}`, x + 620, y, W - 160 - (x + 620));
       y += 80;
     });
 

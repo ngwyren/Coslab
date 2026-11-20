@@ -158,6 +158,95 @@
     return `<g transform="${layerTransform(layer, rect)}" opacity="${layer.opacity ?? 1}"${data}>${inner}</g>`;
   }
 
+  /* ---------- Surface types ----------
+     solid          plain opaque colour (default)
+     solid-gradient opaque 2-colour gradient
+     clear          clear shell, coloured tint visible inside
+     clear-gradient colour fading into a clear shell
+     shimmer        colour with layered glitter inside            */
+  const SURFACES = ['clear', 'shimmer', 'solid', 'solid-gradient', 'clear-gradient'];
+
+  function fillColors(fill) {
+    if (!fill) return ['#b85c66', '#b85c66'];
+    if (fill.type === 'linear' && fill.stops && fill.stops.length) {
+      return [fill.stops[0].c, fill.stops[fill.stops.length - 1].c];
+    }
+    return [fill.color || '#b85c66', fill.color || '#b85c66'];
+  }
+
+  // small deterministic PRNG so glitter stays put between renders
+  function seeded(seedStr) {
+    let h = 2166136261;
+    for (let i = 0; i < seedStr.length; i++) { h ^= seedStr.charCodeAt(i); h = Math.imul(h, 16777619); }
+    return () => { h += 0x6d2b79f5; let t = h; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+  }
+
+  function glitter(rect, color, seedKey) {
+    const rnd = seeded(`${seedKey}|${color}|${rect.w}x${rect.h}`);
+    const area = rect.w * rect.h;
+    const px = () => CL.round(rect.x + 3 + rnd() * (rect.w - 6), 2);
+    const py = () => CL.round(rect.y + 3 + rnd() * (rect.h - 6), 2);
+    const light = CL.color.mix(color, '#ffffff', 0.65);
+    let m = '';
+    // deep layer: fine, faint specks
+    for (let i = 0; i < area / 55; i++) m += `<circle cx="${px()}" cy="${py()}" r="${CL.round(0.35 + rnd() * 0.45, 2)}" fill="#ffffff" opacity="${CL.round(0.25 + rnd() * 0.35, 2)}"/>`;
+    // mid layer: tinted flakes
+    for (let i = 0; i < area / 160; i++) m += `<circle cx="${px()}" cy="${py()}" r="${CL.round(0.7 + rnd() * 0.9, 2)}" fill="${light}" opacity="${CL.round(0.35 + rnd() * 0.4, 2)}"/>`;
+    // top layer: four-point sparkles
+    for (let i = 0; i < area / 900; i++) {
+      const x = px(), y = py(), s = CL.round(1.6 + rnd() * 2.2, 2);
+      m += `<path d="M${x} ${y - s} L${x + s * 0.22} ${y - s * 0.22} L${x + s} ${y} L${x + s * 0.22} ${y + s * 0.22} L${x} ${y + s} L${x - s * 0.22} ${y + s * 0.22} L${x - s} ${y} L${x - s * 0.22} ${y - s * 0.22} Z" fill="#ffffff" opacity="${CL.round(0.7 + rnd() * 0.3, 2)}"/>`;
+    }
+    return m;
+  }
+
+  /**
+   * Markup + defs for one part's body according to its surface type.
+   * `shape(rect, paint, extra)` draws the outline (cap/base path, or a plain rect for print flats).
+   */
+  function surfaceBody(partData, rect, shape, id, isCap, legacyGlassTint) {
+    const p = partData || {};
+    const surface = SURFACES.includes(p.surface) ? p.surface : 'solid';
+    const [cA, cB] = fillColors(p.fill);
+    const defs = [];
+    let m = '';
+    const vGrad = (gid, stops) => defs.push(`<linearGradient id="${gid}" x1="0" y1="1" x2="0" y2="0">${stops}</linearGradient>`);
+
+    if (surface === 'clear') {
+      // clear acrylic shell + the tint (or wand) visible inside
+      m += shape(rect, '#ffffff', ' fill-opacity="0.42"');
+      if (isCap) {
+        const w = rect.w * 0.26;
+        m += `<rect x="${CL.round(rect.x + (rect.w - w) / 2, 2)}" y="${CL.round(rect.y + rect.h * 0.14, 2)}" width="${CL.round(w, 2)}" height="${CL.round(rect.h * 0.86, 2)}" rx="${CL.round(w / 2, 2)}" fill="${cA}" opacity="0.9"/>`;
+      } else {
+        const ix = 10, iy = 12;
+        m += `<rect x="${rect.x + ix}" y="${rect.y + iy}" width="${rect.w - ix * 2}" height="${rect.h - iy * 2}" rx="${Math.max((rect.r || 8) - 4, 3)}" fill="${cA}" opacity="0.92"/>`;
+      }
+      m += shape(rect, 'none', ' stroke="#ffffff" stroke-opacity="0.8" stroke-width="2.5"');
+    } else if (surface === 'clear-gradient') {
+      vGrad(id, `<stop offset="0" stop-color="${cA}" stop-opacity="0.95"/><stop offset="0.55" stop-color="${cB}" stop-opacity="0.45"/><stop offset="1" stop-color="${cB}" stop-opacity="0.06"/>`);
+      m += shape(rect, '#ffffff', ' fill-opacity="0.4"');
+      m += shape(rect, `url(#${id})`);
+      m += shape(rect, 'none', ' stroke="#ffffff" stroke-opacity="0.7" stroke-width="2"');
+    } else if (surface === 'solid-gradient') {
+      vGrad(id, `<stop offset="0" stop-color="${cA}"/><stop offset="1" stop-color="${cB}"/>`);
+      m += shape(rect, `url(#${id})`);
+    } else if (surface === 'shimmer') {
+      vGrad(id, `<stop offset="0" stop-color="${cA}"/><stop offset="1" stop-color="${CL.color.mix(cB, '#ffffff', 0.18)}"/>`);
+      m += shape(rect, `url(#${id})`);
+      m += glitter(rect, cA, id.replace(/^[^-]+-/, '') + (isCap ? 'cap' : 'base'));
+    } else {
+      const f = fillPaint(p.fill, id);
+      if (f.def) defs.push(f.def);
+      m += shape(rect, f.paint);
+      if (legacyGlassTint && !isCap) {
+        // older "glass" designs saved before surface types existed
+        m += `<rect x="${rect.x + 12}" y="${rect.y + 14}" width="${rect.w - 24}" height="${rect.h - 28}" rx="${Math.max((rect.r || 8) - 4, 3)}" fill="${legacyGlassTint}" opacity="0.88"/>`;
+      }
+    }
+    return { defs, markup: m };
+  }
+
   function renderSVG(design, opts = {}) {
     const u = opts.uid || CL.uid('lt');
     const L = CL.models.layout(design.model);
@@ -167,10 +256,10 @@
     const inter = !!opts.interactive;
     const defs = [];
 
-    const fCap = fillPaint(P.cap && P.cap.fill, `${u}-f-cap`);
-    const fBase = fillPaint(P.base && P.base.fill, `${u}-f-base`);
-    if (fCap.def) defs.push(fCap.def);
-    if (fBase.def) defs.push(fBase.def);
+    const legacyTint = L.model.style === 'glass' && !(P.base && P.base.surface) ? ((P.tint && P.tint.color) || '#b83b48') : null;
+    const sCap = surfaceBody(P.cap, L.cap, capShape, `${u}-f-cap`, true, null);
+    const sBase = surfaceBody(P.base, L.base, baseShape, `${u}-f-base`, false, legacyTint);
+    defs.push(...sCap.defs, ...sBase.defs);
 
     const shadeKey = (sil === 'square' ? 'square' : sil === 'crystal' ? 'crystal' : 'round');
     const shadeCapId = `${u}-sh-cap`;
@@ -204,11 +293,7 @@
     // 1. Base (Thân son)
     const baseAttr = inter ? ` data-part="base" class="cl-part"` : '';
     body += `<g${baseAttr} clip-path="url(#${u}-clip-base)">`;
-    body += baseShape(L.base, fBase.paint);
-    if (L.model.style === 'glass') {
-      const tintCol = (P.tint && P.tint.color) || '#b83b48';
-      body += `<rect x="${L.windowRect.x}" y="${L.windowRect.y}" width="${L.windowRect.w}" height="${L.windowRect.h}" rx="${L.windowRect.r}" fill="${tintCol}" opacity="0.88"/>`;
-    }
+    body += sBase.markup;
     body += `</g>`;
 
     // Artwork on Base (Strictly inside Safe Zone)
@@ -224,7 +309,7 @@
     // 2. Cap (Nắp son)
     const capAttr = inter ? ` data-part="cap" class="cl-part"` : '';
     body += `<g${capAttr} clip-path="url(#${u}-clip-cap)">`;
-    body += capShape(L.cap, fCap.paint);
+    body += sCap.markup;
     body += `</g>`;
 
     // Artwork on Cap (Strictly inside Safe Zone)
@@ -261,13 +346,16 @@
     const u = opts.uid || CL.uid('p');
     const L = CL.models.layout(design.model);
     const r = L[part];
-    const f = fillPaint(design.parts[part]?.fill, `${u}-f`);
+    const flatRect = (rr, paint, extra = '') => `<rect x="${rr.x}" y="${rr.y}" width="${rr.w}" height="${rr.h}" fill="${paint}"${extra}/>`;
+    const P = design.parts || {};
+    const legacyTint = part === 'base' && L.model.style === 'glass' && !(P.base && P.base.surface) ? ((P.tint && P.tint.color) || '#b83b48') : null;
+    const s = surfaceBody(P[part], r, flatRect, `${u}-f`, part === 'cap', legacyTint);
     const layers = (design.layers || []).filter((l) => l.part === part).map((l) => layerMarkup(l, r, false)).join('');
     const scale = opts.scale || 4;
     const style = opts.fontCSS ? `<style>${opts.fontCSS}</style>` : '';
 
     return {
-      svg: `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="${r.x} ${r.y} ${r.w} ${r.h}" width="${r.w * scale}" height="${r.h * scale}">${style}<defs>${f.def}</defs><rect x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" fill="${f.paint}"/>${layers}</svg>`,
+      svg: `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="${r.x} ${r.y} ${r.w} ${r.h}" width="${r.w * scale}" height="${r.h * scale}">${style}<defs>${s.defs.join('')}</defs>${s.markup}${layers}</svg>`,
       w: r.w * scale,
       h: r.h * scale,
       rect: r,

@@ -85,8 +85,8 @@
       templateId: 'dewy-glass',
       category: 'k-dewy',
       parts: {
-        cap: { fill: solid('#fbfaf7'), finish: 'gloss' },
-        base: { fill: solid('#fbfaf7'), finish: 'gloss' },
+        cap: { fill: solid('#fbfaf7'), finish: 'gloss', surface: 'solid' },
+        base: { fill: solid('#c94d5b'), finish: 'gloss', surface: 'clear' },
         tint: { color: '#c94d5b' },
       },
       layers: [
@@ -133,8 +133,8 @@
       templateId: 'chili-gradient',
       category: 'k-gradient',
       parts: {
-        cap: { fill: grad('#df705e', '#a63428'), finish: 'gloss' },
-        base: { fill: grad('#a63428', '#df705e'), finish: 'gloss' },
+        cap: { fill: grad('#df705e', '#a63428'), finish: 'gloss', surface: 'solid-gradient' },
+        base: { fill: grad('#a63428', '#df705e'), finish: 'gloss', surface: 'solid-gradient' },
       },
       layers: [
         T('base', 'GLOW TINT', { y: 0.5, rotation: -90, font: 'Bebas Neue', weight: 400, size: 22, spacing: 5, color: '#ffffff' }),

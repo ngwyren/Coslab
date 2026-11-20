@@ -72,6 +72,10 @@
       subscribeSuccess: '¡Gracias por conectar con Coslab!',
       subscribeError: 'Por favor, ingresa un correo electrónico válido.',
     },
+    surface: {
+      title: 'Tipo de superficie', clear: 'Transparente · color interior', shimmer: 'Brillo multicapa', solid: 'Liso', solidGradient: 'Degradado liso', clearGradient: 'Degradado transparente',
+      color1: 'Color 1', color2: 'Color 2', inside: 'Color interior',
+    },
     flow: {
       stepOf: 'Paso {n} de {t}', pickShape: 'Elige una forma', colorCode: 'Código de color', cap: 'Tapa', body: 'Cuerpo',
       noteTitle: 'Nota sobre el color', summary: 'Tu diseño',
