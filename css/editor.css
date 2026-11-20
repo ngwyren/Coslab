@@ -1217,7 +1217,7 @@
 .flow-summary-row strong { margin-inline-start: auto; text-align: end; }
 
 /* ---------- Surface type picker (5 options, each with a live tube preview) ---------- */
-.surface-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+.surface-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
 .surface-card {
   display: flex;
   flex-direction: column;

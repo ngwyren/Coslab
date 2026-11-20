@@ -30,13 +30,6 @@
           CL.h('span', { text: t(CL.models.getModel(modelId).nameKey) })
         ));
 
-      // Same 4-step bar as the Studio: 1 Shape (here) → 2 Color → 3 Text → 4 Logo
-      const flowBar = CL.h('nav.studio-stepper.flow-bar', { 'aria-label': 'Steps' },
-        ['landing.step1', 'landing.step2', 'landing.step3', 'landing.step4'].map((key, i) =>
-          CL.h('span.studio-step-pill' + (i === 0 ? '.is-active' : '.is-upcoming'), {
-            'aria-current': i === 0 ? 'step' : null,
-            html: `<span class="step-num">${String(i + 1).padStart(2, '0')}</span><span class="step-name">${t(key)}</span>`,
-          })));
 
       const visuals = FORMS.map(([tplId, modelId]) => {
         const d = CL.templates.createDesign(tplId, modelId);
@@ -98,7 +91,7 @@
       window.addEventListener('keydown', onKey);
 
       setActive(active);
-      container.appendChild(CL.h('div.page.lp.design-pick', null, CL.h('div.container', null, flowBar, stage)));
+      container.appendChild(CL.h('div.page.lp.design-pick', null, CL.h('div.container', null, stage)));
 
       return () => window.removeEventListener('keydown', onKey);
     },

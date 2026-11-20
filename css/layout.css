@@ -292,6 +292,7 @@ body.nav-ov-open .nav-ov-foot { opacity: 1; }
   font-size: clamp(26px, 9.6vw, 140px);
   font-weight: 800;
   letter-spacing: -0.04em;
+  font-kerning: none;
   line-height: 0.92;
   color: var(--text);
   margin-bottom: 48px;

@@ -45,9 +45,11 @@
 .lp-hero {
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
-  min-height: min(78vh, 760px);
-  padding-block: clamp(32px, 5vw, 72px) clamp(28px, 3.4vw, 48px);
+  justify-content: center; /* wordmark + action sit in the vertical middle */
+  /* fills the first screen exactly, so the renders only appear on scroll */
+  min-height: calc(100vh - var(--header-h));
+  min-height: calc(100svh - var(--header-h));
+  padding-block: clamp(28px, 4vw, 56px);
   overflow: hidden;
 }
 .lp-hero-grid { display: flex; flex-direction: column; gap: clamp(22px, 2.6vw, 36px); }
@@ -55,40 +57,43 @@
   margin: 0;
   align-self: center;
   font-size: clamp(48px, 11.6vw, 220px); /* JS refines this to fit the width exactly */
-  font-weight: 400;
-  line-height: 0.84;
-  letter-spacing: -0.065em;
+  font-weight: 700;
+  line-height: 0.86;
+  letter-spacing: -0.06em;
+  font-kerning: none; /* spacing below is measured without kerning */
   white-space: nowrap;
   width: max-content;
   animation: lpRise var(--dur-editorial) var(--ease) both;
 }
-/* Compact note under the wordmark — narrow, first line indented, set in from the left */
+/* Action row under the wordmark — right-aligned, with generous air above */
 .lp-hero-note {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 18px;
-  width: min(100%, 280px);
-  margin-inline-start: 34%;
+  justify-content: flex-end;
+  width: 100%;
+  margin-top: clamp(24px, 4vw, 64px);
   animation: lpRise var(--dur-editorial) var(--ease) 0.1s both;
 }
-.lp-tagline {
-  font-size: 16px;
-  font-weight: 500;
-  line-height: 1.3;
-  letter-spacing: -0.01em;
-  color: var(--text-2);
-  text-indent: 3.2em;
+.lp-hero-cta {
+  gap: 10px;
+  height: 56px;
+  padding-inline: 30px;
+  font-size: 17px;
+  white-space: nowrap;
 }
-.lp-hero-cta { gap: 8px; white-space: nowrap; }
-.lp-hero-cta svg { width: 14px; height: 14px; }
+.lp-hero-cta svg { width: 18px; height: 18px; }
 
+/* Extra room after L so its foot never touches the following A (LA is the only colliding pair) */.lp-kern-l, .footer-kern-l { letter-spacing: 0.01em; }
 @keyframes lpRise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
 
-@media (max-width: 760px) {
-  .lp-hero { min-height: 0; }
-  .lp-hero-note { margin-inline-start: 0; }
+/* Phones: stack the two words and put a smaller action in the middle */
+@media (max-width: 640px) {
+  .lp-title { text-align: center; line-height: 0.9; }
+  .lp-title-word { display: block; }
+  .lp-hero-note { justify-content: center; margin-top: 28px; }
+  .lp-hero-cta { height: 46px; padding-inline: 22px; font-size: 15px; gap: 8px; }
+  .lp-hero-cta svg { width: 15px; height: 15px; }
 }
+
 /* ---------- 3. Silhouettes — scroll-synced showcase ---------- */
 .lp-ss {
   position: relative;
@@ -217,7 +222,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .lp-title, .lp-tagline, .lp-actions { animation: none !important; }
+  .lp-title, .lp-hero-note { animation: none !important; }
 }
 
 /* ---------- Design route: static silhouette picker ---------- */
@@ -256,7 +261,7 @@
 
 /* Design page: step label + illustrated names */
 .flow-step-of { display: block; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 4px; }
-.lp-ss-stage.is-static { height: calc(100vh - var(--header-h) - 100px); }
+.lp-ss-stage.is-static { height: calc(100vh - var(--header-h) - 48px); }
 .lp-ss-name.has-thumb { display: inline-flex; align-items: center; gap: 0.32em; }
 .lp-ss-thumb {
   display: inline-grid;
@@ -272,12 +277,12 @@
 .lp-ss-name.is-active .lp-ss-thumb,
 .lp-ss-name:hover .lp-ss-thumb { opacity: 1; filter: none; }
 
-/* ---------- 2. Works grid: tight gutters, thin margin, labels on the image ---------- */
+/* ---------- 2. Works grid: edge to edge, tight gutters, images only ---------- */
 .lp-works {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  padding: 0 12px 12px;
+  padding: 0; /* edge to edge */
 }
 .lp-works-row { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
 .lp-works-row.is-full { grid-template-columns: 1fr; }
@@ -286,9 +291,11 @@
   margin: 0;
   overflow: hidden;
   aspect-ratio: 1 / 1.08;
-  background: #eceae6;
+  background: transparent; /* nothing shows until the image itself fades in */
 }
-.lp-works-row.is-full .lp-work { aspect-ratio: 16 / 9; max-height: 94vh; }
+/* full-width rows: always 100% wide; height follows 16:9 but never taller than the screen
+   (aspect-ratio + max-height would shrink the width on wide screens) */
+.lp-works-row.is-full .lp-work { aspect-ratio: auto; width: 100%; height: min(56.25vw, 94vh); }
 .lp-work img {
   position: absolute;
   inset: 0;
@@ -302,39 +309,10 @@
 .lp-work.is-in img { transform: scale(1); opacity: 1; }
 .lp-work:hover img { transform: scale(1.025); }
 
-/* title left, tags right — vertically centred on the image */
-.lp-work-cap {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 0 clamp(16px, 2.4vw, 32px);
-  color: #fff;
-  pointer-events: none;
-  text-shadow: 0 1px 18px rgba(0, 0, 0, 0.18);
-}
-.lp-work.is-dark .lp-work-cap { color: #111; text-shadow: none; }
-.lp-work-title {
-  font-size: clamp(26px, 3.2vw, 48px);
-  font-weight: 500;
-  letter-spacing: -0.04em;
-  line-height: 1;
-}
-.lp-work-tags {
-  max-width: 16ch;
-  font-size: 13px;
-  font-weight: 500;
-  line-height: 1.3;
-  text-align: end;
-}
-.lp-works-row:not(.is-full) .lp-work-tags { margin-inline-start: auto; }
-
 @media (max-width: 640px) {
-  .lp-works { padding: 0 8px 8px; gap: 4px; }
+  .lp-works { gap: 4px; }
   .lp-works-row { grid-template-columns: 1fr; gap: 4px; }
-  .lp-works-row.is-full .lp-work { aspect-ratio: 4 / 3; }
+  .lp-works-row.is-full .lp-work { height: 75vw; }
 }
 @media (prefers-reduced-motion: reduce) {
   .lp-work img { transform: none; opacity: 1; transition: none; }

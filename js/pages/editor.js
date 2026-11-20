@@ -142,6 +142,8 @@
         }
         // Older drafts may hold free HEX colours — snap them to Pantone codes
         CL.pantone.normalizeDesign(design);
+        // "Clear · tint inside" is no longer offered — move such parts to the closest option
+        Object.values(design.parts || {}).forEach((p) => { if (p && p.surface === 'clear') p.surface = 'clear-gradient'; });
         CL.store.saveDraft(design);
 
         const history = [CL.clone(design)];
@@ -981,7 +983,6 @@
         // Which colour of a 2-colour surface the palette edits (kept across panel re-renders)
         let colorSlot = 0;
         const SURFACES = [
-          { id: 'clear', key: 'surface.clear' },
           { id: 'shimmer', key: 'surface.shimmer' },
           { id: 'solid', key: 'surface.solid' },
           { id: 'solid-gradient', key: 'surface.solidGradient' },
@@ -993,7 +994,7 @@
         function buildColorStep() {
           const isVi = I18N.lang === 'vi';
           const curPart = design.parts[activePart] || (design.parts[activePart] = { fill: CL.pantone.fillFor(CL.pantone.byCode.get('7418 C')), finish: 'matte' });
-          const surface = curPart.surface || (CL.models.getModel(design.model).style === 'glass' && activePart === 'base' ? 'clear' : 'solid');
+          const surface = curPart.surface || 'solid';
           const twoColour = isGradientSurface(surface);
           if (!twoColour) colorSlot = 0;
           const partName = t(activePart === 'base' ? 'flow.body' : 'flow.cap');
@@ -1085,19 +1086,6 @@
             )
           );
 
-          // 5. Finish (sheen) — illustrated spheres
-          const FINISH_LIST = ['matte', 'gloss', 'satin', 'metallic'];
-          const finishRow = CL.h('div.finish-grid', null,
-            FINISH_LIST.map((id) =>
-              CL.h('button.finish-card-btn.has-chip' + (curPart.finish === id ? '.is-active' : ''), {
-                type: 'button',
-                onclick: () => { curPart.finish = id; pushHistory(); render2DCanvas(); renderStepPanel(); },
-              },
-                CL.h('i.finish-chip.finish-chip--' + id, { style: { '--chip': current ? current.screen : '#b85c66' } }),
-                CL.h('span', { text: t('editor.finishesShort.' + id) })
-              ))
-          );
-
           const note = CL.h('div.color-note', { role: 'note' },
             CL.h('strong', { text: t('flow.noteTitle') }),
             CL.h('p', { text: t('flow.disclaimer') })
@@ -1119,12 +1107,6 @@
               note,
               group('tint', 'Tông son', 'Tint shades'),
               group('pack', 'Tông bao bì', 'Packaging')
-            ),
-            CL.h('div.fg-section', null,
-              CL.h('div.fg-section-head', null,
-                CL.h('span.fg-section-title', { text: isVi ? 'Độ bóng' : 'Finish' })
-              ),
-              finishRow
             )
           );
         }
@@ -1815,7 +1797,7 @@
             return CL.h('div.flow-summary-row', null,
               CL.h('i', { style: { background: pt ? pt.screen : '#ccc' } }),
               CL.h('span', { text: t(part === 'cap' ? 'flow.cap' : 'flow.body') }),
-              CL.h('strong', { text: `${t(CL.pantone.surfaceKey(p))} · ${CL.pantone.describeFill(p.fill)} · ${t('editor.finishesShort.' + (p.finish || 'matte'))}` })
+              CL.h('strong', { text: `${t(CL.pantone.surfaceKey(p))} · ${CL.pantone.describeFill(p.fill)}` })
             );
           };
           const textLayers = (design.layers || []).filter((l) => l.type === 'text' && l.visible !== false);

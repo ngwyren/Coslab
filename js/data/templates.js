@@ -86,7 +86,7 @@
       category: 'k-dewy',
       parts: {
         cap: { fill: solid('#fbfaf7'), finish: 'gloss', surface: 'solid' },
-        base: { fill: solid('#c94d5b'), finish: 'gloss', surface: 'clear' },
+        base: { fill: solid('#c94d5b'), finish: 'gloss', surface: 'clear-gradient' },
         tint: { color: '#c94d5b' },
       },
       layers: [
