@@ -19,7 +19,11 @@
     { code: '7625 C', name: 'Chili', screen: '#e1523d', group: 'tint' },
     { code: '4995 C', name: 'Dusty Rose', screen: '#a56e75', group: 'tint' },
     { code: '7430 C', name: 'Petal', screen: '#eab8c3', group: 'tint' },
+    { code: '4985 C', name: 'Fig', screen: '#844551', group: 'tint' },
     { code: '5125 C', name: 'Plum', screen: '#6a4c6b', group: 'tint' },
+    // Packaging materials (not Pantone inks): clear acrylic and plain white plastic
+    { code: 'Clear', name: 'Clear acrylic', screen: '#fbfaf7', group: 'pack', special: true, material: true },
+    { code: 'White', name: 'Solid white', screen: '#f4f2ec', group: 'pack', special: true, material: true },
     // Packaging neutrals
     { code: '4685 C', name: 'Nude', screen: '#e0c6ad', group: 'pack' },
     { code: '7521 C', name: 'Cinnamon', screen: '#c09c83', group: 'pack' },
@@ -43,12 +47,15 @@
     return Math.sqrt((2 + rm / 256) * dr * dr + 4 * dg * dg + (2 + (255 - rm) / 256) * db * db);
   }
 
-  /** Closest palette entry to any colour (used for templates / older designs). */
-  /** Closest entry; print inks (opaque white) are only considered for print colours (text / logo). */
+  /**
+   * Closest palette entry to any colour (used for templates / older designs).
+   * Packaging fills may snap to materials (clear / white) but never to print ink;
+   * print colours (opts.ink: text / logo) may snap to ink but never to a material.
+   */
   function nearest(hex, opts = {}) {
     let best = null, bd = Infinity;
     for (const p of LIST) {
-      if (p.special && !opts.ink) continue;
+      if (p.special && (p.material ? opts.ink : !opts.ink)) continue;
       const d = dist(hex, p.screen);
       if (d < bd) { bd = d; best = p; }
     }
@@ -65,7 +72,8 @@
     return nearest(colorOrFill, opts);
   }
 
-  const label = (p) => (!p ? '—' : p.special ? `${p.code} (ink)` : `PANTONE ${p.code}`);
+  // Materials read as their name ("Clear acrylic"), inks as "Opaque White (ink)", the rest as Pantone codes
+  const label = (p) => (!p ? '—' : p.material ? p.name : p.special ? `${p.code} (ink)` : `PANTONE ${p.code}`);
 
   /** Human label for a part fill, e.g. "PANTONE 4995 C" or "PANTONE 7416 C → PANTONE 186 C". */
   function describeFill(fill) {
