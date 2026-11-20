@@ -72,6 +72,11 @@
       subscribeSuccess: 'Đã đăng ký thành công!',
       subscribeError: 'Email không hợp lệ.',
     },
+    flow: {
+      stepOf: 'Bước {n}/{t}', pickShape: 'Chọn mẫu vỏ', colorCode: 'Mã màu', cap: 'Nắp', body: 'Thân',
+      noteTitle: 'Lưu ý về màu', summary: 'Thiết kế của bạn',
+      disclaimer: 'Màu sắc trên màn hình chỉ mang tính tham khảo. Màu cuối cùng cần được xác nhận và phê duyệt bằng bảng màu mẫu thực tế hoặc mẫu mockup thực tế trước khi sản xuất.',
+    },
     landing: {
       tagline: 'Bạn thiết kế. Chúng tôi sản xuất.', start: 'Bắt đầu thiết kế', explore: 'Khám phá',
       collection: 'Bộ sưu tập', c1: 'Bộ ba đặc trưng.', c2: 'Nhung lì gặp kim loại gương.', c3: 'Kính trong, màu căng mọng.',

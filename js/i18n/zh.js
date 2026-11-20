@@ -72,6 +72,11 @@
       subscribeSuccess: '感谢您关注 Coslab！',
       subscribeError: '请输入有效的邮箱地址。',
     },
+    flow: {
+      stepOf: '第 {n}/{t} 步', pickShape: '选择瓶型', colorCode: '颜色代码', cap: '盖', body: '瓶身',
+      noteTitle: '颜色说明', summary: '你的设计',
+      disclaimer: '屏幕显示的颜色仅供参考。最终颜色须在生产前通过实物色卡或实物样品确认并批准。',
+    },
     landing: {
       tagline: '你来设计，我们生产。', start: '开始设计', explore: '浏览',
       collection: '系列', c1: '招牌三件套。', c2: '丝绒哑光遇上镜面金属。', c3: '透亮玻璃，水润色彩。',

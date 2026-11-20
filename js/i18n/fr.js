@@ -72,6 +72,11 @@
       subscribeSuccess: 'Merci de vous être connecté à Coslab !',
       subscribeError: 'Veuillez saisir une adresse email valide.',
     },
+    flow: {
+      stepOf: 'Étape {n} sur {t}', pickShape: 'Choisissez une forme', colorCode: 'Code couleur', cap: 'Capuchon', body: 'Corps',
+      noteTitle: 'Note sur la couleur', summary: 'Votre création',
+      disclaimer: 'Les couleurs à l’écran sont données à titre indicatif. La couleur finale doit être confirmée et validée sur un nuancier physique ou une maquette réelle avant la production.',
+    },
     landing: {
       tagline: 'Vous dessinez. Nous fabriquons.', start: 'Commencer', explore: 'Explorer',
       collection: 'Collection', c1: 'Le trio signature.', c2: 'Velours mat et métal miroir.', c3: 'Verre clair, couleur rosée.',

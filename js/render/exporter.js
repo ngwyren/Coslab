@@ -133,10 +133,44 @@
     return { canvas: await rasterize(f.svg, f.w, f.h), rect: f.rect };
   }
 
+  // Colours are specified by Pantone code only (no HEX on customer-facing documents)
   function fillDesc(fill) {
     if (!fill) return '-';
-    if (fill.type === 'solid') return fill.color.toUpperCase();
-    return `Linear Gradient ${fill.angle}° · ${fill.stops.map((s) => s.c.toUpperCase()).join(' → ')}`;
+    return CL.pantone.describeFill(fill);
+  }
+
+  /** Wrap text into lines that fit maxWidth on a canvas context. */
+  function wrapLines(ctx, text, maxWidth) {
+    const words = String(text).split(/\s+/);
+    const lines = [];
+    let line = '';
+    words.forEach((w) => {
+      const test = line ? line + ' ' + w : w;
+      if (ctx.measureText(test).width > maxWidth && line) { lines.push(line); line = w; } else line = test;
+    });
+    if (line) lines.push(line);
+    return lines;
+  }
+
+  /** Amber "on-screen colour is reference only" box. */
+  function drawColorNote(ctx, x, y, w, UI) {
+    ctx.save();
+    ctx.font = `500 30px ${UI}`;
+    const lines = wrapLines(ctx, t('flow.disclaimer'), w - 80);
+    const h = 60 + 40 + lines.length * 42;
+    ctx.fillStyle = '#fff7ec';
+    roundRectPath(ctx, x, y, w, h, 24);
+    ctx.fill();
+    ctx.strokeStyle = '#f3dfbf';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    ctx.fillStyle = '#6b4e1f';
+    ctx.font = `700 32px ${UI}`;
+    ctx.fillText('⚠ ' + t('flow.noteTitle'), x + 40, y + 64);
+    ctx.font = `500 30px ${UI}`;
+    lines.forEach((ln, i) => ctx.fillText(ln, x + 40, y + 112 + i * 42));
+    ctx.restore();
+    return h;
   }
 
   function paintSwatch(ctx, fill, x, y, r) {
@@ -289,10 +323,10 @@
       ctx.fillStyle = '#171615';
       ctx.font = `400 34px ${UI}`;
       let label = l.type === 'text'
-        ? `“${l.text.content}” · ${l.text.font} ${l.text.size}pt ${l.text.color.toUpperCase()}`
+        ? `“${l.text.content}” · ${l.text.font} ${l.text.size}pt · ${CL.pantone.label(CL.pantone.of({ color: l.text.color, pantone: l.text.pantone }, { ink: true }))}`
         : l.type === 'image' ? 'Logo Graphic (Nano Banana Model Cleaned)' : `${t('editor.shapes.' + l.shape.kind)} shape`;
 
-      if (label.length > 56) label = label.slice(0, 54) + '…';
+      if (label.length > 74) label = label.slice(0, 72) + '…';
       ctx.fillText(label, x + 80, y);
 
       ctx.fillStyle = '#8a8479';
@@ -301,6 +335,9 @@
       ctx.textAlign = 'left';
       y += 62;
     });
+
+    // Colour disclaimer at the bottom of the spec column (never above the layer list)
+    drawColorNote(ctx, x, Math.max(y + 40, H - 420), W - 160 - x, UI);
 
     ctx.fillStyle = '#9e978c';
     ctx.font = `400 30px ${UI}`;
@@ -368,6 +405,9 @@
     g.fillStyle = '#9e978c';
     g.font = `400 30px ${UI}`;
     g.fillText(t('pdf.flatNote'), 160, H - 90);
+    g.fillStyle = '#6b4e1f';
+    g.font = `500 28px ${UI}`;
+    g.fillText('⚠ ' + t('flow.disclaimer'), 160, H - 140, W - 320);
 
     return [c1, c2];
   }

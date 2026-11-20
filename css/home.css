@@ -415,3 +415,21 @@
 @media (prefers-reduced-motion: reduce) {
   .lp-ss-visual.is-active .lp-ss-tube { animation: none; }
 }
+
+/* Design page: step label + illustrated names */
+.flow-step-of { display: block; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 4px; }
+.lp-ss-stage.is-static { height: calc(100vh - var(--header-h) - 100px); }
+.lp-ss-name.has-thumb { display: inline-flex; align-items: center; gap: 0.32em; }
+.lp-ss-thumb {
+  display: inline-grid;
+  place-items: center;
+  width: 0.62em;
+  height: 0.9em;
+  flex-shrink: 0;
+  opacity: 0.35;
+  filter: grayscale(0.6);
+  transition: opacity 0.4s ease, filter 0.4s ease;
+}
+.lp-ss-thumb svg { height: 100%; width: auto; }
+.lp-ss-name.is-active .lp-ss-thumb,
+.lp-ss-name:hover .lp-ss-thumb { opacity: 1; filter: none; }

@@ -72,6 +72,11 @@
       subscribeSuccess: '¡Gracias por conectar con Coslab!',
       subscribeError: 'Por favor, ingresa un correo electrónico válido.',
     },
+    flow: {
+      stepOf: 'Paso {n} de {t}', pickShape: 'Elige una forma', colorCode: 'Código de color', cap: 'Tapa', body: 'Cuerpo',
+      noteTitle: 'Nota sobre el color', summary: 'Tu diseño',
+      disclaimer: 'Los colores en pantalla son solo de referencia. El color final debe confirmarse y aprobarse con una muestra de color física o una maqueta real antes de la producción.',
+    },
     landing: {
       tagline: 'Tú diseñas. Nosotros fabricamos.', start: 'Empezar', explore: 'Explorar',
       collection: 'Colección', c1: 'El trío insignia.', c2: 'Terciopelo mate y metal espejo.', c3: 'Cristal claro, color jugoso.',

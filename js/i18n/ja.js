@@ -72,6 +72,11 @@
       subscribeSuccess: 'Coslabへのご登録ありがとうございます！',
       subscribeError: '有効なメールアドレスを入力してください。',
     },
+    flow: {
+      stepOf: 'ステップ {n}/{t}', pickShape: '容器の形を選ぶ', colorCode: 'カラーコード', cap: 'キャップ', body: 'ボディ',
+      noteTitle: '色についての注意', summary: 'あなたのデザイン',
+      disclaimer: '画面上の色は参考用です。最終的な色は、生産前に実物のカラーサンプルまたは実物のモックアップで確認・承認する必要があります。',
+    },
     landing: {
       tagline: 'デザインはあなた、製造は私たち。', start: 'デザインを始める', explore: '見る',
       collection: 'コレクション', c1: 'シグネチャーの3本。', c2: 'ベルベットとミラーメタル。', c3: '透明ガラスに、みずみずしい色。',

@@ -1,6 +1,6 @@
 /* ==========================================================
    COSLAB — Figma UI3 Inspired Lipstick Design Studio
-   4 Turns: 01 Model -> 02 Color -> 03 Text -> 04 Logo
+   3 steps here (02 Color -> 03 Text -> 04 Logo); step 01 Shape is the Design page
    - Figma-style legible Inspector with scrubbable property inputs
    - Smooth Mouse Wheel Zoom (toward cursor, 35%–350%) & Canvas Pan
    - Interactive Figma Blue Selection Gizmo (Move, Rotate, Corner Resize)
@@ -9,35 +9,16 @@
 (function (CL) {
   CL.pages = CL.pages || {};
 
+  // Studio covers steps 2–4 of the customer flow; step 1 (shape) lives on the Design page.
   const STEPS = [
-    { id: 'colors', num: '01', vi: 'Màu', en: 'Color' },
-    { id: 'text', num: '02', vi: 'Chữ', en: 'Text' },
-    { id: 'graphics', num: '03', vi: 'Logo', en: 'Logo' },
+    { id: 'colors', num: '02', key: 'landing.step2' },
+    { id: 'text', num: '03', key: 'landing.step3' },
+    { id: 'graphics', num: '04', key: 'landing.step4' },
   ];
-
-  // Curated minimalist K-Beauty & Packaging color grid (17 swatches + 1 custom)
-  const PALETTE = [
-    { c: '#b85c66', n: 'Velvet Rosé' },
-    { c: '#a84d59', n: 'Muted Mauve' },
-    { c: '#c94d5b', n: 'Crimson Dew' },
-    { c: '#e26b77', n: 'Cherry Berry' },
-    { c: '#df705e', n: 'Chili Sunset' },
-    { c: '#a63428', n: 'Warm Brick' },
-    { c: '#df8b7d', n: 'Peach Mousse' },
-    { c: '#e89098', n: 'Baby Pink' },
-    { c: '#8a4c58', n: 'Vintage Fig' },
-    { c: '#783c47', n: 'Blackberry' },
-    { c: '#c98d79', n: 'Almond Beige' },
-    { c: '#fbfaf7', n: 'Pure Porcelain' },
-    { c: '#eae5da', n: 'Ivory Glaze' },
-    { c: '#d9d9d9', n: 'Cold Chrome' },
-    { c: '#c5a367', n: '24K Gold' },
-    { c: '#3b3834', n: 'Dark Umber' },
-    { c: '#171615', n: 'Seoul Noir' },
-  ];
+  const TOTAL_STEPS = STEPS.length + 1;
 
   function stepLabel(s) {
-    return I18N.lang === 'vi' ? s.vi : s.en;
+    return t(s.key);
   }
 
   /* Reusable Figma-style Scrubbable Numeric Property Box */
@@ -158,8 +139,10 @@
         let design = CL.store.getDraft();
         if (!design || !design.model || !design.parts?.cap) {
           design = CL.templates.createDesign('velvet-rose', 'velvet-round');
-          CL.store.saveDraft(design);
         }
+        // Older drafts may hold free HEX colours — snap them to Pantone codes
+        CL.pantone.normalizeDesign(design);
+        CL.store.saveDraft(design);
 
         const history = [CL.clone(design)];
         let historyIdx = 0;
@@ -228,6 +211,12 @@
         });
 
         const stepperBar = CL.h('nav.studio-stepper', { 'aria-label': 'Steps' },
+          // Step 1 (shape) is already done on the Design page — tap it to go back and change
+          CL.h('a.studio-step-pill.is-done', {
+            href: '#/design',
+            title: t('flow.pickShape'),
+            html: `<span class="step-num">01</span><span class="step-name">${t('landing.step1')}</span>`,
+          }),
           STEPS.map((s, idx) =>
             CL.h('button.studio-step-pill' + (idx === activeStepIdx ? '.is-active' : ''), {
               type: 'button',
@@ -469,7 +458,7 @@
 
         function goToStep(idx) {
           activeStepIdx = CL.clamp(idx, 0, STEPS.length - 1);
-          stepperBar.querySelectorAll('.studio-step-pill').forEach((b, i) => {
+          stepperBar.querySelectorAll('.studio-step-pill[data-step-idx]').forEach((b, i) => {
             b.classList.toggle('is-active', i === activeStepIdx);
             b.classList.toggle('is-done', i < activeStepIdx);
           });
@@ -949,7 +938,7 @@
           stepHeader.innerHTML = '';
           stepHeader.append(
             CL.h('h2.studio-step-title', { text: TITLES[step.id] }),
-            CL.h('span.studio-step-eyebrow', { text: isVi ? `Bước ${activeStepIdx + 1} / ${STEPS.length}` : `Step ${activeStepIdx + 1} / ${STEPS.length}` })
+            CL.h('span.studio-step-eyebrow', { text: t('flow.stepOf', { n: activeStepIdx + 2, t: TOTAL_STEPS }) })
           );
 
           stepBody.innerHTML = '';
@@ -959,18 +948,17 @@
 
           // Clean Footer Navigation
           stepFooter.innerHTML = '';
-          const backBtn = activeStepIdx > 0
-            ? CL.h('button.btn.btn-outline', {
-                html: CL.icon('arrowLeft') + `<span>${isVi ? 'Quay lại' : 'Back'}</span>`,
-                onclick: () => goToStep(activeStepIdx - 1),
-              })
-            : null;
+          // Back always exists: on the first Studio step it returns to the shape picker
+          const backBtn = CL.h('button.btn.btn-outline', {
+            html: CL.icon('arrowLeft') + `<span>${t('common.back')}</span>`,
+            onclick: () => (activeStepIdx > 0 ? goToStep(activeStepIdx - 1) : CL.go('#/design')),
+          });
 
           let nextBtn;
           if (activeStepIdx < STEPS.length - 1) {
             const nextStep = STEPS[activeStepIdx + 1];
             nextBtn = CL.h('button.btn.btn-primary.studio-next-btn', {
-              html: `<span>${isVi ? 'Tiếp: ' + nextStep.vi : 'Next: ' + nextStep.en}</span>` + CL.icon('arrowRight'),
+              html: `<span>${t('common.next')}: ${t(nextStep.key)}</span>` + CL.icon('arrowRight'),
               onclick: () => goToStep(activeStepIdx + 1),
             });
           } else {
@@ -992,133 +980,82 @@
         // ======================================================
         function buildColorStep() {
           const isVi = I18N.lang === 'vi';
-          const curPart = design.parts[activePart] || (design.parts[activePart] = { fill: { type: 'solid', color: '#b85c66' }, finish: 'matte' });
-          const activeHex = getPartHex(activePart).toLowerCase();
+          const curPart = design.parts[activePart] || (design.parts[activePart] = { fill: CL.pantone.fillFor(CL.pantone.LIST[4]), finish: 'matte' });
+          const current = CL.pantone.of(curPart.fill);
+          const partName = t(activePart === 'base' ? 'flow.body' : 'flow.cap');
 
-          // 1. Finish Pills
-          const FINISH_LIST = [
-            { id: 'matte', fallback: 'Velvet' },
-            { id: 'gloss', fallback: 'Dewy' },
-            { id: 'satin', fallback: 'Satin' },
-            { id: 'metallic', fallback: 'Chrome' },
-          ];
+          // 1. Finish — each option shows a small illustrated sphere of the finish
+          const FINISH_LIST = ['matte', 'gloss', 'satin', 'metallic'];
           const finishRow = CL.h('div.finish-grid', null,
-            FINISH_LIST.map((f) =>
-              CL.h('button.finish-card-btn' + (curPart.finish === f.id ? '.is-active' : ''), {
+            FINISH_LIST.map((id) =>
+              CL.h('button.finish-card-btn.has-chip' + (curPart.finish === id ? '.is-active' : ''), {
                 type: 'button',
-                text: t('editor.finishesShort.' + f.id) || f.fallback,
                 onclick: () => {
-                  curPart.finish = f.id;
+                  curPart.finish = id;
                   pushHistory();
                   render2DCanvas();
                   renderStepPanel();
                 },
-              })
+              },
+                CL.h('i.finish-chip.finish-chip--' + id, { style: { '--chip': current ? current.screen : '#b85c66' } }),
+                CL.h('span', { text: t('editor.finishesShort.' + id) })
+              )
             )
           );
 
-          // 2. Figma Fill Bar (Swatch + Hex Input)
-          const hexInput = CL.h('input.fg-hex-input', {
-            type: 'text',
-            value: activeHex.toUpperCase(),
-            maxLength: 7,
-            onchange: () => {
-              let v = hexInput.value.trim();
-              if (!v.startsWith('#')) v = '#' + v;
-              if (/^#[0-9a-fA-F]{6}$/.test(v)) {
-                curPart.fill = { type: 'solid', color: v.toLowerCase() };
-                pushHistory();
-                syncPartChips();
-                render2DCanvas();
-                renderStepPanel();
-              } else {
-                hexInput.value = activeHex.toUpperCase();
-              }
-            },
-          });
-
-          const swatchPreview = CL.h('label.fg-swatch-trigger', {
-            style: { background: activeHex },
-            title: isVi ? 'Chọn màu tự do' : 'Pick Custom Color',
-          },
-            CL.h('input', {
-              type: 'color',
-              value: activeHex.length === 7 ? activeHex : '#b85c66',
-              oninput: (e) => {
-                const c = e.target.value;
-                curPart.fill = { type: 'solid', color: c };
-                swatchPreview.style.background = c;
-                hexInput.value = c.toUpperCase();
-                syncPartChips();
-                render2DCanvas();
-              },
-              onchange: () => {
-                pushHistory();
-                renderStepPanel();
-              },
-            })
+          // 2. Selected colour — shown by Pantone code (no HEX anywhere)
+          const selected = CL.h('div.pt-selected', null,
+            CL.h('i.pt-selected-swatch', { style: { background: current ? current.screen : '#ccc' } }),
+            CL.h('div.pt-selected-text', null,
+              CL.h('span.pt-selected-label', { text: `${t('flow.colorCode')} · ${partName}` }),
+              CL.h('strong.pt-selected-code', { text: CL.pantone.label(current) }),
+              CL.h('span.pt-selected-name', { text: current ? current.name : '' })
+            )
           );
 
-          const fillBar = CL.h('div.fg-fill-row', null,
-            swatchPreview,
-            hexInput,
-            CL.h('span.fg-badge-pill', { text: activePart === 'base' ? (isVi ? 'Thân' : 'Body') : (isVi ? 'Nắp' : 'Cap') })
-          );
-
-          // 3. K-Beauty Swatch Grid
-          const customInput = CL.h('input', {
-            type: 'color',
-            value: activeHex.length === 7 ? activeHex : '#b85c66',
-            style: { position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer', width: '100%', height: '100%' },
-            oninput: () => {
-              curPart.fill = { type: 'solid', color: customInput.value };
-              syncPartChips();
-              render2DCanvas();
-            },
-            onchange: () => {
-              pushHistory();
-              renderStepPanel();
-            },
-          });
-
-          const customCircle = CL.h('label.studio-color-dot.is-custom', {
-            title: isVi ? 'Tự chọn màu' : 'Custom Color',
-          },
-            CL.h('span', { text: '+' }),
-            customInput
-          );
-
-          const colorGrid = CL.h('div.studio-clean-palette', null,
-            PALETTE.map((item) =>
-              CL.h('button.studio-color-dot' + (activeHex === item.c.toLowerCase() ? '.is-active' : ''), {
-                type: 'button',
-                title: item.n,
-                style: { background: item.c },
-                onclick: () => {
-                  curPart.fill = { type: 'solid', color: item.c };
-                  pushHistory();
-                  syncPartChips();
-                  render2DCanvas();
-                  renderStepPanel();
+          // 3. Pantone palette (grouped), each chip labelled with its code
+          const group = (key, titleVi, titleEn) => CL.h('div.pt-group', null,
+            CL.h('span.pt-group-title', { text: isVi ? titleVi : titleEn }),
+            CL.h('div.pt-grid', null,
+              CL.pantone.LIST.filter((p) => p.group === key).map((p) =>
+                CL.h('button.pt-chip' + (current && current.code === p.code ? '.is-active' : ''), {
+                  type: 'button',
+                  title: `${CL.pantone.label(p)} — ${p.name}`,
+                  'aria-pressed': String(!!(current && current.code === p.code)),
+                  onclick: () => {
+                    curPart.fill = CL.pantone.fillFor(p);
+                    pushHistory();
+                    syncPartChips();
+                    render2DCanvas();
+                    renderStepPanel();
+                  },
                 },
-              })
-            ),
-            customCircle
+                  CL.h('i.pt-chip-swatch', { style: { background: p.screen } }),
+                  CL.h('span.pt-chip-code', { text: p.code })
+                ))
+            )
+          );
+
+          const note = CL.h('div.color-note', { role: 'note' },
+            CL.h('strong', { text: t('flow.noteTitle') }),
+            CL.h('p', { text: t('flow.disclaimer') })
           );
 
           stepBody.append(
             CL.h('div.fg-section', null,
               CL.h('div.fg-section-head', null,
-                CL.h('span.fg-section-title', { text: isVi ? 'Chất liệu bề mặt' : 'Surface Finish' })
+                CL.h('span.fg-section-title', { text: isVi ? `Màu ${partName.toLowerCase()} (Pantone)` : `${partName} colour (Pantone)` })
               ),
-              finishRow
+              selected,
+              note,
+              group('tint', 'Tông son', 'Tint shades'),
+              group('pack', 'Tông bao bì', 'Packaging')
             ),
             CL.h('div.fg-section', null,
               CL.h('div.fg-section-head', null,
-                CL.h('span.fg-section-title', { text: isVi ? 'Màu sắc' : 'Fill Color' })
+                CL.h('span.fg-section-title', { text: isVi ? 'Chất liệu bề mặt' : 'Surface finish' })
               ),
-              fillBar,
-              colorGrid
+              finishRow
             )
           );
         }
@@ -1470,50 +1407,10 @@
             styleBar
           );
 
-          // --- SECTION 4: FILL (FIGMA COLOR + OPACITY BLOCK) ---
-          const TEXT_COLORS = ['#ffffff', '#171615', '#c5a367', '#e5d5c5', '#d9d9d9', '#f2c6c2'];
-          const curTxtColor = (curLayer ? curLayer.text.color : '#ffffff').toLowerCase();
+          // --- SECTION 4: TEXT COLOUR — Pantone print colours only (no HEX) ---
+          const TEXT_CODES = ['Opaque White', 'Black 6 C', '871 C', '877 C', 'Cool Gray 1 C', '4685 C', '7430 C', '7427 C'];
+          const curTxt = CL.pantone.of(curLayer ? { color: curLayer.text.color, pantone: curLayer.text.pantone } : '#ffffff', { ink: true });
           const curOpacity = Math.round((curLayer ? (curLayer.opacity ?? 1) : 1) * 100);
-
-          const txtHexInput = CL.h('input.fg-hex-input', {
-            type: 'text',
-            value: curTxtColor.toUpperCase(),
-            maxLength: 7,
-            onchange: () => {
-              let v = txtHexInput.value.trim();
-              if (!v.startsWith('#')) v = '#' + v;
-              if (/^#[0-9a-fA-F]{6}$/.test(v)) {
-                const lyr = ensureTextLayer(textInput.value || 'COSLAB');
-                lyr.text.color = v.toLowerCase();
-                pushHistory();
-                render2DCanvas();
-                renderStepPanel();
-              } else {
-                txtHexInput.value = curTxtColor.toUpperCase();
-              }
-            },
-          });
-
-          const txtSwatchPreview = CL.h('label.fg-swatch-trigger', {
-            style: { background: curTxtColor },
-            title: isVi ? 'Chọn màu chữ tự do' : 'Pick Text Color',
-          },
-            CL.h('input', {
-              type: 'color',
-              value: curTxtColor.length === 7 ? curTxtColor : '#ffffff',
-              oninput: (e) => {
-                const lyr = ensureTextLayer(textInput.value || 'COSLAB');
-                lyr.text.color = e.target.value;
-                txtSwatchPreview.style.background = e.target.value;
-                txtHexInput.value = e.target.value.toUpperCase();
-                render2DCanvas();
-              },
-              onchange: () => {
-                pushHistory();
-                renderStepPanel();
-              },
-            })
-          );
 
           const opacityInput = CL.h('input.fg-num-input', {
             type: 'number',
@@ -1530,35 +1427,40 @@
             onchange: pushHistory,
           });
 
-          const fillBar = CL.h('div.fg-fill-row', null,
-            txtSwatchPreview,
-            txtHexInput,
-            CL.h('span.fg-fill-sep'),
+          const fillBar = CL.h('div.pt-selected.is-compact', null,
+            CL.h('i.pt-selected-swatch', { style: { background: curTxt.screen } }),
+            CL.h('div.pt-selected-text', null,
+              CL.h('span.pt-selected-label', { text: t('flow.colorCode') }),
+              CL.h('strong.pt-selected-code', { text: CL.pantone.label(curTxt) })
+            ),
             CL.h('div.fg-opacity-wrap', { title: isVi ? 'Độ đậm (%)' : 'Opacity (%)' },
               opacityInput,
               CL.h('span.fg-unit', { text: '%' })
             )
           );
 
-          const txtColorRow = CL.h('div.studio-quick-swatches', null,
-            TEXT_COLORS.map((hex) =>
-              CL.h('button.quick-color-dot' + (curTxtColor === hex ? '.is-active' : ''), {
+          const txtColorRow = CL.h('div.pt-grid', null,
+            TEXT_CODES.map((code) => CL.pantone.byCode.get(code)).filter(Boolean).map((p) =>
+              CL.h('button.pt-chip' + (curTxt.code === p.code ? '.is-active' : ''), {
                 type: 'button',
-                style: { background: hex },
+                title: `${CL.pantone.label(p)} — ${p.name}`,
                 onclick: () => {
                   const lyr = ensureTextLayer(textInput.value || 'COSLAB');
-                  lyr.text.color = hex;
+                  lyr.text.color = p.screen;
+                  lyr.text.pantone = p.code;
                   pushHistory();
                   render2DCanvas();
                   renderStepPanel();
                 },
-              })
-            )
+              },
+                CL.h('i.pt-chip-swatch', { style: { background: p.screen } }),
+                CL.h('span.pt-chip-code', { text: p.special ? 'White' : p.code })
+              ))
           );
 
           const fillSection = CL.h('div.fg-section', null,
             CL.h('div.fg-section-head', null,
-              CL.h('span.fg-section-title', { text: isVi ? 'Màu chữ' : 'Fill' })
+              CL.h('span.fg-section-title', { text: isVi ? 'Màu chữ (Pantone)' : 'Text colour (Pantone)' })
             ),
             fillBar,
             txtColorRow
@@ -1615,7 +1517,7 @@
           },
             CL.h('div.upload-icon-circle', { html: CL.icon('upload') }),
             CL.h('strong', { text: isVi ? 'Tải ảnh Logo lên' : 'Upload Logo' }),
-            CL.h('span', { text: 'PNG, SVG, JPG · Tự động căn Safe Zone' })
+            CL.h('span', { text: isVi ? 'PNG, SVG, JPG · Tự động căn vào vùng in' : 'PNG, SVG, JPG · Auto-fits the print area' })
           );
 
           const uploadSection = CL.h('div.fg-section', null,
@@ -1832,7 +1734,46 @@
 
           stepBody.append(uploadSection);
           if (graphicSection) stepBody.append(graphicSection);
-          stepBody.append(marksSection);
+          stepBody.append(marksSection, buildSummarySection());
+        }
+
+        // Final-step recap: every colour by Pantone code + the on-screen colour disclaimer
+        function buildSummarySection() {
+          const m = CL.models.getModel(design.model);
+          const partRow = (part) => {
+            const p = design.parts[part] || {};
+            const pt = CL.pantone.of(p.fill);
+            return CL.h('div.flow-summary-row', null,
+              CL.h('i', { style: { background: pt ? pt.screen : '#ccc' } }),
+              CL.h('span', { text: t(part === 'cap' ? 'flow.cap' : 'flow.body') }),
+              CL.h('strong', { text: `${CL.pantone.describeFill(p.fill)} · ${t('editor.finishesShort.' + (p.finish || 'matte'))}` })
+            );
+          };
+          const textLayers = (design.layers || []).filter((l) => l.type === 'text' && l.visible !== false);
+          const inkCodes = [...new Set(textLayers.map((l) => CL.pantone.label(CL.pantone.of({ color: l.text.color, pantone: l.text.pantone }, { ink: true }))))];
+
+          return CL.h('div.fg-section', null,
+            CL.h('div.fg-section-head', null,
+              CL.h('span.fg-section-title', { text: t('flow.summary') })
+            ),
+            CL.h('div.flow-summary', null,
+              CL.h('div.flow-summary-row', null,
+                CL.h('span', { text: t('landing.step1') }),
+                CL.h('strong', { text: t(m.nameKey) })
+              ),
+              partRow('cap'),
+              partRow('base'),
+              inkCodes.length
+                ? CL.h('div.flow-summary-row', null,
+                    CL.h('span', { text: t('landing.step3') }),
+                    CL.h('strong', { text: inkCodes.join(', ') }))
+                : null
+            ),
+            CL.h('div.color-note', { role: 'note' },
+              CL.h('strong', { text: t('flow.noteTitle') }),
+              CL.h('p', { text: t('flow.disclaimer') })
+            )
+          );
         }
 
         function refreshAll() {

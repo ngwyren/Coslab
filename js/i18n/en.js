@@ -72,6 +72,11 @@
       subscribeSuccess: 'Connected with Coslab!',
       subscribeError: 'Invalid email.',
     },
+    flow: {
+      stepOf: 'Step {n} of {t}', pickShape: 'Choose a shape', colorCode: 'Colour code', cap: 'Cap', body: 'Body',
+      noteTitle: 'Colour note', summary: 'Your design',
+      disclaimer: 'On-screen colours are for reference only. The final colour must be confirmed and approved against a physical colour swatch or a physical mockup sample before production.',
+    },
     landing: {
       tagline: 'Design your lip tint. We make it.', start: 'Start designing', explore: 'Explore',
       collection: 'Collection', c1: 'The signature trio.', c2: 'Soft matte meets mirror metal.', c3: 'Clear glass, dewy color.',

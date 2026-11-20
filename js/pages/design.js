@@ -18,13 +18,25 @@
       const draft = CL.store.getDraft();
       let active = Math.max(0, FORMS.findIndex(([, modelId]) => draft && draft.model === modelId));
 
-      const names = FORMS.map(([, modelId], i) =>
-        CL.h('button.lp-ss-name', {
+      // Each option carries a small illustration of its shape next to the name
+      const names = FORMS.map(([tplId, modelId], i) =>
+        CL.h('button.lp-ss-name.has-thumb', {
           type: 'button',
           onmouseenter: () => setActive(i),
           onfocus: () => setActive(i),
           onclick: () => setActive(i),
-        }, t(CL.models.getModel(modelId).nameKey)));
+        },
+          CL.h('span.lp-ss-thumb', { html: CL.render.renderTight(CL.templates.createDesign(tplId, modelId), { width: 40, shadow: false }) }),
+          CL.h('span', { text: t(CL.models.getModel(modelId).nameKey) })
+        ));
+
+      // Same 4-step bar as the Studio: 1 Shape (here) → 2 Color → 3 Text → 4 Logo
+      const flowBar = CL.h('nav.studio-stepper.flow-bar', { 'aria-label': 'Steps' },
+        ['landing.step1', 'landing.step2', 'landing.step3', 'landing.step4'].map((key, i) =>
+          CL.h('span.studio-step-pill' + (i === 0 ? '.is-active' : '.is-upcoming'), {
+            'aria-current': i === 0 ? 'step' : null,
+            html: `<span class="step-num">${String(i + 1).padStart(2, '0')}</span><span class="step-name">${t(key)}</span>`,
+          })));
 
       const visuals = FORMS.map(([tplId, modelId]) => {
         const d = CL.templates.createDesign(tplId, modelId);
@@ -38,7 +50,10 @@
       const stage = CL.h('div.lp-ss-stage.is-static', { tabindex: '-1' },
         CL.h('div.lp-ss-side', null,
           CL.h('div.lp-ss-head', null,
-            CL.h('h2', { 'data-i18n': 'landing.forms', text: t('landing.forms') }),
+            CL.h('div', null,
+              CL.h('span.flow-step-of', { text: t('flow.stepOf', { n: 1, t: 4 }) }),
+              CL.h('h2', { text: t('flow.pickShape') })
+            ),
             count
           ),
           CL.h('div.lp-ss-names', { role: 'listbox', 'aria-label': t('landing.forms') }, names)
@@ -83,7 +98,7 @@
       window.addEventListener('keydown', onKey);
 
       setActive(active);
-      container.appendChild(CL.h('div.page.lp.design-pick', null, CL.h('div.container', null, stage)));
+      container.appendChild(CL.h('div.page.lp.design-pick', null, CL.h('div.container', null, flowBar, stage)));
 
       return () => window.removeEventListener('keydown', onKey);
     },

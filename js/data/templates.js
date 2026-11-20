@@ -155,6 +155,7 @@
     const tpl = TEMPLATES.find((x) => x.templateId === templateId) || TEMPLATES[0];
     const d = CL.clone(tpl);
     (d.layers || []).forEach((l) => (l.id = CL.uid('ly')));
+    if (CL.pantone) CL.pantone.normalizeDesign(d);
 
     return {
       id: null,

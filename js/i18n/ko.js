@@ -72,6 +72,11 @@
       subscribeSuccess: 'Coslab과 연결해 주셔서 감사합니다!',
       subscribeError: '유효한 이메일 주소를 입력해 주세요.',
     },
+    flow: {
+      stepOf: '{t}단계 중 {n}단계', pickShape: '용기 형태 선택', colorCode: '색상 코드', cap: '캡', body: '바디',
+      noteTitle: '색상 안내', summary: '나의 디자인',
+      disclaimer: '화면에 표시되는 색상은 참고용입니다. 최종 색상은 생산 전에 실물 컬러 샘플 또는 실물 목업으로 확인 및 승인되어야 합니다.',
+    },
     landing: {
       tagline: '디자인은 당신이, 생산은 우리가.', start: '디자인 시작', explore: '둘러보기',
       collection: '컬렉션', c1: '시그니처 트리오.', c2: '벨벳 매트와 미러 메탈.', c3: '투명한 글라스, 촉촉한 컬러.',
