@@ -7,7 +7,6 @@
 .page-head {
   padding-top: 36px;
   padding-bottom: 24px;
-  border-bottom: 1px solid var(--border);
   margin-bottom: 28px;
   display: grid;
   gap: 10px;
@@ -922,7 +921,7 @@
 .prefs-field { display: flex; flex-direction: column; gap: 6px; }
 .prefs-field span { font-size: 12px; color: var(--muted); }
 .prefs-seg { width: max-content; }
-.prefs-seg button { min-width: 96px; }
+.prefs-seg button { min-width: 96px; justify-content: center; text-align: center; }
 .prefs-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .prefs-danger { color: var(--danger, #c0392b); }
 @media (max-width: 720px) {

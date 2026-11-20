@@ -61,7 +61,6 @@
   gap: 20px;
   flex-wrap: wrap;
   padding-top: clamp(16px, 2vw, 24px);
-  border-top: 1px solid var(--border);
 }
 .lp-tagline {
   font-size: clamp(18px, 1.7vw, 24px);

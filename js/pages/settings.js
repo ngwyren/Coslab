@@ -94,7 +94,6 @@
 
     render(container) {
       const s = CL.store.settings;
-      const author = s.author || {};
       const root = CL.h('div.page.container.prefs', { style: { paddingBottom: '72px' } });
 
       const head = CL.h('div.page-head', null, CL.h('h1', { text: t('settings.title') }));
@@ -116,22 +115,7 @@
             onclick: () => CL.setLang(l.code),
           })));
 
-      // 2. Brand (printed on the PDF spec sheet) — saved on change
-      const field = (key, label, type, ph) => {
-        const input = CL.h('input.input', { type: type || 'text', value: author[key] || '', placeholder: ph || '' });
-        input.addEventListener('change', () => {
-          CL.store.saveSettings({ author: Object.assign({}, CL.store.settings.author, { [key]: input.value.trim() }) });
-          CL.toast(t('settings.savedToast'));
-        });
-        return CL.h('label.prefs-field', null, CL.h('span', { text: label }), input);
-      };
-      const brand = CL.h('div.prefs-fields', null,
-        field('name', t('settings.name')),
-        field('brand', t('settings.brand')),
-        field('email', t('settings.email'), 'email', 'name@brand.com'),
-        field('phone', t('settings.phone'), 'tel'));
-
-      // 3. PDF quality
+      // 2. PDF quality
       const quality = CL.h('div.segmented.prefs-seg', null,
         [[150, 'prefs.q150'], [300, 'prefs.q300'], [600, 'prefs.q600']].map(([dpi, key]) =>
           CL.h('button' + ((s.exportDPI || 300) === dpi ? '.is-active' : ''), {
@@ -140,17 +124,10 @@
             onclick: (e) => {
               CL.store.saveSettings({ exportDPI: dpi });
               e.currentTarget.parentElement.querySelectorAll('button').forEach((b) => b.classList.toggle('is-active', b === e.currentTarget));
-              CL.toast(t('settings.savedToast'));
             },
           })));
 
-      // 4. Data — back up / restore / reset
-      const backup = () => {
-        const data = { app: 'coslab', exportedAt: new Date().toISOString(), designs: CL.store.listDesigns() };
-        const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
-        CL.download(url, 'coslab-designs.json');
-        setTimeout(() => URL.revokeObjectURL(url), 2000);
-      };
+      // 3. Data — restore / reset
       const restore = () => {
         const input = CL.h('input', { type: 'file', accept: '.json,application/json' });
         input.onchange = () => {
@@ -164,7 +141,6 @@
               const clean = list.map(sanitizeDesign).filter(Boolean);
               if (!clean.length) throw new Error('empty');
               clean.forEach((d) => CL.store.saveDesign(d));
-              CL.toast(t('settings.savedToast'));
               CL.go('#/my-designs');
             } catch (e) {
               CL.toast(t('prefs.restoreFail'), 'info');
@@ -182,13 +158,11 @@
         }
       };
       const data = CL.h('div.prefs-actions', null,
-        CL.h('button.btn.btn-outline.btn-sm', { type: 'button', text: t('prefs.backup'), onclick: backup }),
         CL.h('button.btn.btn-outline.btn-sm', { type: 'button', text: t('prefs.restore'), onclick: restore }),
         CL.h('button.btn.btn-ghost.btn-sm.prefs-danger', { type: 'button', text: t('prefs.reset'), onclick: reset }));
 
       root.append(head,
         group(t('settings.languages'), null, langs),
-        group(t('settings.author'), t('prefs.brandNote'), brand),
         group(t('prefs.pdfQuality'), null, quality),
         group(t('prefs.data'), null, data));
       container.appendChild(root);

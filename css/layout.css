@@ -281,7 +281,6 @@ body.nav-ov-open .nav-ov-foot { opacity: 1; }
    Giant typographic display, architectural 4-column grid, live CGMP status
    ========================================================== */
 .site-footer {
-  border-top: 1px solid var(--border);
   background: var(--bg);
   padding-block: 72px 36px;
   position: relative;
@@ -297,7 +296,6 @@ body.nav-ov-open .nav-ov-foot { opacity: 1; }
   color: var(--text);
   margin-bottom: 48px;
   padding-bottom: 28px;
-  border-bottom: 1px solid var(--border);
   white-space: nowrap;
   user-select: none;
 }
@@ -359,7 +357,6 @@ body.nav-ov-open .nav-ov-foot { opacity: 1; }
   align-items: center;
   gap: 8px;
   padding-bottom: 10px;
-  border-bottom: 1px solid var(--border);
 }
 .footer-col-header h4 {
   font-family: var(--font-mono);
@@ -398,7 +395,6 @@ body.nav-ov-open .nav-ov-foot { opacity: 1; }
   align-items: center;
   justify-content: space-between;
   gap: 20px;
-  border-top: 1px solid var(--border);
   padding-top: 28px;
   font-family: var(--font-mono);
   font-size: 11px;
