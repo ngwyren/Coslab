@@ -289,7 +289,7 @@ body.nav-ov-open .nav-ov-foot { opacity: 1; }
 }
 
 .footer-giant-title {
-  font-size: clamp(44px, 10vw, 140px);
+  font-size: clamp(26px, 9.6vw, 140px);
   font-weight: 800;
   letter-spacing: -0.04em;
   line-height: 0.92;
@@ -297,6 +297,7 @@ body.nav-ov-open .nav-ov-foot { opacity: 1; }
   margin-bottom: 48px;
   padding-bottom: 28px;
   white-space: nowrap;
+  text-align: center;
   user-select: none;
 }
 
