@@ -1418,3 +1418,6 @@
   .studio-stepper .step-num { width: 24px; height: 24px; line-height: 1; }
   .studio-stepper .step-name { line-height: 1; }
 }
+
+/* Body / Cap switch: same rounded island */
+.canvas-part-Quickbar, .canvas-part-chip { border-radius: 999px; }
