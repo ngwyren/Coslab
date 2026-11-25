@@ -73,7 +73,7 @@
       subscribeError: 'Email không hợp lệ.',
     },
     surface: {
-      title: 'Kiểu bề mặt', clear: 'Trong suốt · son bên trong', shimmer: 'Nhiều lớp lấp lánh', solid: 'Trơn', solidGradient: 'Trơn gradient', clearGradient: 'Gradient trên nền trong',
+      clearSolid: 'Trong, nhạt dần', title: 'Kiểu bề mặt', clear: 'Trong suốt · son bên trong', shimmer: 'Nhiều lớp lấp lánh', solid: 'Trơn', solidGradient: 'Trơn gradient', clearGradient: 'Gradient trên nền trong',
       color1: 'Màu 1', color2: 'Màu 2', inside: 'Màu son bên trong',
     },
     prefs: {

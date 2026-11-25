@@ -6,23 +6,32 @@
 (function (CL) {
   const FONT_FALLBACK = "'Noto Sans KR','Noto Serif KR','Noto Sans SC','Noto Sans JP','Noto Naskh Arabic',sans-serif";
 
+  // Soft form shading across the tube, left to right: [offset, opacity]. No light streaks:
+  // only a deep tone of the part's own colour (see shadeTone) towards both edges.
   const SHADES = {
     round: {
-      matte: [[0, '#000', .22], [.18, '#fff', .06], [.36, '#fff', .16], [.6, '#000', 0], [.88, '#000', .10], [1, '#000', .25]],
-      satin: [[0, '#000', .26], [.16, '#fff', .08], [.34, '#fff', .30], [.48, '#fff', .04], [.82, '#000', .10], [1, '#000', .30]],
-      gloss: [[0, '#000', .32], [.14, '#000', 0], [.26, '#fff', .62], [.33, '#fff', .14], [.6, '#fff', 0], [.86, '#000', .12], [.93, '#fff', .14], [1, '#000', .36]],
-      metallic: [[0, '#000', .42], [.12, '#fff', .58], [.24, '#000', .1], [.38, '#fff', .72], [.54, '#000', .14], [.76, '#fff', .32], [.9, '#000', .16], [1, '#000', .44]],
+      matte: [[0, .32], [.12, .15], [.3, .03], [.46, 0], [.64, .03], [.86, .16], [1, .36]],
+      satin: [[0, .32], [.12, .14], [.28, .03], [.44, 0], [.64, .03], [.86, .16], [1, .36]],
+      gloss: [[0, .32], [.1, .14], [.26, .03], [.44, 0], [.66, .03], [.88, .16], [1, .36]],
+      metallic: [[0, .46], [.14, .18], [.32, .03], [.46, 0], [.64, .06], [.86, .24], [1, .5]],
     },
     square: {
-      matte: [[0, '#000', .12], [.06, '#000', .02], [.5, '#fff', .08], [.94, '#000', .04], [1, '#000', .18]],
-      satin: [[0, '#000', .14], [.06, '#fff', .06], [.4, '#fff', .18], [.94, '#000', .04], [1, '#000', .20]],
-      gloss: [[0, '#000', .18], [.05, '#fff', .35], [.12, '#fff', .06], [.62, '#fff', 0], [.7, '#fff', .25], [.76, '#fff', .03], [1, '#000', .24]],
-      metallic: [[0, '#000', .28], [.06, '#fff', .55], [.3, '#000', .06], [.55, '#fff', .5], [.8, '#000', .08], [1, '#000', .30]],
+      matte: [[0, .18], [.05, .05], [.2, 0], [.75, .02], [.95, .08], [1, .22]],
+      satin: [[0, .18], [.05, .05], [.2, 0], [.75, .02], [.95, .08], [1, .22]],
+      gloss: [[0, .18], [.05, .05], [.2, 0], [.75, .02], [.95, .08], [1, .22]],
+      metallic: [[0, .3], [.06, .1], [.3, 0], [.7, .05], [.94, .14], [1, .32]],
     },
   };
 
-  function gradStops(stops) {
-    return stops.map(([o, c, a]) => `<stop offset="${o}" stop-color="${c}" stop-opacity="${a}"/>`).join('');
+  function gradStops(stops, tone) {
+    return stops.map(([o, a]) => `<stop offset="${o}" stop-color="${tone}" stop-opacity="${a}"/>`).join('');
+  }
+
+  /** Deep tone of a part's colour for its shadows. */
+  function shadeTone(part) {
+    const [a, b] = fillColors(part && part.fill);
+    const c = CL.color.mix(a, b, 0.5);
+    return CL.color.luminance(c) > 0.8 ? CL.color.mix(c, '#4d4852', 0.85) : CL.color.mix(c, '#1a0a10', 0.62);
   }
 
   function angleToVector(angle) {
@@ -211,13 +220,13 @@
         m += shape(rect, `url(#${id})`);
         m += shape(rect, 'none', ' stroke="#8d97a3" stroke-opacity="0.55" stroke-width="1.6"');
       } else {
-        vGrad(id, `<stop offset="0" stop-color="${cA}" stop-opacity="0.95"/><stop offset="0.55" stop-color="${cB}" stop-opacity="0.45"/><stop offset="1" stop-color="${cB}" stop-opacity="0.06"/>`);
-        m += shape(rect, '#ffffff', ' fill-opacity="0.25"');
+        vGrad(id, `<stop offset="0" stop-color="${cA}" stop-opacity="0.95"/><stop offset="0.3" stop-color="${CL.color.mix(cA, cB, 0.25)}" stop-opacity="0.8"/><stop offset="0.6" stop-color="${CL.color.mix(cA, cB, 0.65)}" stop-opacity="0.5"/><stop offset="0.85" stop-color="${cB}" stop-opacity="0.26"/><stop offset="1" stop-color="${cB}" stop-opacity="0.18"/>`);
+        m += shape(rect, '#ffffff', ' fill-opacity="0.4"');
         m += shape(rect, `url(#${id})`);
-        m += shape(rect, 'none', ' stroke="#ffffff" stroke-opacity="0.7" stroke-width="2"');
+        m += shape(rect, 'none', ` stroke="${CL.color.mix(cA, '#ffffff', 0.35)}" stroke-opacity="0.45" stroke-width="1.4"`);
       }
     } else if (surface === 'solid-gradient') {
-      vGrad(id, `<stop offset="0" stop-color="${cA}"/><stop offset="1" stop-color="${cB}"/>`);
+      vGrad(id, `<stop offset="0.04" stop-color="${cA}"/><stop offset="0.28" stop-color="${CL.color.mix(cA, cB, 0.18)}"/><stop offset="0.5" stop-color="${CL.color.mix(cA, cB, 0.5)}"/><stop offset="0.72" stop-color="${CL.color.mix(cA, cB, 0.82)}"/><stop offset="0.96" stop-color="${cB}"/>`);
       m += shape(rect, `url(#${id})`);
     } else if (surface === 'shimmer') {
       vGrad(id, `<stop offset="0" stop-color="${cA}"/><stop offset="1" stop-color="${CL.color.mix(cB, '#ffffff', 0.18)}"/>`);
@@ -248,13 +257,14 @@
     const shadeCapId = `${u}-sh-cap`;
     const shadeBaseId = `${u}-sh-base`;
 
-    defs.push(`<linearGradient id="${shadeCapId}" x1="0" y1="0" x2="1" y2="0">${gradStops((SHADES[shadeKey] || SHADES.round)[P.cap?.finish || 'gloss'])}</linearGradient>`);
-    defs.push(`<linearGradient id="${shadeBaseId}" x1="0" y1="0" x2="1" y2="0">${gradStops((SHADES[shadeKey] || SHADES.round)[P.base?.finish || 'matte'])}</linearGradient>`);
+    defs.push(`<linearGradient id="${shadeCapId}" x1="0" y1="0" x2="1" y2="0">${gradStops((SHADES[shadeKey] || SHADES.round)[P.cap?.finish || 'gloss'], shadeTone(P.cap))}</linearGradient>`);
+    defs.push(`<linearGradient id="${shadeBaseId}" x1="0" y1="0" x2="1" y2="0">${gradStops((SHADES[shadeKey] || SHADES.round)[P.base?.finish || 'matte'], shadeTone(P.base))}</linearGradient>`);
 
-    defs.push(`<linearGradient id="${u}-v-top" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".26"/><stop offset=".08" stop-color="#fff" stop-opacity="0"/><stop offset=".94" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".18"/></linearGradient>`);
-    defs.push(`<linearGradient id="${u}-v-bot" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#000" stop-opacity=".14"/><stop offset=".06" stop-color="#000" stop-opacity="0"/><stop offset=".9" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".26"/></linearGradient>`);
+    const tCap = shadeTone(P.cap), tBase = shadeTone(P.base);
+    defs.push(`<linearGradient id="${u}-v-top" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${tCap}" stop-opacity=".06"/><stop offset=".04" stop-color="${tCap}" stop-opacity="0"/><stop offset=".93" stop-color="${tCap}" stop-opacity="0"/><stop offset=".99" stop-color="${tCap}" stop-opacity=".16"/><stop offset="1" stop-color="${tCap}" stop-opacity=".3"/></linearGradient>`);
+    defs.push(`<linearGradient id="${u}-v-bot" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${tBase}" stop-opacity=".18"/><stop offset=".07" stop-color="${tBase}" stop-opacity="0"/><stop offset=".92" stop-color="${tBase}" stop-opacity="0"/><stop offset="1" stop-color="${tBase}" stop-opacity=".2"/></linearGradient>`);
 
-    defs.push(`<radialGradient id="${u}-shadow"><stop offset="0" stop-color="#141312" stop-opacity=".22"/><stop offset=".45" stop-color="#141312" stop-opacity=".08"/><stop offset="1" stop-color="#141312" stop-opacity="0"/></radialGradient>`);
+    defs.push(`<radialGradient id="${u}-shadow"><stop offset="0" stop-color="#141312" stop-opacity=".16"/><stop offset=".45" stop-color="#141312" stop-opacity=".06"/><stop offset="1" stop-color="#141312" stop-opacity="0"/></radialGradient>`);
 
     // Exact shape clip paths + Safe Zone clip paths
     defs.push(`<clipPath id="${u}-clip-cap">${partShape(L.capShell, '#000')}</clipPath>`);
@@ -280,7 +290,7 @@
     const wandMarkup = `<rect x="${n2(W.x)}" y="${n2(W.y)}" width="${n2(W.w)}" height="${n2(W.h)}" rx="2" fill="#eef1f5" stroke="#8d97a3" stroke-opacity=".35" stroke-width=".7"/>`;
     const footMarkup = `<ellipse cx="${F.cx}" cy="${n2(F.cy)}" rx="${n2(F.rx)}" ry="${n2(F.ry)}" fill="#f6efe0" stroke="#b9ac92" stroke-opacity=".5" stroke-width=".7"/>`;
     const innerBase = isClear(P.base) ? `<path d="${L.cavityPath}"${line}/>${wandMarkup}${footMarkup}` : '';
-    const neckFill = isClear(P.base) ? line : ` fill="${fillColors(P.base && P.base.fill)[1]}" stroke="#000" stroke-opacity=".15" stroke-width=".8"`;
+    const neckFill = isClear(P.base) ? line : ` fill="${fillColors(P.base && P.base.fill)[1]}" fill-opacity=".45"`;
     const innerCap = isClear(P.cap) ? `${wandMarkup}<path d="${L.neckPath}"${neckFill}/>` : '';
 
     // 1. Base (Thân son)

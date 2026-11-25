@@ -8,33 +8,24 @@
   const TUBE_H = 5.4; // every container is scaled to this height in the scene
 
   const FINISH = {
-    matte: {
-      roughness: 0.60,
-      metalness: 0.02,
-      clearcoat: 0.15,
-      clearcoatRoughness: 0.5,
-      sheen: 1.0,
-      sheenRoughness: 0.45,
-    },
-    satin: {
-      roughness: 0.30,
-      metalness: 0.05,
-      clearcoat: 0.45,
-      clearcoatRoughness: 0.2,
-      sheen: 0.5,
-    },
-    gloss: {
-      roughness: 0.06,
-      metalness: 0.02,
-      clearcoat: 1.0,
-      clearcoatRoughness: 0.03,
-    },
-    metallic: {
-      roughness: 0.15,
-      metalness: 0.98,
-      clearcoat: 0.55,
-      clearcoatRoughness: 0.1,
-    },
+    matte: { roughness: 0.85, metalness: 0, specularIntensity: 0.15 },
+    satin: { roughness: 0.5, metalness: 0, specularIntensity: 0.3 },
+    gloss: { roughness: 0.32, metalness: 0, specularIntensity: 0.4 },
+    metallic: { roughness: 0.38, metalness: 0.75 },
+  };
+
+  // Keep the product's own colour: the lights only shape it (0 = fully lit, 1 = flat colour)
+  const TRUE_COLOR = '0.4';
+  const trueColor = (m, key, rim = '0.0') => {
+    m.onBeforeCompile = (sh) => {
+      sh.fragmentShader = sh.fragmentShader.replace('#include <output_fragment>', `
+          outgoingLight = mix(outgoingLight, diffuseColor.rgb, ${TRUE_COLOR});
+          float clEdge = 1.0 - abs(dot(normalize(normal), normalize(vViewPosition)));
+          outgoingLight *= 1.0 - ${rim} * clEdge * clEdge;
+          #include <output_fragment>`);
+    };
+    m.customProgramCacheKey = () => 'clTrue-' + key;
+    return m;
   };
 
   const MODEL_VERSION = 3;
@@ -135,34 +126,32 @@
     return tx;
   }
 
+  /**
+   * Daylight beside a large window: bright overhead, softer floor bounce, one broad window lobe
+   * on the left and a faint fill on the right. The brightness changes smoothly everywhere, so
+   * reflections stay soft (no light strips) and neutral white keeps the product's colour.
+   */
   function makeEnv(renderer) {
     const pm = new THREE.PMREMGenerator(renderer);
     const env = new THREE.Scene();
-    env.background = new THREE.Color(0xffffff);
-
-    const box = new THREE.Mesh(
-      new THREE.BoxGeometry(30, 30, 30),
-      new THREE.MeshBasicMaterial({ color: 0xfafafa, side: THREE.BackSide })
-    );
-    env.add(box);
-
-    const panel = (w, h, x, y, z, ry, intensity) => {
-      const m = new THREE.Mesh(
-        new THREE.PlaneGeometry(w, h),
-        new THREE.MeshBasicMaterial({ color: new THREE.Color(intensity, intensity, intensity), side: THREE.DoubleSide })
-      );
-      m.position.set(x, y, z);
-      m.rotation.y = ry;
-      m.lookAt(0, 0, 0);
-      env.add(m);
-    };
-
-    panel(10, 18, -12, 5, 6, 0, 5.5);
-    panel(8, 16, 12, 3, 4, 0, 3.8);
-    panel(20, 6, 0, 14, 0, 0, 3.0);
-    panel(8, 14, 0, 3, -12, 0, 2.2);
-
-    const tex = pm.fromScene(env, 0.04).texture;
+    const geo = new THREE.SphereGeometry(10, 96, 64);
+    const pos = geo.attributes.position;
+    const rgb = new Float32Array(pos.count * 3);
+    const win = new THREE.Vector3(-0.62, 0.5, 0.6).normalize();
+    const fill = new THREE.Vector3(0.75, 0.15, 0.6).normalize();
+    const v = new THREE.Vector3();
+    for (let i = 0; i < pos.count; i++) {
+      v.fromBufferAttribute(pos, i).normalize();
+      const sky = v.y > 0 ? 0.8 + 0.32 * v.y : 0.8 + 0.18 * v.y;
+      const l = sky + 0.75 * Math.pow(Math.max(0, v.dot(win)), 4) + 0.22 * Math.pow(Math.max(0, v.dot(fill)), 3);
+      rgb.set([l, l, l], i * 3);
+    }
+    geo.setAttribute('color', new THREE.BufferAttribute(rgb, 3));
+    const mat = new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.BackSide, toneMapped: false });
+    env.add(new THREE.Mesh(geo, mat));
+    const tex = pm.fromScene(env, 0.06).texture;
+    geo.dispose();
+    mat.dispose();
     pm.dispose();
     return tex;
   }
@@ -206,10 +195,10 @@
       this.targetRotX = 0.08;
 
       // K-Beauty Studio Lights & Softbox Highlights
-      const hemi = new THREE.HemisphereLight(0xffffff, 0xf6f6f6, 0.12);
+      const hemi = new THREE.HemisphereLight(0xffffff, 0xffffff, 0.03);
       this.scene.add(hemi);
 
-      const key = new THREE.DirectionalLight(0xffffff, 0.22);
+      const key = new THREE.DirectionalLight(0xffffff, 0.06);
       key.position.set(-4, 9, 6);
       key.castShadow = true;
       key.shadow.mapSize.set(1024, 1024);
@@ -221,17 +210,17 @@
       this.scene.add(key);
 
       // Vertical softbox strip light (creates the iconic specular streak on tube curves)
-      const softbox = new THREE.DirectionalLight(0xffffff, 0.1);
+      const softbox = new THREE.DirectionalLight(0xffffff, 0.02);
       softbox.position.set(6, 4, 3);
       this.scene.add(softbox);
 
       // Back rim light to separate the silhouette from the white background
-      const rim = new THREE.DirectionalLight(0xffffff, 0.2);
+      const rim = new THREE.DirectionalLight(0xffffff, 0.03);
       rim.position.set(0, 6, -7);
       this.scene.add(rim);
 
       // Gentle floor bounce light
-      const bounce = new THREE.DirectionalLight(0xffffff, 0.06);
+      const bounce = new THREE.DirectionalLight(0xffffff, 0.02);
       bounce.position.set(0, -3, 2);
       this.scene.add(bounce);
 
@@ -345,7 +334,8 @@
     }
 
     _opaque(part) {
-      const m = new THREE.MeshPhysicalMaterial(Object.assign({ color: 0xffffff, vertexColors: true, envMapIntensity: 0.4 }, FINISH[part && part.finish] || FINISH.gloss));
+      const m = new THREE.MeshPhysicalMaterial(Object.assign({ color: 0xffffff, vertexColors: true, envMapIntensity: 0.86 }, FINISH[part && part.finish] || FINISH.gloss));
+      trueColor(m, 'solid', '0.24');
       this.disposables.push(m);
       return m;
     }
@@ -355,7 +345,7 @@
       const pure = isClearMaterial(part);
       const m = new THREE.MeshPhysicalMaterial({
         color: 0xffffff, transparent: true, depthWrite: false,
-        roughness: 0.06, metalness: 0, clearcoat: inner ? 0 : 1, clearcoatRoughness: 0.04, envMapIntensity: pure ? 1.0 : 0.55,
+        roughness: 0.22, metalness: 0, envMapIntensity: pure ? 1.0 : 0.86,
       });
       const base = pure ? (inner ? '0.10' : '0.13') : (inner ? 'diffuseColor.a * 0.35' : 'diffuseColor.a');
       m.onBeforeCompile = (sh) => {
@@ -364,6 +354,7 @@
           float clFacing = abs(dot(normalize(normal), normalize(vViewPosition)));
           float clRim = pow(1.0 - clFacing, 1.6);
           float clGloss = max(max(totalSpecular.r, totalSpecular.g), totalSpecular.b);
+          ${pure ? '' : `outgoingLight = mix(outgoingLight, diffuseColor.rgb, ${TRUE_COLOR});`}
           ${pure ? 'outgoingLight *= vec3(0.74, 0.80, 0.87);' : ''}
           outgoingLight = mix(outgoingLight, diffuseColor.rgb * vec3(0.20, 0.235, 0.28), clRim * 0.85);
           diffuseColor.a = clamp(max(${base}, clRim * ${inner ? '0.50' : '0.72'}) + clGloss * ${inner ? '0.10' : '0.16'}, 0.0, 1.0);
@@ -438,7 +429,7 @@
     }
 
     _plain(color, roughness) {
-      const m = new THREE.MeshPhysicalMaterial({ color: linear(color), roughness, envMapIntensity: 0.42 });
+      const m = new THREE.MeshPhysicalMaterial({ color: linear(color), roughness, envMapIntensity: 0.86 });
       this.disposables.push(m);
       return m;
     }
@@ -512,7 +503,7 @@
         return mesh;
       };
 
-      add(makeGeometry(raw.wand), this._plain('#e6ebf1', 0.18), 0);
+      add(makeGeometry(raw.wand), this._plain('#e6ebf1', 0.8), 0);
       add(makeGeometry(raw.foot), this._plain('#f4ecdc', 0.9), 0);
       add(makeGeometry(raw.wiper), this._plain('#eceff2', 0.5), 0);
 
@@ -564,7 +555,8 @@
         if (t.every((v) => nor.getZ(v) > 0.02)) front.push(...t);
       }
       geo.setIndex(front);
-      const mat = new THREE.MeshPhysicalMaterial({ map, transparent: true, depthWrite: false, roughness: 0.45, envMapIntensity: 0.6 });
+      const mat = new THREE.MeshPhysicalMaterial({ map, transparent: true, depthWrite: false, roughness: 0.95, specularIntensity: 0.1, envMapIntensity: 0.86 });
+      trueColor(mat, 'art');
       this.disposables.push(mat);
       const mesh = new THREE.Mesh(geo, mat);
       mesh.renderOrder = 10;

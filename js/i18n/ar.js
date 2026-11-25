@@ -73,7 +73,7 @@
       subscribeError: 'يرجى إدخال بريد إلكتروني صالح.',
     },
     surface: {
-      title: 'نوع السطح', clear: 'شفاف · لون داخلي', shimmer: 'لمعان متعدد الطبقات', solid: 'سادة', solidGradient: 'تدرج سادة', clearGradient: 'تدرج على شفاف',
+      clearSolid: 'شفاف متدرج', title: 'نوع السطح', clear: 'شفاف · لون داخلي', shimmer: 'لمعان متعدد الطبقات', solid: 'سادة', solidGradient: 'تدرج سادة', clearGradient: 'تدرج على شفاف',
       color1: 'اللون 1', color2: 'اللون 2', inside: 'اللون الداخلي',
     },
     prefs: {

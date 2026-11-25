@@ -73,7 +73,7 @@
       subscribeError: '请输入有效的邮箱地址。',
     },
     surface: {
-      title: '表面类型', clear: '透明 · 内含唇色', shimmer: '多层闪粉', solid: '纯色', solidGradient: '纯色渐变', clearGradient: '透明渐变',
+      clearSolid: '透明渐淡', title: '表面类型', clear: '透明 · 内含唇色', shimmer: '多层闪粉', solid: '纯色', solidGradient: '纯色渐变', clearGradient: '透明渐变',
       color1: '颜色 1', color2: '颜色 2', inside: '内含唇色',
     },
     prefs: {

@@ -73,7 +73,7 @@
       subscribeError: 'Veuillez saisir une adresse email valide.',
     },
     surface: {
-      title: 'Type de surface', clear: 'Transparent · teinte visible', shimmer: 'Paillettes multicouches', solid: 'Uni', solidGradient: 'Dégradé uni', clearGradient: 'Dégradé sur transparent',
+      clearSolid: 'Transparent dégradé', title: 'Type de surface', clear: 'Transparent · teinte visible', shimmer: 'Paillettes multicouches', solid: 'Uni', solidGradient: 'Dégradé uni', clearGradient: 'Dégradé sur transparent',
       color1: 'Couleur 1', color2: 'Couleur 2', inside: 'Teinte intérieure',
     },
     prefs: {

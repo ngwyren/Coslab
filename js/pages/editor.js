@@ -1192,12 +1192,6 @@
         // ======================================================
         // Which colour of a 2-colour surface the palette edits (kept across panel re-renders)
         let colorSlot = 0;
-        const SURFACES = [
-          { id: 'shimmer', key: 'surface.shimmer' },
-          { id: 'solid', key: 'surface.solid' },
-          { id: 'solid-gradient', key: 'surface.solidGradient' },
-          { id: 'clear-gradient', key: 'surface.clearGradient' },
-        ];
         const COMBOS = ['cherry-jelly', 'soft-bun', 'red-cap', 'peach-fizz', 'noir-cherry', 'porcelain-rose', 'cocoa-milk', 'mauve-line'];
         const isGradientSurface = (s) => s === 'solid-gradient' || s === 'clear-gradient';
         const stopEntry = (s) => CL.pantone.of({ color: s.c, pantone: s.pantone });
@@ -1206,13 +1200,13 @@
           const isVi = I18N.lang === 'vi';
           const curPart = design.parts[activePart] || (design.parts[activePart] = { fill: CL.pantone.fillFor(CL.pantone.byCode.get('7418 C')), finish: 'matte' });
           const surface = curPart.surface || 'solid';
-          const twoColour = isGradientSurface(surface);
-          if (!twoColour) colorSlot = 0;
           const partName = t(activePart === 'base' ? 'flow.body' : 'flow.cap');
 
           // Current colour(s) as Pantone entries
           const stops = curPart.fill && curPart.fill.type === 'linear' ? curPart.fill.stops : null;
           const colours = stops ? [stopEntry(stops[0]), stopEntry(stops[stops.length - 1])] : [CL.pantone.of(curPart.fill), CL.pantone.of(curPart.fill)];
+          const twoColour = isGradientSurface(surface);
+          if (!twoColour) colorSlot = 0;
           const current = colours[colorSlot] || colours[0];
 
           const toSolid = (p) => CL.pantone.fillFor(p);
@@ -1228,6 +1222,8 @@
               const on = same(preview.parts, design.parts);
               return CL.h('button.surface-card' + (on ? '.is-active' : ''), {
                 type: 'button',
+                title: t('templates.' + id),
+                'aria-label': t('templates.' + id),
                 'aria-pressed': String(on),
                 onclick: () => {
                   design.parts = CL.clone(preview.parts);
@@ -1235,63 +1231,59 @@
                   commit();
                 },
               },
-                CL.h('span.surface-thumb', { html: CL.render.renderTight(preview, { width: 34, shadow: false }) }),
-                CL.h('span.surface-name', { text: t('templates.' + id) })
+                CL.h('span.surface-thumb', { html: CL.render.renderTight(preview, { width: 34, shadow: false }) })
               );
             })
           );
 
-          // 1. Surface type — each option previews the tube with that surface in the current colours
-          const surfaceRow = CL.h('div.surface-grid', null,
-            SURFACES.map((s) => {
-              const preview = CL.clone(design);
-              preview.parts[activePart] = Object.assign({}, curPart, {
-                surface: s.id,
-                fill: isGradientSurface(s.id)
-                  ? toLinear(colours[0], colours[1].code === colours[0].code ? CL.pantone.byCode.get('7430 C') : colours[1])
-                  : toSolid(colours[0]),
-              });
-              return CL.h('button.surface-card' + (surface === s.id ? '.is-active' : ''), {
-                type: 'button',
-                'aria-pressed': String(surface === s.id),
-                onclick: () => {
-                  if (surface === s.id) return;
-                  curPart.surface = s.id;
-                  curPart.fill = preview.parts[activePart].fill;
-                  colorSlot = 0;
-                  commit();
-                },
+          // Solid or gradient. Clear / shimmer looks come from the ready-made designs and stay
+          // until the customer switches kind.
+          const modeRow = CL.h('div.fg-seg', { role: 'radiogroup', 'aria-label': isVi ? 'Kiểu màu' : 'Colour style' },
+            [[false, isVi ? 'Một màu' : 'Solid'], [true, isVi ? 'Chuyển màu' : 'Gradient']].map(([two, label]) => CL.h('button.fg-seg-btn' + (two === twoColour ? '.is-active' : ''), {
+              type: 'button',
+              role: 'radio',
+              'aria-checked': String(two === twoColour),
+              text: label,
+              onclick: () => {
+                if (two === twoColour) return;
+                if (two) {
+                  curPart.fill = toLinear(colours[0], CL.pantone.byCode.get(colours[0].code === '7430 C' ? '186 C' : '7430 C'));
+                  curPart.surface = 'solid-gradient';
+                } else {
+                  // keep the visible colour rather than the clear end
+                  const c = colours[0].code === 'Clear' ? colours[1] : colours[0];
+                  curPart.fill = toSolid(c.code === 'Clear' ? CL.pantone.byCode.get('White') : c);
+                  curPart.surface = 'solid';
+                }
+                colorSlot = 0;
+                commit();
               },
-                CL.h('span.surface-thumb', { html: CL.render.renderTight(preview, { width: 34, shadow: false }) }),
-                CL.h('span.surface-name', { text: t(s.key) })
-              );
-            })
-          );
+            })));
 
-          // 2. Colour slot switch for 2-colour surfaces
+          // 3. Two colours: named by where they sit on the part, next to a picture of the blend
+          const END = [isVi ? 'Màu dưới' : 'Bottom', isVi ? 'Màu trên' : 'Top'];
           const slotSwitch = twoColour
-            ? CL.h('div.colour-slots', null,
-                [0, 1].map((i) => CL.h('button.colour-slot' + (colorSlot === i ? '.is-active' : ''), {
+            ? CL.h('div.blend', null,
+                CL.h('i.blend-bar', { 'aria-hidden': 'true', style: { background: `linear-gradient(to top, ${colours[0].screen}, ${colours[1].screen})` } }),
+                CL.h('div.blend-ends', { role: 'radiogroup', 'aria-label': isVi ? 'Đổi màu nào' : 'Colour to change' },
+                  [1, 0].map((i) => CL.h('button.colour-slot' + (colorSlot === i ? '.is-active' : ''), {
+                    type: 'button',
+                    role: 'radio',
+                    'aria-checked': String(colorSlot === i),
+                    onclick: () => { colorSlot = i; renderStepPanel(); },
+                  },
+                    CL.h('i', { style: { background: colours[i].screen } }),
+                    CL.h('span', { text: END[i] }),
+                    CL.h('strong', { text: CL.pantone.label(colours[i]) })
+                  ))),
+                CL.h('button.icon-btn.sm', {
                   type: 'button',
-                  onclick: () => { colorSlot = i; renderStepPanel(); },
-                },
-                  CL.h('i', { style: { background: colours[i].screen } }),
-                  CL.h('span', { text: t(i === 0 ? 'surface.color1' : 'surface.color2') }),
-                  CL.h('strong', { text: CL.pantone.label(colours[i]) })
-                )))
+                  title: isVi ? 'Đổi chỗ trên và dưới' : 'Swap top and bottom',
+                  'aria-label': isVi ? 'Đổi chỗ trên và dưới' : 'Swap top and bottom',
+                  html: CL.icon('flipV'),
+                  onclick: () => { curPart.fill = toLinear(colours[1], colours[0]); commit(); },
+                }))
             : null;
-
-          // 3. Selected colour — shown by Pantone code (no HEX anywhere)
-          const slotLabel = surface === 'clear' ? t('surface.inside') : twoColour ? t(colorSlot === 0 ? 'surface.color1' : 'surface.color2') : t('flow.colorCode');
-          const selected = CL.h('div.pt-selected', null,
-            CL.h('i.pt-selected-swatch', { style: { background: current ? current.screen : '#ccc' } }),
-            CL.h('div.pt-selected-text', null,
-              CL.h('span.pt-selected-label', { text: `${slotLabel} · ${partName}` }),
-              CL.h('strong.pt-selected-code', { text: CL.pantone.label(current) }),
-              CL.h('span.pt-selected-name', { text: current ? current.name : '' })
-            )
-          );
-
           // 4. Pantone palette (grouped); a chip sets the whole colour, or the active slot of a gradient
           const setColour = (p) => {
             if (twoColour) {
@@ -1308,21 +1300,16 @@
             onInput: (p) => { setColour(p); syncPartChips(); render2DCanvas(); },
             onCommit: commit,
           });
-          const group = (key, titleVi, titleEn) => CL.h('div.pt-group', null,
-            CL.h('span.pt-group-title', { text: isVi ? titleVi : titleEn }),
-            CL.h('div.pt-grid', null,
-              CL.pantone.LIST.filter((p) => p.group === key).map((p) =>
-                CL.h('button.pt-chip' + (current && current.code === p.code ? '.is-active' : ''), {
-                  type: 'button',
-                  title: `${CL.pantone.label(p)} — ${p.name}`,
-                  'aria-pressed': String(!!(current && current.code === p.code)),
-                  onclick: () => pick(p),
-                },
-                  CL.h('i.pt-chip-swatch', { style: { background: p.screen } }),
-                  CL.h('span.pt-chip-code', { text: p.code })
-                ))
-            )
-          );
+          const label = (p) => `${CL.pantone.label(p)}${p.name && !p.material ? ' — ' + p.name : ''}`;
+          const palette = CL.h('div.dots', null,
+            CL.pantone.LIST.filter((p) => p.group === 'tint' || p.group === 'pack').map((p) => {
+              const on = !!(current && current.code === p.code);
+              return CL.h('button.dot' + (on ? '.is-active' : ''), {
+                type: 'button', title: label(p), 'aria-label': label(p), 'aria-pressed': String(on),
+                style: { '--c': p.screen },
+                onclick: () => pick(p),
+              });
+            }));
 
           // One quiet line; the full text opens on tap (it is also on the last step and on the PDF)
           const note = CL.h('details.color-note-mini', null,
@@ -1332,26 +1319,18 @@
 
           stepBody.append(
             CL.h('div.fg-section', null,
-              CL.h('div.fg-section-head', null,
-                CL.h('span.fg-section-title', { text: isVi ? 'Phối sẵn · chạm để dùng' : 'Ready-made · tap to use' })
-              ),
+              CL.h('span.fg-section-title', { text: isVi ? 'Phối sẵn' : 'Ready-made' }),
               comboRow
             ),
             CL.h('div.fg-section', null,
               CL.h('div.fg-section-head', null,
-                CL.h('span.fg-section-title', { text: `${t('surface.title')} · ${partName}` })
+                CL.h('span.fg-section-title', { text: partName }),
+                twoColour ? null : CL.h('span.font-current', { text: CL.pantone.label(current) })
               ),
-              surfaceRow
-            ),
-            CL.h('div.fg-section', null,
-              CL.h('div.fg-section-head', null,
-                CL.h('span.fg-section-title', { text: isVi ? `Màu ${partName.toLowerCase()} (Pantone)` : `${partName} colour (Pantone)` })
-              ),
+              modeRow,
               slotSwitch,
-              twoColour ? null : selected,
+              palette,
               partPicker,
-              group('tint', 'Tông son', 'Tint shades'),
-              group('pack', 'Tông bao bì', 'Packaging'),
               note
             )
           );

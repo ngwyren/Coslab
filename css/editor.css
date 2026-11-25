@@ -1390,3 +1390,25 @@
 .font-list { height: 282px; scroll-snap-type: y mandatory; }
 .font-row { height: 40px; scroll-snap-align: start; }
 @media (max-width: 760px) { .font-list { height: 222px; } .font-row { height: 44px; } }
+
+/* ---------- One colour / two colours ---------- */
+.blend { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; align-items: center; gap: 10px; }
+.blend-bar { align-self: stretch; border-radius: 10px; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12); }
+.blend-ends { display: grid; gap: 6px; }
+
+/* ---------- Colour step, short version ---------- */
+.combo-grid { grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 4px; }
+.combo-grid .surface-card { padding: 6px 0; border-radius: 10px; }
+.combo-grid .surface-thumb { height: 56px; }
+.dots { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 8px; }
+.dot { position: relative; aspect-ratio: 1; border-radius: 50%; background: var(--c); box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12); }
+.dot:hover { transform: scale(1.06); }
+.dot.is-active { box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12), 0 0 0 2px var(--fg-bg), 0 0 0 4px var(--fg-text); }
+.dot:focus-visible { outline: 2px solid var(--fg-accent); outline-offset: 4px; }
+.blend .colour-slot { padding: 6px 10px; }
+
+
+/* Step bar as one rounded island */
+.studio-stepper { border-radius: 999px; }
+.studio-stepper .studio-step-pill { border-radius: 999px; }
+.studio-stepper .step-num { border-radius: 50%; }

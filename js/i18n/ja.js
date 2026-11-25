@@ -73,7 +73,7 @@
       subscribeError: '有効なメールアドレスを入力してください。',
     },
     surface: {
-      title: '表面タイプ', clear: 'クリア・中身の色', shimmer: '多層ラメ', solid: 'ソリッド', solidGradient: 'ソリッドグラデーション', clearGradient: 'クリアグラデーション',
+      clearSolid: 'クリアフェード', title: '表面タイプ', clear: 'クリア・中身の色', shimmer: '多層ラメ', solid: 'ソリッド', solidGradient: 'ソリッドグラデーション', clearGradient: 'クリアグラデーション',
       color1: 'カラー1', color2: 'カラー2', inside: '中身の色',
     },
     prefs: {

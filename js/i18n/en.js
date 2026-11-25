@@ -73,7 +73,7 @@
       subscribeError: 'Invalid email.',
     },
     surface: {
-      title: 'Surface type', clear: 'Clear · tint inside', shimmer: 'Shimmer layers', solid: 'Solid', solidGradient: 'Solid gradient', clearGradient: 'Gradient on clear',
+      clearSolid: 'Clear fade', title: 'Surface type', clear: 'Clear · tint inside', shimmer: 'Shimmer layers', solid: 'Solid', solidGradient: 'Solid gradient', clearGradient: 'Gradient on clear',
       color1: 'Colour 1', color2: 'Colour 2', inside: 'Tint colour inside',
     },
     prefs: {

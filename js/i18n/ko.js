@@ -73,7 +73,7 @@
       subscribeError: '유효한 이메일 주소를 입력해 주세요.',
     },
     surface: {
-      title: '표면 타입', clear: '투명 · 내용물 컬러', shimmer: '다층 글리터', solid: '단색', solidGradient: '단색 그라데이션', clearGradient: '투명 그라데이션',
+      clearSolid: '투명 페이드', title: '표면 타입', clear: '투명 · 내용물 컬러', shimmer: '다층 글리터', solid: '단색', solidGradient: '단색 그라데이션', clearGradient: '투명 그라데이션',
       color1: '컬러 1', color2: '컬러 2', inside: '내용물 컬러',
     },
     prefs: {

@@ -73,7 +73,7 @@
       subscribeError: 'Por favor, ingresa un correo electrónico válido.',
     },
     surface: {
-      title: 'Tipo de superficie', clear: 'Transparente · color interior', shimmer: 'Brillo multicapa', solid: 'Liso', solidGradient: 'Degradado liso', clearGradient: 'Degradado transparente',
+      clearSolid: 'Transparente difuminado', title: 'Tipo de superficie', clear: 'Transparente · color interior', shimmer: 'Brillo multicapa', solid: 'Liso', solidGradient: 'Degradado liso', clearGradient: 'Degradado transparente',
       color1: 'Color 1', color2: 'Color 2', inside: 'Color interior',
     },
     prefs: {
