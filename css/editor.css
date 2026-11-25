@@ -1421,3 +1421,12 @@
 
 /* Body / Cap switch: same rounded island */
 .canvas-part-Quickbar, .canvas-part-chip { border-radius: 999px; }
+
+/* Finished step: blue circle with a drawn, centred tick */
+.studio-step-pill.is-done .step-num { position: relative; background: #0a7cff; }
+.studio-step-pill.is-done .step-num::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 12.4l3.4 3.4L17 8.8'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
+}

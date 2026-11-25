@@ -227,7 +227,7 @@
             html: `<span class="step-num">01</span><span class="step-name">${t('landing.step1')}</span>`,
           }),
           STEPS.map((s, idx) =>
-            CL.h('button.studio-step-pill' + (idx === activeStepIdx ? '.is-active' : ''), {
+            CL.h('button.studio-step-pill' + (idx === activeStepIdx ? '.is-active' : idx < activeStepIdx ? '.is-done' : ''), {
               type: 'button',
               'data-step-idx': idx,
               html: `<span class="step-num">${s.num}</span><span class="step-name">${stepLabel(s)}</span>`,
