@@ -120,10 +120,10 @@
     return c;
   }
 
-  async function renderCanvas(design, { scale = 3, background = null, fonts } = {}) {
+  async function renderCanvas(design, { scale = 3, background = null, fonts, dieline = false } = {}) {
     const css = fonts !== undefined ? fonts : await fontCSS(design);
     const S = CL.models.SCENE;
-    const svg = CL.render.renderSVG(design, { fontCSS: css, width: S.w * scale, height: S.h * scale });
+    const svg = CL.render.renderSVG(design, { fontCSS: css, width: S.w * scale, height: S.h * scale, dieline });
     return rasterize(svg, S.w * scale, S.h * scale, background);
   }
 
@@ -131,6 +131,38 @@
     const css = fonts !== undefined ? fonts : await fontCSS(design);
     const f = CL.render.renderPartFlat(design, part, { scale, fontCSS: css, layersOnly });
     return { canvas: await rasterize(f.svg, f.w, f.h), rect: f.rect };
+  }
+
+  /** Still picture of the 3D container (front view, slightly turned). */
+  async function renderCanvas3D(design, { background = null, pixelRatio = 2 } = {}) {
+    await CL.loadThree();
+    const host = CL.h('div', { 'aria-hidden': 'true', style: { position: 'fixed', left: '-5000px', top: '0', width: '1000px', height: '1400px', pointerEvents: 'none' } });
+    document.body.append(host);
+    let view = null;
+    try {
+      view = new CL.Preview3D(host, { autoRotate: false, interactive: false });
+      view.renderer.setPixelRatio(pixelRatio);
+      view._resize();
+      if (!(await view.setDesign(design))) throw new Error('3D model missing');
+      view.rotY = view.targetRotY = -0.3;
+      view.rotX = view.targetRotX = 0.08;
+      cancelAnimationFrame(view._raf); // draw this frame now, even in a background tab
+      view._loop(performance.now());
+      const src = view.renderer.domElement;
+      const c = document.createElement('canvas');
+      c.width = src.width;
+      c.height = src.height;
+      const ctx = c.getContext('2d');
+      if (background) {
+        ctx.fillStyle = background;
+        ctx.fillRect(0, 0, c.width, c.height);
+      }
+      ctx.drawImage(src, 0, 0);
+      return c;
+    } finally {
+      if (view) view.dispose();
+      host.remove();
+    }
   }
 
   // Colours are specified by Pantone code only (no HEX on customer-facing documents)
@@ -201,11 +233,11 @@
     ctx.closePath();
   }
 
-  async function buildSpecPages(design) {
+  async function buildSpecPages(design, view, previewDpi) {
     const fonts = await fontCSS(design);
     const W = 3508, H = 2480; // A4 landscape layout units (@300dpi)
     const settings = CL.store.settings || {};
-    const dpi = [150, 300, 600].includes(settings.exportDPI) ? settings.exportDPI : 300;
+    const dpi = previewDpi ? previewDpi : [150, 300, 600].includes(settings.exportDPI) ? settings.exportDPI : 300;
     const K = dpi / 300; // canvas pixel scale vs. 300dpi layout units
     const showCropMarks = settings.cropMarks !== false;
     const UI = "'Plus Jakarta Sans', 'Noto Sans KR', 'Noto Serif KR', sans-serif";
@@ -240,7 +272,7 @@
     roundRectPath(ctx, 160, 320, 1400, 1920, 40);
     ctx.fill();
 
-    const prod = await renderCanvas(design, { scale: 3.2 * K, fonts });
+    const prod = view === '3d' ? await renderCanvas3D(design) : await renderCanvas(design, { scale: 3.2 * K, fonts });
     const k = Math.min(1280 / prod.width, 1800 / prod.height);
     ctx.drawImage(prod, 160 + (1400 - prod.width * k) / 2, 320 + (1920 - prod.height * k) / 2, prod.width * k, prod.height * k);
 
@@ -414,8 +446,9 @@
     return [c1, c2];
   }
 
-  async function exportDesign(design, fmt) {
-    const base = CL.slug(design.name || ('coslab-liptint-' + design.model));
+  /** view: '2d' | '3d' — how the tube is pictured (SVG artwork is always 2D) */
+  async function exportDesign(design, fmt, view = '2d') {
+    const base = CL.slug(design.name || ('coslab-liptint-' + design.model)) + (view === '3d' && fmt !== 'svg' ? '-3d' : '');
     CL.toast(t('editor.exporting'), 'download');
     try {
       if (fmt === 'svg') {
@@ -429,11 +462,12 @@
         CL.download(url, base + '.svg');
         setTimeout(() => URL.revokeObjectURL(url), 4000);
       } else if (fmt === 'png' || fmt === 'jpg') {
-        const c = await renderCanvas(design, { scale: 4, background: fmt === 'jpg' ? '#faf9f6' : null });
+        const background = fmt === 'jpg' ? '#faf9f6' : null;
+        const c = view === '3d' ? await renderCanvas3D(design, { background }) : await renderCanvas(design, { scale: 4, background });
         CL.download(c.toDataURL(fmt === 'jpg' ? 'image/jpeg' : 'image/png', 0.95), `${base}.${fmt}`);
       } else if (fmt === 'pdf') {
         await CL.loadPdf();
-        const pages = await buildSpecPages(design);
+        const pages = await buildSpecPages(design, view);
         const JsPDF = window.jspdf && window.jspdf.jsPDF;
         if (!JsPDF) throw new Error('jsPDF missing');
         const pdf = new JsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4', compress: true });
@@ -445,9 +479,11 @@
         pdf.save(base + '.pdf');
       }
       CL.toast(t('editor.exported'));
+      return true;
     } catch (e) {
       console.error(e);
       CL.toast(t('editor.exportFailed'), 'info');
+      return false;
     }
   }
 
@@ -455,7 +491,9 @@
     fontCSS,
     rasterize,
     renderCanvas,
+    renderCanvas3D,
     renderFlatCanvas,
+    buildSpecPages,
     exportDesign,
   };
 })(window.CL);

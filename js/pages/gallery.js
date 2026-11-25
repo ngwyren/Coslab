@@ -114,7 +114,7 @@
                     type: 'button',
                     title: t('common.download'),
                     html: CL.icon('download'),
-                    onclick: (e) => CL.menu(e.currentTarget, CL.exportMenuItems(() => design), { align: 'end' }),
+                    onclick: () => CL.openExport(design),
                   })
                 )
               )

@@ -109,38 +109,124 @@
   window.addEventListener('resize', () => CL.closeMenu());
   window.addEventListener('hashchange', () => CL.closeMenu());
 
-  /** Ask for the PDF quality right before exporting; remembers the last choice. */
-  CL.exportPdf = async function (design) {
-    let dpi = [150, 300, 600].includes(CL.store.settings.exportDPI) ? CL.store.settings.exportDPI : 300;
-    const body = CL.h('div.segmented.block.pdf-quality', { role: 'radiogroup', 'aria-label': t('prefs.pdfQuality') },
-      [[150, 'prefs.q150'], [300, 'prefs.q300'], [600, 'prefs.q600']].map(([v, key]) =>
-        CL.h('button' + (v === dpi ? '.is-active' : ''), {
-          type: 'button',
-          role: 'radio',
-          'aria-checked': String(v === dpi),
-          text: t(key),
-          onclick: (e) => {
-            dpi = v;
-            body.querySelectorAll('button').forEach((b) => {
-              b.classList.toggle('is-active', b === e.currentTarget);
-              b.setAttribute('aria-checked', String(b === e.currentTarget));
-            });
-          },
-        })));
-    if (!(await CL.confirm({ title: t('prefs.pdfQuality'), body, okText: t('editor.export') }))) return;
-    CL.store.saveSettings({ exportDPI: dpi });
-    CL.exporter.exportDesign(design, 'pdf');
-  };
+  /** Save dialog: pick 2D/3D and a file format, see the result, then save. */
+  CL.openExport = function (source) {
+    const design = CL.clone(source);
+    const saved = CL.store.settings;
+    const FORMATS = [['png', 'image', 'editor.exportPng'], ['jpg', 'image', 'editor.exportJpg'], ['pdf', 'file', 'editor.exportPdf'], ['svg', 'shapes', 'editor.exportSvg']];
+    let view = saved.exportView === '3d' ? '3d' : '2d';
+    let fmt = FORMATS.some(([id]) => id === saved.exportFormat) ? saved.exportFormat : 'png';
+    let dpi = [150, 300, 600].includes(saved.exportDPI) ? saved.exportDPI : 300;
 
-  /** Export menu items shared by editor, gallery and my-designs. */
-  CL.exportMenuItems = function (getDesign) {
-    const run = (fmt) => CL.exporter.exportDesign(getDesign(), fmt);
-    return [
-      { label: t('editor.exportPng'), icon: 'image', onClick: () => run('png') },
-      { label: t('editor.exportJpg'), icon: 'image', onClick: () => run('jpg') },
-      { label: t('editor.exportPdf'), icon: 'file', onClick: () => CL.exportPdf(getDesign()) },
-      { sep: true },
-      { label: t('editor.exportSvg'), icon: 'shapes', onClick: () => run('svg') },
-    ];
+    const host = document.getElementById('modalHost');
+    const opener = document.activeElement;
+    let open = true;
+    const close = () => {
+      open = false;
+      host.replaceChildren();
+      window.removeEventListener('hashchange', close);
+      if (opener && opener.isConnected) opener.focus();
+    };
+
+    /* ---- choices ---- */
+    const choice = (cls, label, options, get, set) => {
+      const el = CL.h('div' + cls, { role: 'radiogroup', 'aria-label': label });
+      options.forEach(([id, ...parts]) => el.append(CL.h('button', {
+        type: 'button', role: 'radio', 'data-id': String(id), onclick: () => { set(id); sync(); },
+      }, ...parts)));
+      el._sync = () => el.querySelectorAll('button').forEach((b) => {
+        const on = b.dataset.id === String(get());
+        b.classList.toggle('is-active', on);
+        b.setAttribute('aria-checked', String(on));
+      });
+      return el;
+    };
+    const viewPick = choice('.segmented.block.ex-view', '2D / 3D', [['2d', '2D'], ['3d', '3D']], () => (fmt === 'svg' ? '2d' : view), (v) => { view = v; });
+    const fmtPick = choice('.ex-formats', t('editor.export'),
+      FORMATS.map(([id, icon, key]) => [id, CL.h('i', { html: CL.icon(icon), 'aria-hidden': 'true' }), CL.h('span', null, CL.h('strong', { text: id.toUpperCase() }), CL.h('small', { text: t(key) }))]),
+      () => fmt, (v) => { fmt = v; });
+    const dpiPick = choice('.segmented.block', t('prefs.pdfQuality'), [[150, t('prefs.q150')], [300, t('prefs.q300')], [600, t('prefs.q600')]], () => dpi, (v) => { dpi = v; });
+    const dpiRow = CL.h('div.ex-quality', null, CL.h('span', { text: t('prefs.pdfQuality') }), dpiPick);
+
+    /* ---- preview ---- */
+    const stage = CL.h('div.ex-preview', { 'aria-live': 'polite' });
+    const cache = new Map();
+    let shown = '';
+    const draw = (v, f) => {
+      const X = CL.exporter;
+      if (f === 'pdf') return X.buildSpecPages(design, v, 150);
+      if (f === 'svg') return X.renderCanvas(design, { scale: 1.5, dieline: (CL.store.settings || {}).outlineVector !== false }).then((c) => [c]);
+      if (v === '3d') return X.renderCanvas3D(design, { pixelRatio: 1 }).then((c) => [c]);
+      return X.renderCanvas(design, { scale: 1.5 }).then((c) => [c]);
+    };
+    async function preview() {
+      const v = fmt === 'svg' ? '2d' : view;
+      const kind = fmt === 'pdf' || fmt === 'svg' ? fmt : 'image';
+      const key = v + kind;
+      stage.dataset.format = fmt;
+      if (shown === key && !stage.classList.contains('is-loading')) return;
+      shown = key;
+      stage.classList.add('is-loading');
+      if (!cache.has(key)) cache.set(key, draw(v, kind));
+      try {
+        const pages = await cache.get(key);
+        if (!open || shown !== key) return;
+        stage.replaceChildren(...pages);
+      } catch (e) {
+        console.error(e);
+        cache.delete(key);
+        if (!open || shown !== key) return;
+        shown = '';
+        stage.replaceChildren(CL.h('p', { text: t('editor.exportFailed') }));
+      }
+      stage.classList.remove('is-loading');
+    }
+
+    function sync() {
+      viewPick._sync(); fmtPick._sync(); dpiPick._sync();
+      // SVG artwork is flat by nature
+      viewPick.querySelector('[data-id="3d"]').disabled = fmt === 'svg';
+      dpiRow.hidden = fmt !== 'pdf';
+      preview();
+    }
+
+    const saveBtn = CL.h('button.btn.btn-primary', {
+      type: 'button',
+      html: CL.icon('download') + `<span>${t('common.download')}</span>`,
+      onclick: async () => {
+        saveBtn.disabled = true;
+        CL.store.saveSettings({ exportView: view, exportFormat: fmt, exportDPI: dpi });
+        const ok = await CL.exporter.exportDesign(design, fmt, view);
+        saveBtn.disabled = false;
+        if (ok && open) close();
+      },
+    });
+
+    const modal = CL.h('div.modal.ex-modal', { role: 'dialog', 'aria-modal': 'true', 'aria-label': t('editor.export') },
+      stage,
+      CL.h('div.ex-side', null,
+        CL.h('div.ex-head', null,
+          CL.h('h3', { text: t('editor.export') }),
+          CL.h('button.icon-btn.sm', { type: 'button', 'aria-label': t('common.close'), html: CL.icon('close'), onclick: close })),
+        viewPick, fmtPick, dpiRow,
+        CL.h('div.modal-actions', null,
+          CL.h('button.btn.btn-ghost', { type: 'button', text: t('common.cancel'), onclick: close }),
+          saveBtn))
+    );
+    const bd = CL.h('div.modal-backdrop', { onclick: (e) => { if (e.target === bd) close(); } }, modal);
+    // Keys stay in the dialog (the Studio behind it has its own shortcuts)
+    bd.addEventListener('keydown', (e) => {
+      e.stopPropagation();
+      if (e.key === 'Escape') { e.preventDefault(); close(); return; }
+      if (e.key !== 'Tab') return;
+      const list = [...modal.querySelectorAll('button:not(:disabled)')].filter((b) => b.offsetParent);
+      const first = list[0], last = list[list.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    });
+    window.addEventListener('hashchange', close);
+    host.replaceChildren(bd);
+    sync();
+    saveBtn.focus();
   };
 })(window.CL);

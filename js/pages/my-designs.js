@@ -9,6 +9,8 @@
     appMode: false,
 
     render(container) {
+
+      CL.fonts.load();
       const root = CL.h('div.page.container', { style: { paddingBottom: '80px' } });
 
       const head = CL.h('div.page-head', null,
@@ -74,8 +76,8 @@
                   CL.h('button.icon-btn.sm', {
                     title: t('common.download'),
                     html: CL.icon('download'),
-                    onclick: (e) => {
-                      CL.menu(e.currentTarget, CL.exportMenuItems(() => dsn), { align: 'end' });
+                    onclick: () => {
+                      CL.openExport(dsn);
                     },
                   }),
                   CL.h('button.icon-btn.sm', {

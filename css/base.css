@@ -657,6 +657,65 @@ svg.ic {
 html, body, * { scrollbar-width: none !important; -ms-overflow-style: none !important; }
 html::-webkit-scrollbar, body::-webkit-scrollbar, *::-webkit-scrollbar { width: 0 !important; height: 0 !important; display: none !important; }
 
-/* PDF quality picker in the export dialog */
-.pdf-quality { margin-block: 14px 20px; }
-.pdf-quality button { text-align: center; }
+
+/* ---------- Save dialog: preview + choices ---------- */
+.ex-modal { width: min(860px, 100%); max-height: calc(100dvh - 40px); padding: 0; overflow: hidden; display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(300px, 1fr); }
+.ex-preview {
+  position: relative;
+  height: min(560px, calc(100dvh - 40px));
+  padding: 16px;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: safe center;
+  gap: 12px;
+  background: #ecebe8;
+}
+.ex-preview canvas { max-width: 100%; max-height: 100%; transition: opacity 0.2s ease; }
+/* transparent background shown as a checkerboard */
+.ex-preview[data-format='png'] canvas, .ex-preview[data-format='svg'] canvas { background: repeating-conic-gradient(#fff 0 25%, #f0efed 0 50%) 0 0 / 20px 20px; }
+.ex-preview[data-format='jpg'] canvas { background: #faf9f6; }
+.ex-preview[data-format='pdf'] canvas { width: 100%; height: auto; max-height: none; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12); }
+.ex-preview.is-loading canvas { opacity: 0.25; }
+.ex-preview.is-loading::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 3px solid rgba(0, 0, 0, 0.12);
+  border-top-color: #111;
+  animation: exSpin 0.8s linear infinite;
+}
+@keyframes exSpin { to { transform: rotate(360deg); } }
+.ex-side { display: flex; flex-direction: column; gap: 16px; padding: 22px; overflow: auto; }
+.ex-head { display: flex; align-items: center; justify-content: space-between; }
+.ex-head h3 { margin: 0; }
+.ex-side .segmented button { min-height: 38px; }
+.ex-side .segmented button:disabled { opacity: 0.35; cursor: not-allowed; }
+.ex-view button.is-active { background: #111; color: #fff; }
+.ex-formats { display: grid; gap: 8px; }
+.ex-formats button { display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 8px 14px; border: 1.5px solid var(--border); border-radius: 12px; text-align: start; }
+.ex-formats button:hover { background: var(--surface-2); }
+.ex-formats button.is-active { border-color: #111; background: var(--surface-2); }
+.ex-formats i { display: inline-flex; }
+.ex-formats i svg { width: 18px; height: 18px; }
+.ex-formats span { display: flex; flex-direction: column; min-width: 0; }
+.ex-formats strong { font-size: 13.5px; }
+.ex-formats small { font-size: 12px; color: var(--muted); }
+.ex-quality { display: grid; gap: 8px; font-size: 13px; font-weight: 600; }
+.ex-quality[hidden] { display: none; }
+.ex-side .modal-actions { margin-top: auto; }
+.ex-side .modal-actions .btn-primary { flex: 1; justify-content: center; }
+@media (max-width: 760px) {
+  .modal-backdrop:has(.ex-modal) { padding: 8px; }
+  .ex-modal { grid-template-columns: 1fr; grid-template-rows: auto minmax(0, 1fr); max-height: calc(100dvh - 16px); }
+  .ex-preview { height: 34dvh; padding: 10px; }
+  .ex-side { padding: 16px; gap: 12px; }
+  .ex-formats { grid-template-columns: 1fr 1fr; }
+  .ex-formats button { padding: 8px 10px; gap: 8px; }
+  .ex-side .modal-actions { position: sticky; bottom: -16px; margin-bottom: -16px; padding-block: 10px; background: var(--surface); }
+}

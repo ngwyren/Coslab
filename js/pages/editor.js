@@ -187,6 +187,7 @@
         let activeView = '2d';
         let activePart = 'base'; // strictly 'base' | 'cap'
         let selectedLayerId = null;
+        let deselected = false; // blue frame hidden after a click on empty space
         let zoomLevel = 1.0;
         let panX = 0;
         let panY = 0;
@@ -259,8 +260,8 @@
         const exportBtn = CL.h('button.btn.btn-sm.btn-primary', {
           html: CL.icon('download') + `<span>${t('editor.export')}</span>`,
           'aria-label': t('editor.export'),
-          onclick: (e) => {
-            CL.menu(e.currentTarget, CL.exportMenuItems(() => design), { align: 'end' });
+          onclick: () => {
+            CL.openExport(design);
           },
         });
 
@@ -291,6 +292,7 @@
               onclick: () => {
                 activePart = pId;
                 selectedLayerId = null;
+                deselected = false;
                 syncPartChips();
                 render2DCanvas();
                 renderStepPanel();
@@ -443,6 +445,24 @@
           window.addEventListener('pointerup', onPanUp);
         });
 
+        // A plain click beside the text / logo hides its blue frame (dragging to pan does not)
+        let emptyDown = null;
+        canvasContainer.addEventListener('pointerdown', (e) => {
+          const busy = e.button !== 0 || isSpaceDown || e.target.closest('.canvas-part-Quickbar, .canvas-floating-controls, [data-layer], .cl-transform-gizmo');
+          emptyDown = busy ? null : { x: e.clientX, y: e.clientY };
+        }, true);
+        canvasContainer.addEventListener('click', (e) => {
+          if (activeView !== '2d' || !emptyDown || Math.hypot(e.clientX - emptyDown.x, e.clientY - emptyDown.y) > 5) return;
+          if (deselected) return;
+          deselected = true;
+          render2DCanvas();
+        });
+        const reselect = () => {
+          if (!deselected) return;
+          deselected = false;
+          render2DCanvas();
+        };
+
         // Double-click empty canvas stage resets zoom to 100%
         canvasContainer.addEventListener('dblclick', (e) => {
           if (activeView !== '2d') return;
@@ -468,6 +488,7 @@
 
         function goToStep(idx) {
           activeStepIdx = CL.clamp(idx, 0, STEPS.length - 1);
+          deselected = false;
           stepperBar.querySelectorAll('.studio-step-pill[data-step-idx]').forEach((b, i) => {
             b.classList.toggle('is-active', i === activeStepIdx);
             b.classList.toggle('is-done', i < activeStepIdx);
@@ -521,6 +542,7 @@
         }
 
         function getActiveTargetLayer() {
+          if (deselected) return null;
           let targetLayer = null;
           if (selectedLayerId) {
             targetLayer = design.layers.find((l) => l.id === selectedLayerId);
@@ -538,6 +560,12 @@
         /* ---------- Simple controls (no design knowledge needed) ---------- */
         const LEVELS = { s: 0.45, m: 0.7, l: 1 };
         let advancedOpen = false;
+        let shownStep = null;
+        const shownFonts = new Set(); // rows already drawn in their own font
+        let fontQuery = '';
+        let fontScroll = null; // kept while the panel re-renders
+        CL.fonts.load();
+        const SCRIPT = CL.fonts.GROUPS.find((g) => g.id === 'script').fonts;
         const measureCtx = document.createElement('canvas').getContext('2d');
         const isVertical = (lyr) => Math.abs(Math.sin(((lyr.rotation || 0) * Math.PI) / 180)) > 0.7;
 
@@ -546,7 +574,11 @@
           const lines = String(tx.content || '').split('\n');
           measureCtx.font = `${tx.italic ? 'italic ' : ''}${tx.weight || 400} 100px '${tx.font}', sans-serif`;
           return {
-            w: Math.max(0.3, ...lines.map((l) => measureCtx.measureText(l).width / 100)),
+            // scripts swing past their letter widths, so use whichever is larger and keep a little air
+            w: Math.max(0.3, ...lines.map((l) => {
+              const m = measureCtx.measureText(l);
+              return Math.max(m.width, m.actualBoundingBoxLeft + m.actualBoundingBoxRight) / 100;
+            })) * (SCRIPT.includes(tx.font) ? 1.08 : 1),
             h: 1.05 + (lines.length - 1) * (tx.lineHeight || 1.2),
             gaps: Math.max(0, ...lines.map((l) => l.length - 1)),
           };
@@ -836,8 +868,11 @@
                   const scaleY = ctm ? ctm.d : 1;
                   const startX = e.clientX, startY = e.clientY;
                   const origX = targetLayer.x ?? 0.5, origY = targetLayer.y ?? 0.5;
+                  let moved = false;
 
                   const onMove = (ev) => {
+                    if (!moved && Math.hypot(ev.clientX - startX, ev.clientY - startY) < 3) return;
+                    moved = true;
                     const dx = (ev.clientX - startX) / scaleX;
                     const dy = (ev.clientY - startY) / scaleY;
                     let nx = CL.clamp(origX + dx / partRect.w, safe.minX, safe.maxX);
@@ -878,13 +913,17 @@
                     window.removeEventListener('pointerup', onUp);
                     if (guideV) guideV.style.display = 'none';
                     if (guideH) guideH.style.display = 'none';
+                    window.removeEventListener('pointercancel', onUp);
                     hideHud();
+                    if (!moved) return; // a plain click changes nothing
                     pushHistory();
                     render2DCanvas();
+                    renderStepPanel(); // Place / X / Y follow the drag
                   };
 
                   window.addEventListener('pointermove', onMove);
                   window.addEventListener('pointerup', onUp);
+                  window.addEventListener('pointercancel', onUp);
                 });
               };
 
@@ -1048,26 +1087,38 @@
             }
           }
 
-          // Clicking on any other layer switches to it
+          // Pressing a layer selects it and starts moving it in the same gesture
           svgEl.querySelectorAll('[data-layer]').forEach((el) => {
-            el.addEventListener('click', (e) => {
-              if (isSpaceDown) return;
-              const lid = el.getAttribute('data-layer');
-              if (lid && lid !== selectedLayerId) {
-                e.stopPropagation();
-                selectedLayerId = lid;
-                const lyr = design.layers.find((l) => l.id === lid);
-                if (lyr) {
-                  activePart = lyr.part;
-                  syncPartChips();
-                  const targetStep = STEPS.findIndex((s) => s.id === (lyr.type === 'text' ? 'text' : 'graphics'));
-                  if (activeStepIdx !== targetStep) goToStep(targetStep);
-                  else {
-                    render2DCanvas();
-                    renderStepPanel();
-                  }
-                }
+            const lid = el.getAttribute('data-layer');
+            // the whole text block can be grabbed, not only the thin strokes
+            try {
+              const bb = el.getBBox();
+              const hit = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+              ['x', 'y', 'width', 'height'].forEach((k) => hit.setAttribute(k, bb[k]));
+              hit.setAttribute('fill', 'transparent');
+              el.prepend(hit);
+            } catch (err) {}
+            el.addEventListener('pointerdown', (e) => {
+              if (isSpaceDown || e.button !== 0) return;
+              if (!deselected && lid === selectedLayerId && targetLayer) return; // its own move handler runs
+              const lyr = design.layers.find((l) => l.id === lid);
+              if (!lyr) return;
+              e.preventDefault();
+              e.stopPropagation();
+              const other = lid !== selectedLayerId;
+              deselected = false;
+              selectedLayerId = lid;
+              activePart = lyr.part;
+              syncPartChips();
+              const step = STEPS.findIndex((x) => x.id === (lyr.type === 'text' ? 'text' : 'graphics'));
+              if (activeStepIdx !== step) goToStep(step);
+              else {
+                render2DCanvas();
+                if (other) renderStepPanel();
               }
+              // hand the press over to the fresh blue frame so the drag goes on
+              const grip = holder.querySelector('.cl-transform-gizmo .gizmo-hit');
+              if (grip) grip.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, clientX: e.clientX, clientY: e.clientY, button: 0, pointerId: e.pointerId, pointerType: e.pointerType }));
             });
           });
 
@@ -1096,10 +1147,16 @@
             CL.h('span.studio-step-eyebrow', { text: t('flow.stepOf', { n: activeStepIdx + 2, t: TOTAL_STEPS }) })
           );
 
+          // Same step again (a choice was made): swap the content in place — no fade, same scroll position
+          const same = shownStep === step.id;
+          const keepScroll = same ? stepBody.scrollTop : 0;
+          shownStep = step.id;
+          stepBody.classList.toggle('is-still', same);
           stepBody.innerHTML = '';
           if (step.id === 'colors') buildColorStep();
           else if (step.id === 'text') buildTextStep();
           else if (step.id === 'graphics') buildLogoStep();
+          stepBody.scrollTop = keepScroll;
 
           // Clean Footer Navigation
           stepFooter.innerHTML = '';
@@ -1119,9 +1176,9 @@
           } else {
             nextBtn = CL.h('button.btn.btn-primary.studio-next-btn', {
               html: CL.icon('download') + `<span>${isVi ? 'Xuất thiết kế' : 'Export Design'}</span>`,
-              onclick: (e) => {
+              onclick: () => {
                 CL.store.saveDesign(design);
-                CL.menu(e.currentTarget, CL.exportMenuItems(() => design), { align: 'end' });
+                CL.openExport(design);
               },
             });
           }
@@ -1236,7 +1293,7 @@
           );
 
           // 4. Pantone palette (grouped); a chip sets the whole colour, or the active slot of a gradient
-          const pick = (p) => {
+          const setColour = (p) => {
             if (twoColour) {
               const next = [colours[0], colours[1]];
               next[colorSlot] = p;
@@ -1244,8 +1301,13 @@
             } else {
               curPart.fill = toSolid(p);
             }
-            commit();
           };
+          const pick = (p) => { setColour(p); commit(); };
+          const partPicker = CL.PantonePicker({
+            value: current,
+            onInput: (p) => { setColour(p); syncPartChips(); render2DCanvas(); },
+            onCommit: commit,
+          });
           const group = (key, titleVi, titleEn) => CL.h('div.pt-group', null,
             CL.h('span.pt-group-title', { text: isVi ? titleVi : titleEn }),
             CL.h('div.pt-grid', null,
@@ -1262,8 +1324,9 @@
             )
           );
 
-          const note = CL.h('div.color-note', { role: 'note' },
-            CL.h('strong', { text: t('flow.noteTitle') }),
+          // One quiet line; the full text opens on tap (it is also on the last step and on the PDF)
+          const note = CL.h('details.color-note-mini', null,
+            CL.h('summary', { text: t('flow.noteTitle') }),
             CL.h('p', { text: t('flow.disclaimer') })
           );
 
@@ -1286,9 +1349,10 @@
               ),
               slotSwitch,
               twoColour ? null : selected,
-              note,
+              partPicker,
               group('tint', 'Tông son', 'Tint shades'),
-              group('pack', 'Tông bao bì', 'Packaging')
+              group('pack', 'Tông bao bì', 'Packaging'),
+              note
             )
           );
         }
@@ -1517,36 +1581,90 @@
           ) : null;
 
           // --- SECTION 3: TYPOGRAPHY (FIGMA TYPOGRAPHY BLOCK) ---
-          const FONTS = [
-            { f: 'Plus Jakarta Sans', label: 'Jakarta Sans', tag: isVi ? 'Hiện đại' : 'Modern' },
-            { f: 'Cinzel', label: 'Cinzel', tag: isVi ? 'Sang trọng' : 'Luxury' },
-            { f: 'Playfair Display', label: 'Playfair', tag: isVi ? 'Tạp chí' : 'Editorial' },
-            { f: 'Cormorant Garamond', label: 'Cormorant', tag: isVi ? 'Cổ điển' : 'Classic' },
-            { f: 'Montserrat', label: 'Montserrat', tag: isVi ? 'Khỏe khoắn' : 'Geometric' },
-            { f: 'Italiana', label: 'Italiana', tag: isVi ? 'Thời trang' : 'Fashion' },
-          ];
           const currentFont = curLayer ? curLayer.text.font : 'Plus Jakarta Sans';
-          const sample = (curLayer && curLayer.text.content.split('\n')[0].slice(0, 12)) || 'Coslab';
-          const fontGrid = CL.h('div.studio-font-grid', null,
-            FONTS.map((item) =>
-              CL.h('button.studio-font-card' + (currentFont === item.f ? '.is-active' : ''), {
+          // Scrolling font list: name on the left, the customer's own text on the right
+          const sample = (curLayer && curLayer.text.content.split('\n')[0].trim().slice(0, 14)) || 'Coslab';
+          const pickFont = (font) => {
+            const lyr = ensureTextLayer(textInput.value || 'COSLAB');
+            lyr.text.font = font;
+            refit(lyr);
+            pushHistory();
+            render2DCanvas();
+            renderStepPanel();
+            const row = stepBody.querySelector('.font-row.is-active');
+            if (row) row.focus({ preventScroll: true });
+            // Measure again once the real letter shapes are there
+            CL.fonts.ready(lyr.text).then(() => {
+              if (!root.isConnected || lyr.text.font !== font || !design.layers.includes(lyr)) return;
+              refit(lyr);
+              history[historyIdx] = CL.clone(design);
+              CL.store.saveDraft(design);
+              render2DCanvas();
+            });
+          };
+          const fontList = CL.h('div.font-list', { role: 'group', 'aria-label': isVi ? 'Kiểu chữ' : 'Fonts' },
+            CL.fonts.GROUPS.map((g) => CL.h('section', null,
+              g.fonts.map((font) => CL.h('button.font-row' + (currentFont === font ? '.is-active' : ''), {
                 type: 'button',
-                title: item.label,
-                onclick: () => {
-                  const lyr = ensureTextLayer(textInput.value || 'COSLAB');
-                  if (!textInput.value) textInput.value = lyr.text.content;
-                  lyr.text.font = item.f;
-                  refit(lyr);
-                  pushHistory();
-                  render2DCanvas();
-                  renderStepPanel();
-                },
+                'data-font': font,
+                'aria-pressed': String(currentFont === font),
+                onclick: () => pickFont(font),
               },
-                CL.h('span.font-sample', { text: sample, style: { fontFamily: `'${item.f}', sans-serif` } }),
-                CL.h('span.font-tag', { text: item.tag })
-              )
-            )
+                CL.h('span.font-row-name', { text: font }),
+                CL.h('span.font-row-sample', { text: sample, 'aria-hidden': 'true' })))
+            )),
+            CL.h('p.font-none', { text: isVi ? 'Không có font nào khớp.' : 'No matching font.' })
           );
+          // Load a font file only when its row comes into view
+          const showFont = (row) => { shownFonts.add(row.dataset.font); row.querySelector('.font-row-sample').style.fontFamily = `'${row.dataset.font}', sans-serif`; };
+          const rows = [...fontList.querySelectorAll('.font-row')];
+          if ('IntersectionObserver' in window) {
+            const io = new IntersectionObserver((entries) => {
+              entries.forEach((e) => { if (e.isIntersecting) { showFont(e.target); io.unobserve(e.target); } });
+            }, { root: fontList, rootMargin: '80px' });
+            rows.forEach((row) => (shownFonts.has(row.dataset.font) ? showFont(row) : io.observe(row)));
+          } else rows.forEach(showFont);
+
+          const filterFonts = () => {
+            const q = fontQuery.trim().toLowerCase();
+            let any = false;
+            fontList.querySelectorAll('section').forEach((sec) => {
+              let hit = false;
+              sec.querySelectorAll('.font-row').forEach((row) => {
+                const on = row.dataset.font.toLowerCase().includes(q);
+                row.hidden = !on;
+                hit = hit || on;
+              });
+              sec.hidden = !hit;
+              any = any || hit;
+            });
+            fontList.classList.toggle('is-empty', !any);
+          };
+          const fontSearch = CL.h('input.font-search', {
+            type: 'search',
+            value: fontQuery,
+            placeholder: isVi ? 'Tìm font' : 'Search fonts',
+            'aria-label': isVi ? 'Tìm font' : 'Search fonts',
+            oninput: () => { fontQuery = fontSearch.value; fontList.scrollTop = 0; filterFonts(); },
+          });
+          filterFonts();
+          fontList.addEventListener('scroll', () => { fontScroll = fontList.scrollTop; }, { passive: true });
+          // Up / Down walk through the list instead of nudging the text on the tube
+          fontList.addEventListener('keydown', (e) => {
+            if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+            e.preventDefault();
+            e.stopPropagation();
+            const seen = rows.filter((r) => !r.hidden);
+            const next = seen[seen.indexOf(document.activeElement) + (e.key === 'ArrowDown' ? 1 : -1)];
+            if (next) next.focus();
+          });
+          const placeFontList = () => {
+            if (fontScroll === null) { // first time: bring the current font into view
+              const cur = fontList.querySelector('.is-active');
+              fontScroll = cur ? Math.max(0, cur.offsetTop - 2 * cur.offsetHeight) : 0;
+            }
+            fontList.scrollTop = fontScroll;
+          };
 
           const curSize = curLayer ? Math.round(curLayer.text.size || 13) : 13;
           const curSpacing = curLayer ? Math.round(curLayer.text.spacing ?? 3) : 3;
@@ -1649,9 +1767,11 @@
 
           const typoSection = CL.h('div.fg-section', null,
             CL.h('div.fg-section-head', null,
-              CL.h('span.fg-section-title', { text: isVi ? 'Kiểu chữ' : 'Style' })
+              CL.h('span.fg-section-title', { text: isVi ? 'Kiểu chữ' : 'Style' }),
+              CL.h('span.font-current', { text: currentFont })
             ),
-            fontGrid
+            fontSearch,
+            fontList
           );
 
           // --- SECTION 4: TEXT COLOUR — Pantone print colours only (no HEX) ---
@@ -1706,11 +1826,24 @@
               ))
           );
 
+          const textPicker = CL.PantonePicker({
+            value: curTxt,
+            ink: true,
+            onInput: (p) => {
+              const lyr = ensureTextLayer(textInput.value || 'COSLAB');
+              lyr.text.color = p.screen;
+              lyr.text.pantone = p.code;
+              render2DCanvas();
+            },
+            onCommit: () => { pushHistory(); renderStepPanel(); },
+          });
+
           const fillSection = CL.h('div.fg-section', null,
             CL.h('div.fg-section-head', null,
               CL.h('span.fg-section-title', { text: isVi ? 'Màu chữ (Pantone)' : 'Text colour (Pantone)' })
             ),
-            txtColorRow
+            txtColorRow,
+            textPicker
           );
 
           stepBody.append(contentSection);
@@ -1730,6 +1863,7 @@
             styleBar,
             fillBar
           ));
+          placeFontList();
         }
 
         // ======================================================
@@ -1994,6 +2128,9 @@
 
         refreshAll();
         updateUndoRedoUI();
+        // Using the panel selects the text / logo again
+        stepBody.addEventListener('pointerdown', reselect);
+        stepBody.addEventListener('focusin', reselect);
 
         // Figma Workspace Keyboard Shortcuts (Undo/Redo, Zoom +/-/0, Space Pan, Arrow Nudge)
         let nudgePending = false;
