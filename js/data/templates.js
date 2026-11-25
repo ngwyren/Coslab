@@ -39,119 +39,135 @@
     },
   });
 
-  const S = (part, kind, o = {}) => base({
-    type: 'shape',
-    part,
-    name: kind,
-    x: o.x ?? 0.5,
-    y: o.y ?? 0.5,
-    rotation: o.rotation || 0,
-    shape: {
-      kind,
-      w: o.w || 32,
-      h: o.h || 32,
-      fill: o.fill || '#171615',
-      stroke: o.stroke || null,
-      strokeWidth: o.strokeWidth || 0,
-    },
-  });
+  // Part helpers: `two` goes from the bottom colour to the top colour
+  const part = (fill, surface = 'solid', finish = 'gloss') => ({ fill, finish, surface });
+  const one = (c, finish) => part(solid(c), 'solid', finish);
+  const two = (surface, bottom, top) => part(grad(bottom, top), surface);
+  const jelly = (bottom, top = bottom) => two('clear-gradient', bottom, top);
+  const CLEAR = '#fbfaf7';
+  const WHITE = '#ffffff';
+  const V = (text, o) => T('base', text, Object.assign({ rotation: -90 }, o)); // vertical lettering on the body
 
+  // Archive designs — one per container (Pantone screen colours only)
   const TEMPLATES = [
     {
-      templateId: 'velvet-rose',
-      category: 'k-velvet',
-      parts: {
-        cap: { fill: solid('#b85c66'), finish: 'matte' },
-        base: { fill: solid('#b85c66'), finish: 'matte' },
-      },
+      templateId: 'cherry-jelly', model: 'cl-sc01', category: 'k-dewy',
+      parts: { cap: jelly('#a6192e', '#eab8c3'), base: jelly('#a6192e') },
+      layers: [T('base', 'cherry\njelly', { y: 0.6, font: 'Instrument Serif', italic: true, weight: 400, size: 44, color: WHITE })],
+    },
+    {
+      templateId: 'soft-bun', model: 'cl-sc02', category: 'k-velvet',
+      parts: { cap: one('#efdbb2', 'matte'), base: one('#efdbb2', 'matte') },
+      layers: [V('soft bun', { font: 'Playfair Display', weight: 600, size: 38, color: '#93272c' })],
+    },
+    {
+      templateId: 'red-cap', model: 'cl-sc03', category: 'k-dewy',
+      parts: { cap: one('#c8102e'), base: jelly('#e5554f', CLEAR) },
+      layers: [V('ROUGE 03', { y: 0.5, font: 'Bebas Neue', weight: 400, size: 50, spacing: 3, color: '#c8102e' })],
+    },
+    {
+      templateId: 'peach-fizz', model: 'cl-sc04', category: 'k-gradient',
+      parts: { cap: jelly('#e5554f', CLEAR), base: two('solid-gradient', '#e5554f', '#eab8c3') },
+      layers: [V('fizz', { y: 0.55, font: 'Playfair Display', weight: 600, size: 72, color: WHITE })],
+    },
+    {
+      templateId: 'petal-water', model: 'cl-sc05', category: 'k-dewy',
+      parts: { cap: jelly(CLEAR), base: jelly('#eab8c3') },
+      layers: [V('petal water', { font: 'Italiana', weight: 400, size: 36, spacing: 2, color: '#844551' })],
+    },
+    {
+      templateId: 'mauve-line', model: 'cl-sc06', category: 'k-velvet',
+      parts: { cap: one('#844551', 'matte'), base: one('#a56e75', 'matte') },
       layers: [
-        T('base', 'COSLAB TINT', { y: 0.5, rotation: -90, font: 'Plus Jakarta Sans', weight: 700, size: 12, spacing: 4, color: '#fcfbf9' }),
-        T('cap', '01 ROSÉ', { y: 0.72, font: 'Cinzel', weight: 600, size: 11, spacing: 2, color: '#fcfbf9' }),
+        V('MAUVE', { y: 0.62, font: 'Montserrat', weight: 700, size: 40, spacing: 5, color: WHITE }),
+        T('cap', '06', { font: 'Montserrat', weight: 500, size: 18, color: '#eab8c3' }),
       ],
     },
     {
-      templateId: 'seoul-noir',
-      category: 'k-luxury',
-      parts: {
-        cap: { fill: solid('#171615'), finish: 'gloss' },
-        base: { fill: solid('#171615'), finish: 'gloss' },
-      },
+      templateId: 'noir-cherry', model: 'cl-ss01', category: 'k-luxury',
+      parts: { cap: one('#101820'), base: jelly('#97233f') },
+      layers: [T('base', 'noir', { y: 0.66, font: 'Playfair Display', weight: 600, size: 46, color: WHITE })],
+    },
+    {
+      templateId: 'porcelain-rose', model: 'cl-ss02', category: 'k-luxury',
+      parts: { cap: one('#f4f2ec'), base: one('#f4f2ec') },
       layers: [
-        T('base', 'COSLAB NOIR', { y: 0.5, rotation: -90, font: 'Cinzel', weight: 700, size: 13, spacing: 5, color: '#ffffff' }),
-        T('cap', 'SEOUL', { y: 0.72, font: 'Plus Jakarta Sans', weight: 600, size: 10, spacing: 4, color: '#c5a367' }),
+        T('base', 'maison\nrosé', { y: 0.5, font: 'Cormorant Garamond', weight: 600, size: 34, color: '#97233f' }),
       ],
     },
     {
-      templateId: 'dewy-glass',
-      category: 'k-dewy',
-      parts: {
-        cap: { fill: solid('#fbfaf7'), finish: 'gloss', surface: 'solid' },
-        base: { fill: solid('#c94d5b'), finish: 'gloss', surface: 'clear-gradient' },
-        tint: { color: '#c94d5b' },
-      },
-      layers: [
-        T('base', 'DEW DROP', { y: 0.5, rotation: -90, font: 'Plus Jakarta Sans', weight: 600, size: 12, spacing: 4, color: '#171615' }),
-        T('cap', 'CL', { y: 0.5, font: 'Italiana', weight: 400, size: 20, color: '#171615' }),
-      ],
+      templateId: 'berry-ombre', model: 'cl-ss03', category: 'k-gradient',
+      parts: { cap: two('solid-gradient', '#97233f', '#eab8c3'), base: jelly('#97233f', '#eab8c3') },
+      layers: [V('BERRY', { y: 0.68, font: 'Montserrat', weight: 700, size: 44, spacing: 4, color: WHITE })],
     },
     {
-      templateId: 'chrome-minimal',
-      category: 'k-tamburins',
-      parts: {
-        cap: { fill: solid('#d9d9d9'), finish: 'metallic' },
-        base: { fill: solid('#f6f4ee'), finish: 'matte' },
-      },
-      layers: [
-        T('base', 'ATELIER 712', { y: 0.5, rotation: -90, font: 'Plus Jakarta Sans', weight: 700, size: 12, spacing: 4, color: '#171615' }),
-      ],
+      templateId: 'sugar-glaze', model: 'cl-ss04', category: 'k-dewy',
+      parts: { cap: jelly(CLEAR), base: part(solid('#eab8c3'), 'shimmer') },
+      layers: [V('glaze', { font: 'Dancing Script', weight: 700, size: 66, color: '#844551' })],
     },
     {
-      templateId: 'fig-mauve',
-      category: 'k-velvet',
-      parts: {
-        cap: { fill: solid('#8a4c58'), finish: 'satin' },
-        base: { fill: solid('#8a4c58'), finish: 'satin' },
-      },
-      layers: [
-        T('base', 'Muted Fig', { y: 0.5, rotation: -90, font: 'Cormorant Garamond', weight: 600, italic: true, size: 20, color: '#fcfbf9' }),
-        T('cap', 'N° 04', { y: 0.72, font: 'Plus Jakarta Sans', weight: 600, size: 11, spacing: 2, color: '#fcfbf9' }),
-      ],
+      templateId: 'cocoa-milk', model: 'cl-ss05', category: 'k-minimal',
+      parts: { cap: one('#c09c83', 'matte'), base: one('#e0c6ad', 'matte') },
+      layers: [V('cocoa milk', { font: 'Plus Jakarta Sans', weight: 700, size: 40, color: '#93272c' })],
     },
     {
-      templateId: 'porcelain-ivory',
-      category: 'k-luxury',
-      parts: {
-        cap: { fill: solid('#f5f0e6'), finish: 'satin' },
-        base: { fill: solid('#f5f0e6'), finish: 'satin' },
-      },
-      layers: [
-        T('base', 'COSLAB', { y: 0.5, rotation: -90, font: 'Cinzel', weight: 600, size: 14, spacing: 5, color: '#2b2926' }),
-        S('cap', 'diamond', { y: 0.5, w: 18, h: 26, fill: '#c5a367' }),
-      ],
+      templateId: 'tangerine-pop', model: 'cl-ss06', category: 'k-gradient',
+      parts: { cap: jelly('#e1523d', CLEAR), base: jelly('#e1523d') },
+      layers: [V('POP!', { y: 0.72, font: 'Bebas Neue', weight: 400, size: 66, spacing: 2, color: WHITE })],
     },
     {
-      templateId: 'chili-gradient',
-      category: 'k-gradient',
-      parts: {
-        cap: { fill: grad('#df705e', '#a63428'), finish: 'gloss', surface: 'solid-gradient' },
-        base: { fill: grad('#a63428', '#df705e'), finish: 'gloss', surface: 'solid-gradient' },
-      },
-      layers: [
-        T('base', 'GLOW TINT', { y: 0.5, rotation: -90, font: 'Bebas Neue', weight: 400, size: 22, spacing: 5, color: '#ffffff' }),
-      ],
+      templateId: 'cloud-nude', model: 'cl-sc02', category: 'k-minimal',
+      parts: { cap: one('#f4f2ec', 'matte'), base: two('solid-gradient', '#e0c6ad', '#f4f2ec') },
+      layers: [T('base', 'cloud\nnude', { y: 0.55, font: 'Instrument Serif', italic: true, weight: 400, size: 46, color: '#93272c' })],
     },
     {
-      templateId: 'blank-liptint',
-      category: 'k-minimal',
-      parts: {
-        cap: { fill: solid('#f4f2ec'), finish: 'matte' },
-        base: { fill: solid('#f4f2ec'), finish: 'matte' },
-      },
+      templateId: 'plum-seoul', model: 'cl-sc03', category: 'k-dewy',
+      parts: { cap: one('#6a4c6b'), base: jelly('#6a4c6b') },
+      layers: [T('base', '자두\n틴트', { y: 0.68, font: 'Noto Sans KR', weight: 700, size: 34, color: WHITE })],
+    },
+    {
+      templateId: 'brick-type', model: 'cl-sc04', category: 'k-velvet',
+      parts: { cap: one('#93272c'), base: one('#93272c') },
+      layers: [V('BRICK', { font: 'Bebas Neue', weight: 400, size: 88, spacing: 4, color: '#eab8c3' })],
+    },
+    {
+      templateId: 'gold-dust', model: 'cl-sc05', category: 'k-luxury',
+      parts: { cap: jelly(CLEAR), base: part(solid('#c09c83'), 'shimmer') },
+      layers: [V('gold dust', { font: 'Cormorant Garamond', weight: 600, size: 44, color: WHITE })],
+    },
+    {
+      templateId: 'number-one', model: 'cl-sc06', category: 'k-minimal',
+      parts: { cap: one('#c8102e'), base: one('#f4f2ec') },
+      layers: [V('NO.1 RED', { font: 'Montserrat', weight: 700, size: 40, spacing: 2, color: '#c8102e' })],
+    },
+    {
+      templateId: 'clear-mono', model: 'cl-ss03', category: 'k-minimal',
+      parts: { cap: one('#101820', 'matte'), base: jelly(CLEAR) },
+      layers: [V('clear tint', { font: 'Plus Jakarta Sans', weight: 700, size: 34, color: '#101820' })],
+    },
+    {
+      templateId: 'sunset-soda', model: 'cl-ss04', category: 'k-gradient',
+      parts: { cap: jelly('#e1523d', '#efdbb2'), base: two('solid-gradient', '#e1523d', '#efdbb2') },
+      layers: [V('soda', { y: 0.58, font: 'Playfair Display', weight: 600, size: 66, color: WHITE })],
+    },
+    {
+      templateId: 'lilac-milk', model: 'cl-ss05', category: 'k-gradient',
+      parts: { cap: one('#d9e1e2'), base: two('solid-gradient', '#6a4c6b', '#eab8c3') },
+      layers: [V('lilac milk', { font: 'Dancing Script', weight: 700, size: 52, color: WHITE })],
+    },
+    {
+      templateId: 'ivory-atelier', model: 'cl-ss06', category: 'k-luxury',
+      parts: { cap: one('#c09c83'), base: one('#d6d2c4', 'satin') },
+      layers: [V('ATELIER', { font: 'Cinzel', weight: 600, size: 34, spacing: 5, color: '#93272c' })],
+    },
+    {
+      templateId: 'blank-liptint', model: 'cl-sc01', category: 'k-minimal',
+      parts: { cap: one('#f4f2ec', 'matte'), base: one('#f4f2ec', 'matte') },
       layers: [],
     },
   ];
 
-  function createDesign(templateId = 'velvet-rose', modelId = 'velvet-round') {
+  function createDesign(templateId = 'blank-liptint', modelId = 'cl-sc01') {
     const tpl = TEMPLATES.find((x) => x.templateId === templateId) || TEMPLATES[0];
     const d = CL.clone(tpl);
     (d.layers || []).forEach((l) => (l.id = CL.uid('ly')));
@@ -169,21 +185,23 @@
     };
   }
 
-  const SAMPLES = [
-    ['velvet-rose', 'velvet-round'],
-    ['seoul-noir', 'square-monolith'],
-    ['dewy-glass', 'dewy-crystal'],
-    ['chrome-minimal', 'slim-atelier'],
-    ['fig-mauve', 'chubby-pot'],
-    ['porcelain-ivory', 'velvet-round'],
-    ['chili-gradient', 'dewy-crystal'],
-    ['chrome-minimal', 'square-monolith'],
-  ];
+  // Every container starts as plain clear plastic
+  const clearPart = () => ({ fill: solid('#fbfaf7'), finish: 'gloss', surface: 'clear-gradient' });
+
+  /** A blank design on a container, all clear. */
+  function createForModel(modelId) {
+    const m = CL.models.getModel(modelId);
+    const d = createDesign('blank-liptint', m.id);
+    d.parts = { cap: clearPart(), base: clearPart() };
+    return CL.pantone.normalizeDesign(d);
+  }
+
+  const SAMPLES = TEMPLATES.filter((x) => x.layers.length).map((x) => [x.templateId, x.model]);
 
   CL.templates = {
     TEMPLATES,
     SAMPLES,
     createDesign,
-    CATEGORIES: ['all', 'k-velvet', 'k-dewy', 'k-luxury', 'k-tamburins', 'k-gradient', 'k-minimal'],
+    createForModel,
   };
 })(window.CL);

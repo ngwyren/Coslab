@@ -1,9 +1,8 @@
 /* ==========================================================
-   COSLAB — Design route: silhouette picker
-   Big name list on one side (active dark, the rest faded) and a
-   large live tube card on the other. Hover / focus / click / ←→
-   switch the silhouette with a rise-and-untilt entrance;
-   "Start designing" opens the Studio with that shape.
+   COSLAB — Design route: container picker
+   Two short lists (round / square) on one side, the selected container
+   in 3D with its catalogue spec on the other. Hover previews, a click locks the choice, ←→
+   switch; "Start designing" opens the Studio with that container.
    ========================================================== */
 (function (CL) {
   CL.pages = CL.pages || {};
@@ -13,35 +12,49 @@
     appMode: false,
 
     render(container) {
-      const FORMS = CL.templates.SAMPLES.slice(0, 5);
-      // Start on the shape of the current draft when there is one
+      const FORMS = CL.models.MODELS;
+      // Start on the container of the current draft when there is one
       const draft = CL.store.getDraft();
-      let active = Math.max(0, FORMS.findIndex(([, modelId]) => draft && draft.model === modelId));
+      let active = draft ? FORMS.indexOf(CL.models.getModel(draft.model)) : 0;
 
-      // Each option carries a small illustration of its shape next to the name
-      const names = FORMS.map(([tplId, modelId], i) =>
-        CL.h('button.lp-ss-name.has-thumb', {
-          type: 'button',
-          onmouseenter: () => setActive(i),
-          onfocus: () => setActive(i),
-          onclick: () => setActive(i),
+      // Renders of the clear 3D containers (same view as the live 3D card)
+      const thumbSrc = (m) => `assets/models/thumbs/${m.id}.webp?v=6`;
+      let locked = false;
+
+      const looks = FORMS.map((m) => CL.templates.createForModel(m.id));
+      const item = (m, i) => CL.h('button.lp-ct', {
+        type: 'button',
+        role: 'option',
+        // Hover previews freely until one is clicked; a click locks it, clicking it again unlocks
+        onmouseenter: () => { if (!locked) setActive(i); },
+        onclick: (e) => {
+          if (e.detail > 1) return; // second click of a double-click
+          const same = locked && i === active;
+          setActive(i);
+          setLocked(!same);
         },
-          CL.h('span.lp-ss-thumb', { html: CL.render.renderTight(CL.templates.createDesign(tplId, modelId), { width: 40, shadow: false }) }),
-          CL.h('span', { text: t(CL.models.getModel(modelId).nameKey) })
+        ondblclick: () => { setActive(i); start(); },
+      },
+        CL.h('span.lp-ct-thumb', null, CL.h('img', { src: thumbSrc(m), alt: '' })),
+        CL.h('span.lp-ct-text', null,
+          CL.h('strong', { text: m.name }),
+          CL.h('small', { text: m.capacity })
         ));
+      const items = FORMS.map(item);
+      const group = (shape) => CL.h('div.lp-ct-group', null,
+        CL.h('h3', { text: t('models.' + shape) }),
+        FORMS.map((m, i) => (m.shape === shape ? items[i] : null)).filter(Boolean));
 
-
-      const visuals = FORMS.map(([tplId, modelId]) => {
-        const d = CL.templates.createDesign(tplId, modelId);
-        return CL.h('div.lp-ss-visual', { style: { '--tint': CL.render.tintOf(d, 0.86) } },
-          CL.h('div.lp-ss-tube', { html: CL.render.renderTight(d, { width: 220 }) }));
-      });
-      const metas = FORMS.map(([, modelId]) =>
-        CL.h('span.lp-ss-meta', { text: t(CL.models.getModel(modelId).descKey) }));
+      const visual = CL.h('div.lp-ct-visual');
+      const still = CL.h('img.lp-ct-still', { alt: '' });
+      const glHost = CL.h('div.lp-ct-gl');
+      visual.append(still, glHost);
+      const name = CL.h('h3.lp-ct-name');
+      const specs = CL.h('dl.lp-ct-specs');
       const count = CL.h('span.lp-ss-count');
 
       const stage = CL.h('div.lp-ss-stage.is-static', { tabindex: '-1' },
-        CL.h('div.lp-ss-side', null,
+        CL.h('div.lp-ss-side.lp-ct-side', null,
           CL.h('div.lp-ss-head', null,
             CL.h('div', null,
               CL.h('span.flow-step-of', { text: t('flow.stepOf', { n: 1, t: 4 }) }),
@@ -49,12 +62,12 @@
             ),
             count
           ),
-          CL.h('div.lp-ss-names', { role: 'listbox', 'aria-label': t('landing.forms') }, names)
+          CL.h('div.lp-ct-list', { role: 'listbox', 'aria-label': t('landing.forms') }, group('round'), group('square'))
         ),
-        CL.h('div.lp-ss-card', null,
-          visuals,
-          CL.h('div.lp-ss-card-foot', null,
-            CL.h('div.lp-ss-metas', null, metas),
+        CL.h('div.lp-ss-card.lp-ct-card', null,
+          visual,
+          CL.h('div.lp-ct-foot', null,
+            CL.h('div.lp-ct-info', null, name, specs),
             CL.h('button.lp-ss-cta', {
               type: 'button',
               onclick: () => start(),
@@ -64,20 +77,63 @@
         )
       );
 
+      let preview = null;
+      let shown = -1;
+      let timer = 0;
+      let alive = true;
+
+      /** Swap the still for the live 3D container once it is ready (the still stays if 3D is unavailable). */
+      function load3D(i) {
+        clearTimeout(timer);
+        timer = setTimeout(async () => {
+          if (!alive) return;
+          if (!window.THREE) { if (document.readyState !== 'complete') load3D(i); return; }
+          if (!preview) {
+            try { preview = new CL.Preview3D(glHost, { autoRotate: true }); } catch (e) { preview = { ok: false }; }
+          }
+          if (!preview.ok) return;
+          const done = await preview.setDesign(looks[i]);
+          if (alive && done && i === active) visual.classList.add('is-3d');
+        }, shown < 0 ? 0 : 120);
+      }
+
+      function setLocked(v) {
+        locked = v;
+        stage.classList.toggle('is-locked', v);
+      }
+
       function setActive(i) {
         const n = FORMS.length;
         active = ((i % n) + n) % n;
-        [names, visuals, metas].forEach((list) => list.forEach((el, k) => el.classList.toggle('is-active', k === active)));
-        names.forEach((el, k) => el.setAttribute('aria-selected', String(k === active)));
+        if (active === shown) return;
+        const m = FORMS[active];
+        items.forEach((el, k) => {
+          el.classList.toggle('is-active', k === active);
+          el.setAttribute('aria-selected', String(k === active));
+        });
+        // phones: the list is a horizontal strip — keep the selected container in view
+        const strip = items[active].closest('.lp-ct-list');
+        if (strip && strip.scrollWidth > strip.clientWidth + 4) {
+          const a = items[active].getBoundingClientRect(), b = strip.getBoundingClientRect();
+          strip.scrollBy({ left: a.left + a.width / 2 - (b.left + b.width / 2), behavior: shown < 0 ? 'auto' : 'smooth' });
+        }
         count.textContent = `${String(active + 1).padStart(2, '0')} / ${String(n).padStart(2, '0')}`;
+        name.textContent = m.name;
+        specs.replaceChildren(...CL.models.specRows(m).map(([k, v]) => CL.h('div', null, CL.h('dt', { text: k }), CL.h('dd', { text: v }))));
+        visual.classList.remove('is-3d');
+        still.src = thumbSrc(m);
+        load3D(active);
+        shown = active;
       }
 
       function start() {
-        const [tplId, modelId] = FORMS[active];
-        // Keep the user's work if a draft exists — only swap its shape; otherwise start from the sample
+        const m = FORMS[active];
+        // Keep the user's work if a draft exists — only swap its container; otherwise start from the clear container
         const d = CL.store.getDraft();
-        if (d && d.parts && d.parts.cap) { d.model = modelId; CL.store.saveDraft(d); }
-        else CL.store.saveDraft(CL.templates.createDesign(tplId, modelId));
+        const edited = d && d.parts && d.parts.cap && ((d.layers || []).length
+          || JSON.stringify(d.parts) !== JSON.stringify(CL.templates.createForModel(d.model).parts));
+        if (edited) { d.model = m.id; CL.store.saveDraft(d); }
+        else CL.store.saveDraft(CL.templates.createForModel(m.id));
         CL.go('#/editor');
       }
 
@@ -90,10 +146,15 @@
       };
       window.addEventListener('keydown', onKey);
 
-      setActive(active);
       container.appendChild(CL.h('div.page.lp.design-pick', null, CL.h('div.container', null, stage)));
+      setActive(Math.max(0, active));
 
-      return () => window.removeEventListener('keydown', onKey);
+      return () => {
+        alive = false;
+        clearTimeout(timer);
+        window.removeEventListener('keydown', onKey);
+        if (preview && preview.dispose) preview.dispose();
+      };
     },
   };
 })(window.CL);

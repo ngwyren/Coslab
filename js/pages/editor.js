@@ -138,8 +138,9 @@
       render(container, ctx = {}) {
         let design = CL.store.getDraft();
         if (!design || !design.model || !design.parts?.cap) {
-          design = CL.templates.createDesign('velvet-rose', 'velvet-round');
+          design = CL.templates.createForModel('cl-sc01');
         }
+        design.model = CL.models.getModel(design.model).id; // drafts from before the real containers
         // Older drafts may hold free HEX colours — snap them to Pantone codes
         CL.pantone.normalizeDesign(design);
         // "Clear · tint inside" is no longer offered — move such parts to the closest option
@@ -934,7 +935,7 @@
             model: isVi ? 'Chọn Model' : 'Choose Model',
             colors: isVi ? 'Chọn Màu' : 'Choose Color',
             text: isVi ? 'Chọn Chữ' : 'Typography',
-            graphics: isVi ? 'Chọn Logo' : 'Logo & Marks',
+            graphics: isVi ? 'Chọn Logo' : 'Choose Logo',
           };
 
           stepHeader.innerHTML = '';
@@ -1733,59 +1734,9 @@
             );
           }
 
-          const shapesList = [
-            { k: 'circle', icon: '◯' },
-            { k: 'star', icon: '✦' },
-            { k: 'heart', icon: '♡' },
-            { k: 'diamond', icon: '◇' },
-          ];
-          const shapesGrid = CL.h('div.studio-accent-grid', null,
-            shapesList.map(({ k, icon }) =>
-              CL.h('button.studio-accent-btn', {
-                type: 'button',
-                onclick: () => {
-                  const newShape = {
-                    id: CL.uid('ly_shp'),
-                    type: 'shape',
-                    name: k,
-                    part: targetPart,
-                    x: 0.5,
-                    y: 0.5,
-                    rotation: 0,
-                    opacity: 1,
-                    visible: true,
-                    locked: false,
-                    shape: {
-                      kind: k,
-                      w: 24,
-                      h: 24,
-                      fill: k === 'circle' ? 'none' : '#ffffff',
-                      stroke: k === 'circle' ? '#ffffff' : null,
-                      strokeWidth: k === 'circle' ? 1.5 : 0,
-                    },
-                  };
-                  design.layers.push(newShape);
-                  selectedLayerId = newShape.id;
-                  pushHistory();
-                  render2DCanvas();
-                  renderStepPanel();
-                },
-              },
-                CL.h('span.accent-symbol', { text: icon })
-              )
-            )
-          );
-
-          const marksSection = CL.h('div.fg-section', null,
-            CL.h('div.fg-section-head', null,
-              CL.h('span.fg-section-title', { text: isVi ? 'Biểu tượng nhanh' : 'Minimal Marks' })
-            ),
-            shapesGrid
-          );
-
           stepBody.append(uploadSection);
           if (graphicSection) stepBody.append(graphicSection);
-          stepBody.append(marksSection, buildSummarySection());
+          stepBody.append(buildSummarySection());
         }
 
         // Final-step recap: every colour by Pantone code + the on-screen colour disclaimer
@@ -1810,7 +1761,7 @@
             CL.h('div.flow-summary', null,
               CL.h('div.flow-summary-row', null,
                 CL.h('span', { text: t('landing.step1') }),
-                CL.h('strong', { text: t(m.nameKey) })
+                CL.h('strong', { text: m.name })
               ),
               partRow('cap'),
               partRow('base'),

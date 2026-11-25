@@ -1,11 +1,11 @@
 /* ==========================================================
-   COSLAB — 3D Liptint Preview (Three.js WebGL Engine)
-   Renders EXACTLY 1 ASSEMBLED LIPTINT TUBE (Chỉ 1 cây son liptint duy nhất).
-   Up Liptint (Cap) seamlessly mounted atop Button Liptint (Base).
-   K-Beauty Atelier PBR Lighting & Materials.
+   COSLAB — 3D preview (Three.js)
+   Shows the real container meshes exported from the Blender file
+   (assets/models/*.bin, loaded on demand). Colour, gradient and clear
+   plastic are driven by the design; artwork is projected on the front.
    ========================================================== */
 (function (CL) {
-  const U = 90; // SVG units per 3D unit
+  const TUBE_H = 5.4; // every container is scaled to this height in the scene
 
   const FINISH = {
     matte: {
@@ -28,9 +28,6 @@
       metalness: 0.02,
       clearcoat: 1.0,
       clearcoatRoughness: 0.03,
-      transmission: 0.25,
-      thickness: 0.9,
-      ior: 1.52,
     },
     metallic: {
       roughness: 0.15,
@@ -40,7 +37,86 @@
     },
   };
 
-  const firstColor = (fill) => (fill && fill.type === 'linear' ? fill.stops[0].c : (fill && fill.color) || '#dedad2');
+  const MODEL_VERSION = 3;
+  const modelCache = new Map();
+
+  /** Load one container: { body, cap, wand, foot, wiper, art_body, art_cap } as raw attributes (mm, y-up). */
+  function loadModel(id) {
+    if (!modelCache.has(id)) {
+      const p = fetch(`assets/models/${id}.bin?v=${MODEL_VERSION}`)
+        .then((r) => { if (!r.ok) throw new Error(`model ${id}: HTTP ${r.status}`); return r.arrayBuffer(); })
+        .then((buf) => {
+          const len = new DataView(buf).getUint32(0, true);
+          const head = JSON.parse(new TextDecoder().decode(new Uint8Array(buf, 4, len)));
+          const off = 4 + len;
+          const out = {};
+          Object.entries(head).forEach(([k, e]) => {
+            out[k] = {
+              q: new Int16Array(buf, off + e.p, e.v * 3), // 1/200 mm
+              n: new Int8Array(buf, off + e.n, e.v * 4),
+              x: e.u32 ? new Uint32Array(buf, off + e.x, e.i) : new Uint16Array(buf, off + e.x, e.i),
+              outer: e.o, // first index of the outside skin (inner walls come first)
+            };
+          });
+          return out;
+        });
+      p.catch(() => modelCache.delete(id)); // allow a retry after a network error
+      modelCache.set(id, p);
+    }
+    return modelCache.get(id);
+  }
+
+  function makeGeometry(raw) {
+    const g = new THREE.BufferGeometry();
+    const n = raw.q.length / 3;
+    const pos = new Float32Array(n * 3);
+    for (let i = 0; i < pos.length; i++) pos[i] = raw.q[i] / 200;
+    const nor = new Float32Array(n * 3);
+    for (let i = 0; i < n; i++) for (let k = 0; k < 3; k++) nor[i * 3 + k] = raw.n[i * 4 + k] / 127;
+    g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    g.setAttribute('normal', new THREE.BufferAttribute(nor, 3));
+    g.setIndex(new THREE.BufferAttribute(raw.x, 1));
+    return g;
+  }
+
+  const linear = (hex) => new THREE.Color(hex).convertSRGBToLinear();
+
+  function colorsOf(fill) {
+    if (fill && fill.type === 'linear' && fill.stops && fill.stops.length) {
+      return [fill.stops[0].c, fill.stops[fill.stops.length - 1].c];
+    }
+    const c = (fill && fill.color) || '#dedad2';
+    return [c, c];
+  }
+
+  /** Vertex colours for an opaque part: plain or 2-colour gradient. */
+  function paintGeometry(g, part, y0, y1) {
+    const [a, b] = colorsOf(part && part.fill).map(linear);
+    const surface = (part && part.surface) || 'solid';
+    const pos = g.attributes.position;
+    const out = new Float32Array(pos.count * 4);
+    const mix = new THREE.Color();
+    for (let i = 0; i < pos.count; i++) {
+      const u = CL.clamp((pos.getY(i) - y0) / (y1 - y0), 0, 1);
+      mix.copy(a).lerp(b, surface === 'solid-gradient' || surface === 'shimmer' ? u : 0);
+      out.set([mix.r, mix.g, mix.b, 1], i * 4);
+    }
+    g.setAttribute('color', new THREE.BufferAttribute(out, 4));
+  }
+
+  /** Per-pixel version of the clear gradient (the decimated walls have too few vertices for a smooth one). */
+  function patchClearGradient(sh, part, y0, y1) {
+    const [a, b] = colorsOf(part.fill).map(linear);
+    Object.assign(sh.uniforms, { clA: { value: a }, clB: { value: b }, clY: { value: new THREE.Vector2(y0, y1) } });
+    sh.vertexShader = 'varying float vClY;\n' + sh.vertexShader.replace('#include <begin_vertex>', 'vClY = position.y;\n#include <begin_vertex>');
+    sh.fragmentShader = 'varying float vClY; uniform vec3 clA; uniform vec3 clB; uniform vec2 clY;\n' + sh.fragmentShader.replace('#include <color_fragment>', `
+      float clU = clamp((vClY - clY.x) / (clY.y - clY.x), 0.0, 1.0);
+      diffuseColor.rgb = mix(clA, clB, min(clU / 0.55, 1.0));
+      diffuseColor.a = clU < 0.55 ? mix(0.92, 0.42, clU / 0.55) : mix(0.42, 0.06, (clU - 0.55) / 0.45);`);
+  }
+
+  const isClear = (part) => !!part && (part.surface === 'clear' || part.surface === 'clear-gradient');
+  const isClearMaterial = (part) => isClear(part) && colorsOf(part.fill).every((c) => CL.pantone.nearest(c).code === 'Clear');
 
   function makeContactShadowTexture() {
     const c = document.createElement('canvas');
@@ -91,27 +167,6 @@
     return tex;
   }
 
-  function warpTexture(flat, fillOnly, cyl) {
-    const W = 2048;
-    const H = CL.clamp(Math.round(W * cyl.h / (Math.PI * cyl.w)), 256, 2048);
-    const c = document.createElement('canvas');
-    c.width = W;
-    c.height = H;
-    const ctx = c.getContext('2d');
-    const fw = flat.width, fh = flat.height;
-
-    for (let i = 0; i < W; i++) {
-      const u = (i + 0.5) / W;
-      const phi = (u - 0.5) * Math.PI * 2;
-      const front = Math.abs(phi) <= Math.PI / 2;
-      const x2d = 0.5 + Math.sin(phi) / 2;
-      const src = front ? flat : fillOnly;
-      const sx = CL.clamp(Math.floor(x2d * fw), 0, fw - 1);
-      ctx.drawImage(src, sx, 0, 1, fh, i, 0, 1, H);
-    }
-    return c;
-  }
-
   class Preview3D {
     constructor(container, opts = {}) {
       this.container = container;
@@ -127,9 +182,8 @@
       const hq = this.opts.highQuality;
       r.setPixelRatio(Math.min(window.devicePixelRatio || 1, hq ? 2 : 1));
       r.outputEncoding = THREE.sRGBEncoding;
-      r.toneMapping = THREE.ACESFilmicToneMapping;
-      // "Studio Soft Bloom": brighter, more diffused exposure
-      r.toneMappingExposure = this.opts.bloom ? 1.08 : 0.96;
+      // no tone curve: surfaces must stay close to their Pantone screen colour
+      r.toneMapping = THREE.NoToneMapping;
       r.shadowMap.enabled = true;
       r.shadowMap.type = THREE.PCFSoftShadowMap;
 
@@ -142,6 +196,8 @@
 
       this.camera = new THREE.PerspectiveCamera(26, 1, 0.1, 100);
       this.target = new THREE.Vector3(0, 2.8, 0);
+      this.pan = new THREE.Vector3(); // middle-button move, eased towards targetPan
+      this.targetPan = new THREE.Vector3();
       this.dist = 14;
       this.targetDist = 14;
       this.rotY = -0.35;
@@ -150,10 +206,10 @@
       this.targetRotX = 0.08;
 
       // K-Beauty Studio Lights & Softbox Highlights
-      const hemi = new THREE.HemisphereLight(0xffffff, 0xf6f6f6, this.opts.bloom ? 0.85 : 0.6);
+      const hemi = new THREE.HemisphereLight(0xffffff, 0xf6f6f6, 0.12);
       this.scene.add(hemi);
 
-      const key = new THREE.DirectionalLight(0xffffff, 1.35);
+      const key = new THREE.DirectionalLight(0xffffff, 0.22);
       key.position.set(-4, 9, 6);
       key.castShadow = true;
       key.shadow.mapSize.set(1024, 1024);
@@ -165,17 +221,17 @@
       this.scene.add(key);
 
       // Vertical softbox strip light (creates the iconic specular streak on tube curves)
-      const softbox = new THREE.DirectionalLight(0xffffff, 0.95);
+      const softbox = new THREE.DirectionalLight(0xffffff, 0.1);
       softbox.position.set(6, 4, 3);
       this.scene.add(softbox);
 
       // Back rim light to separate the silhouette from the white background
-      const rim = new THREE.DirectionalLight(0xffffff, 0.75);
+      const rim = new THREE.DirectionalLight(0xffffff, 0.2);
       rim.position.set(0, 6, -7);
       this.scene.add(rim);
 
       // Gentle floor bounce light
-      const bounce = new THREE.DirectionalLight(0xffffff, 0.35);
+      const bounce = new THREE.DirectionalLight(0xffffff, 0.06);
       bounce.position.set(0, -3, 2);
       this.scene.add(bounce);
 
@@ -185,18 +241,12 @@
         map: shadowTex,
         transparent: true,
         depthWrite: false,
+        opacity: 0.45,
       });
-      const shadowPlane = new THREE.Mesh(new THREE.PlaneGeometry(8, 8), shadowMat);
+      const shadowPlane = new THREE.Mesh(new THREE.PlaneGeometry(4.4, 4.4), shadowMat);
       shadowPlane.rotation.x = -Math.PI / 2;
       shadowPlane.position.y = 0.005;
       this.scene.add(shadowPlane);
-
-      // Studio Pedestal / Ground
-      const ground = new THREE.Mesh(new THREE.PlaneGeometry(30, 30), new THREE.ShadowMaterial({ opacity: 0.06 }));
-      ground.rotation.x = -Math.PI / 2;
-      ground.position.y = 0;
-      ground.receiveShadow = true;
-      this.scene.add(ground);
 
       this.group = new THREE.Group();
       this.scene.add(this.group);
@@ -217,7 +267,9 @@
 
       let drag = null;
       el.addEventListener('pointerdown', (e) => {
-        drag = { x: e.clientX, y: e.clientY, ry: this.targetRotY, rx: this.targetRotX };
+        if (e.button !== 0 && e.button !== 1) return;
+        e.preventDefault();
+        drag = { x: e.clientX, y: e.clientY, ry: this.targetRotY, rx: this.targetRotX, pan: e.button === 1 ? this.targetPan.clone() : null };
         el.setPointerCapture(e.pointerId);
         this.idleAt = performance.now();
         el.classList.add('grabbing');
@@ -225,8 +277,20 @@
 
       el.addEventListener('pointermove', (e) => {
         if (!drag) return;
+        if (drag.pan) {
+          // middle button: move the view freely, 1:1 with the pointer
+          const unit = (2 * this.dist * Math.tan((this.camera.fov * Math.PI) / 360)) / (el.clientHeight || 1);
+          const right = new THREE.Vector3(1, 0, 0).applyQuaternion(this.camera.quaternion);
+          const up = new THREE.Vector3(0, 1, 0).applyQuaternion(this.camera.quaternion);
+          this.targetPan.copy(drag.pan)
+            .addScaledVector(right, -(e.clientX - drag.x) * unit)
+            .addScaledVector(up, (e.clientY - drag.y) * unit)
+            .clampLength(0, 6);
+          this.idleAt = performance.now();
+          return;
+        }
         this.targetRotY = drag.ry + (e.clientX - drag.x) * 0.008;
-        this.targetRotX = CL.clamp(drag.rx + (e.clientY - drag.y) * 0.004, -0.35, 0.5);
+        this.targetRotX = CL.clamp(drag.rx + (e.clientY - drag.y) * 0.004, 0.03, 0.5);
         this.idleAt = performance.now();
       });
 
@@ -234,6 +298,11 @@
         drag = null;
         el.classList.remove('grabbing');
       };
+
+      // no browser autoscroll / paste on the middle button; double-click puts the view back
+      el.addEventListener('mousedown', (e) => { if (e.button === 1) e.preventDefault(); });
+      el.addEventListener('auxclick', (e) => e.preventDefault());
+      el.addEventListener('dblclick', () => this.targetPan.set(0, 0, 0));
 
       el.addEventListener('pointerup', end);
       el.addEventListener('pointercancel', end);
@@ -268,19 +337,108 @@
       const cz = Math.cos(this.rotY) * Math.cos(this.rotX) * this.dist;
       const cy = Math.sin(this.rotX) * this.dist;
 
-      this.camera.position.set(this.target.x + cx, this.target.y + cy, this.target.z + cz);
-      this.camera.lookAt(this.target);
+      this.pan.lerp(this.targetPan, 0.25);
+      const at = this.target.clone().add(this.pan);
+      this.camera.position.set(at.x + cx, at.y + cy, at.z + cz);
+      this.camera.lookAt(at);
       this.renderer.render(this.scene, this.camera);
     }
 
-    _mat(part, map) {
-      const f = FINISH[part?.finish] || FINISH.gloss;
-      const m = new THREE.MeshPhysicalMaterial(Object.assign({
-        color: map ? 0xffffff : new THREE.Color(firstColor(part?.fill)).convertSRGBToLinear(),
-        envMapIntensity: 1.15,
-      }, f));
+    _opaque(part) {
+      const m = new THREE.MeshPhysicalMaterial(Object.assign({ color: 0xffffff, vertexColors: true, envMapIntensity: 0.4 }, FINISH[part && part.finish] || FINISH.gloss));
+      this.disposables.push(m);
+      return m;
+    }
 
-      if (map) m.map = map;
+    /** Clear plastic: alpha from the vertex colours, solid reflections and darker rims. */
+    _glass(part, inner, y0, y1) {
+      const pure = isClearMaterial(part);
+      const m = new THREE.MeshPhysicalMaterial({
+        color: 0xffffff, transparent: true, depthWrite: false,
+        roughness: 0.06, metalness: 0, clearcoat: inner ? 0 : 1, clearcoatRoughness: 0.04, envMapIntensity: pure ? 1.0 : 0.55,
+      });
+      const base = pure ? (inner ? '0.10' : '0.13') : (inner ? 'diffuseColor.a * 0.35' : 'diffuseColor.a');
+      m.onBeforeCompile = (sh) => {
+        patchClearGradient(sh, part, y0, y1);
+        sh.fragmentShader = sh.fragmentShader.replace('#include <output_fragment>', `
+          float clFacing = abs(dot(normalize(normal), normalize(vViewPosition)));
+          float clRim = pow(1.0 - clFacing, 1.6);
+          float clGloss = max(max(totalSpecular.r, totalSpecular.g), totalSpecular.b);
+          ${pure ? 'outgoingLight *= vec3(0.74, 0.80, 0.87);' : ''}
+          outgoingLight = mix(outgoingLight, diffuseColor.rgb * vec3(0.20, 0.235, 0.28), clRim * 0.85);
+          diffuseColor.a = clamp(max(${base}, clRim * ${inner ? '0.50' : '0.72'}) + clGloss * ${inner ? '0.10' : '0.16'}, 0.0, 1.0);
+          // flat inner faces (cavity floor, cap ceiling) are seen almost edge-on: without this they
+          // turn into solid patches mirroring the studio lights
+          float clUp = abs(dot(normalize(normal), normalize((viewMatrix * vec4(0.0, 1.0, 0.0, 0.0)).xyz)));
+          ${inner ? 'diffuseColor.a *= 1.0 - smoothstep(0.35, 0.8, clUp);' : ''}
+          #include <output_fragment>`);
+      };
+      m.customProgramCacheKey = () => `clGlass-${pure}-${inner}`;
+      this.disposables.push(m);
+      return m;
+    }
+
+    /** Far side of the outside skin, seen through the clear plastic: back edges, bottom and top faces. */
+    _glassBack(part, y0, y1) {
+      const m = new THREE.MeshPhysicalMaterial({ color: 0xffffff, transparent: true, depthWrite: false, side: THREE.BackSide, roughness: 1 });
+      m.onBeforeCompile = (sh) => {
+        patchClearGradient(sh, part, y0, y1);
+        sh.fragmentShader = sh.fragmentShader.replace('#include <output_fragment>', `
+          float clRim = pow(1.0 - abs(dot(normalize(normal), normalize(vViewPosition))), 2.0);
+          float clUp = abs(dot(normalize(normal), normalize((viewMatrix * vec4(0.0, 1.0, 0.0, 0.0)).xyz)));
+          float clFlat = smoothstep(0.35, 0.8, clUp);
+          outgoingLight = diffuseColor.rgb * vec3(0.42, 0.48, 0.56);
+          diffuseColor.a = mix(clRim * 0.06, 0.13, clFlat);
+          #include <output_fragment>`);
+      };
+      m.customProgramCacheKey = () => 'clGlassBack';
+      this.disposables.push(m);
+      return m;
+    }
+
+    /** Clean cavity floor that follows the cavity profile (the mesh's own floor is faded out in _glass). */
+    _addFloor(tube, m, part) {
+      const [z0, r0] = m.cavity[0];
+      const rMax = Math.max(...m.cavity.map((p) => p[1]));
+      const wall = m.cavity.find((p) => p[1] > rMax * 0.985); // where the floor has become the wall
+      const bowl = m.cavity.filter((p) => p[0] <= wall[0]);
+      const rounded = r0 < rMax * 0.9;
+      const tint = isClearMaterial(part) ? linear('#8fa0b3') : linear(colorsOf(part.fill)[0]).lerp(linear('#8fa0b3'), 0.35);
+      const mat = (opts) => {
+        const x = new THREE.MeshBasicMaterial(Object.assign({ color: tint, transparent: true, depthWrite: false }, opts));
+        this.disposables.push(x);
+        return x;
+      };
+      const add = (geo, material) => {
+        const mesh = new THREE.Mesh(geo, material);
+        mesh.renderOrder = 0.5;
+        tube.add(mesh);
+        return mesh;
+      };
+
+      const pts = rounded ? [[z0 - 0.35, 0], [z0 - 0.2, r0 * 0.6], ...bowl] : [[z0, 0], [z0, r0]];
+      const curve = rounded
+        ? new THREE.SplineCurve(pts.map(([z, r]) => new THREE.Vector2(r, z))).getPoints(40)
+        : pts.map(([z, r]) => new THREE.Vector2(r, z));
+      const geo = new THREE.LatheGeometry(curve, 96);
+      const pos = geo.attributes.position;
+      const rgba = new Float32Array(pos.count * 4).fill(1);
+      for (let i = 0; i < pos.count; i++) {
+        const u = Math.hypot(pos.getX(i), pos.getZ(i)) / rMax;
+        const up = rounded ? CL.clamp((pos.getY(i) - z0) / (wall[0] - z0), 0, 1) : 0;
+        rgba[i * 4 + 3] = (0.4 + 0.6 * u * u) * (1 - up); // light centre, fading into the wall
+      }
+      geo.setAttribute('color', new THREE.BufferAttribute(rgba, 4));
+      add(geo, mat({ vertexColors: true, opacity: rounded ? 0.3 : 0.2, side: THREE.DoubleSide }));
+      if (!rounded) {
+        const ring = add(new THREE.TorusGeometry(r0, 0.1, 8, 128), mat({ opacity: 0.42 }));
+        ring.rotation.x = -Math.PI / 2;
+        ring.position.y = z0;
+      }
+    }
+
+    _plain(color, roughness) {
+      const m = new THREE.MeshPhysicalMaterial({ color: linear(color), roughness, envMapIntensity: 0.42 });
       this.disposables.push(m);
       return m;
     }
@@ -298,118 +456,167 @@
     }
 
     async setDesign(design) {
-      if (!this.ok) return;
+      if (!this.ok) return false;
       const token = (this._token = Symbol());
       const L = CL.models.layout(design.model);
-      const isSquare = L.model.silhouette === 'square';
       const fonts = await CL.exporter.fontCSS(design).catch(() => '');
+
+      let raw;
+      try {
+        raw = await loadModel(L.model.id);
+      } catch (e) {
+        console.error('[3D]', e);
+        return false;
+      }
 
       const tex = {};
       for (const p of ['cap', 'base']) {
-        const flat = await CL.exporter.renderFlatCanvas(design, p, { scale: 4, fonts });
-        let canvas = flat.canvas;
-        if (!isSquare) {
-          const empty = Object.assign({}, design, { layers: [] });
-          const fill = await CL.exporter.renderFlatCanvas(empty, p, { scale: 4, fonts: '' });
-          canvas = warpTexture(flat.canvas, fill.canvas, L[p]);
-        }
-        const tx = new THREE.CanvasTexture(canvas);
+        if (!(design.layers || []).some((l) => l.part === p && l.visible !== false)) continue;
+        const flat = await CL.exporter.renderFlatCanvas(design, p, { scale: 5, fonts, layersOnly: true });
+        // same safe-zone clipping as the 2D view
+        const c = flat.canvas, r = L[p], k = c.width / r.w, ctx = c.getContext('2d');
+        ctx.globalCompositeOperation = 'destination-in';
+        ctx.fillRect((r.safe.x - r.x) * k, (r.safe.y - r.y) * k, r.safe.w * k, r.safe.h * k);
+        const tx = new THREE.CanvasTexture(c);
         tx.encoding = THREE.sRGBEncoding;
         tx.anisotropy = this.renderer.capabilities.getMaxAnisotropy();
         tex[p] = tx;
       }
 
-      if (token !== this._token) {
-        Object.values(tex).forEach((t) => t.dispose());
-        return;
+      if (token !== this._token || this._disposed) {
+        Object.values(tex).forEach((x) => x.dispose());
+        return false;
       }
 
       this._clear();
-      this._buildSingleLiptint(design, L, isSquare, tex);
+      if (this._modelId !== L.model.id) { this._modelId = L.model.id; this.targetPan.set(0, 0, 0); }
+      this._buildTube(design, L, raw, tex);
+      return true;
     }
 
-    /**
-     * Builds EXACTLY 1 ASSEMBLED LIPTINT TUBE
-     * Base (Button Liptint) at bottom + Ring + Cap (Up Liptint) on top.
-     */
-    _buildSingleLiptint(design, L, isSquare, tex) {
+    _buildTube(design, L, raw, tex) {
+      const m = L.model;
       const P = design.parts;
-      const g = this.group;
+      const k = TUBE_H / m.h;
 
-      const baseW = L.base.w / U;
-      const baseH = L.base.h / U;
-      const seamH = 0.015;
-      const capH = L.cap.h / U;
-      const totalH = baseH + seamH + capH;
+      const tube = new THREE.Group();
+      tube.scale.setScalar(k);
+      tube.position.y = 0.004;
+      this.group.add(tube);
 
-      const add = (geo, mats, y) => {
-        const m = new THREE.Mesh(geo, mats);
-        m.position.set(0, y, 0);
-        m.castShadow = true;
-        m.receiveShadow = true;
-        g.add(m);
-        return m;
+      const add = (geo, mat, order, shadow) => {
+        const mesh = new THREE.Mesh(geo, mat);
+        mesh.renderOrder = order;
+        mesh.castShadow = !!shadow;
+        tube.add(mesh);
+        return mesh;
       };
 
-      // 0. Studio Alabaster / Porcelain Pedestal Podium
-      const podRadius = Math.max(1.8, baseW * 1.35);
-      const podH = 0.28;
-      const podGeo = isSquare
-        ? new THREE.BoxGeometry(podRadius * 2, podH, podRadius * 2)
-        : new THREE.CylinderGeometry(podRadius, podRadius * 1.03, podH, 64);
-      const podMat = new THREE.MeshPhysicalMaterial({
-        color: 0xfcfcfc,
-        roughness: 0.28,
-        metalness: 0.02,
-        clearcoat: 0.4,
-        clearcoatRoughness: 0.3,
+      add(makeGeometry(raw.wand), this._plain('#e6ebf1', 0.18), 0);
+      add(makeGeometry(raw.foot), this._plain('#f4ecdc', 0.9), 0);
+      add(makeGeometry(raw.wiper), this._plain('#eceff2', 0.5), 0);
+
+      const parts = [
+        ['body', P.base, 'base', 0, m.seam, m.artBody, 1],
+        ['cap', P.cap, 'cap', m.seam, m.h, m.artCap, 3],
+      ];
+      parts.forEach(([key, part, texKey, y0, y1, art, order]) => {
+        const src = raw[key];
+        const geo = makeGeometry(src);
+        if (isClear(part)) {
+          geo.addGroup(0, src.outer, 0);
+          geo.addGroup(src.outer, src.x.length - src.outer, 1);
+          const back = geo.clone();
+          back.clearGroups();
+          back.addGroup(src.outer, src.x.length - src.outer, 0);
+          add(back, [this._glassBack(part, y0, y1)], 0.4);
+          if (key === 'body') this._addFloor(tube, m, part);
+          add(geo, [this._glass(part, true, y0, y1), this._glass(part, false, y0, y1)], order);
+        } else {
+          paintGeometry(geo, part, y0, y1);
+          add(geo, this._opaque(part), 0, true);
+          if (part && part.surface === 'shimmer') this._addGlitter(tube, src, part, m, art);
+        }
+        if (tex[texKey]) this._addArtwork(tube, raw['art_' + key], tex[texKey], m, art);
       });
-      this.disposables.push(podMat);
-      add(podGeo, podMat, podH / 2);
 
-      const tubeY0 = podH;
-
-      // 1. Bottom Tube: Button Liptint (Base)
-      const baseSide = this._mat(P.base, tex.base);
-      const basePlain = this._mat(P.base, null);
-
-      if (isSquare) {
-        const baseGeo = new THREE.BoxGeometry(baseW, baseH, baseW);
-        add(baseGeo, [basePlain, basePlain, basePlain, basePlain, baseSide, basePlain], tubeY0 + baseH / 2);
-      } else {
-        const baseGeo = new THREE.CylinderGeometry(baseW / 2, baseW / 2, baseH, 128, 1, false, Math.PI, Math.PI * 2);
-        add(baseGeo, [baseSide, basePlain, basePlain], tubeY0 + baseH / 2);
-      }
-
-      // 2. Top Tube: Up Liptint (Cap) sitting flush atop Base
-      const capSide = this._mat(P.cap, tex.cap);
-      const capPlain = this._mat(P.cap, null);
-      const capY = tubeY0 + baseH + seamH + capH / 2;
-
-      if (isSquare) {
-        const capGeo = new THREE.BoxGeometry(baseW, capH, baseW);
-        add(capGeo, [capPlain, capPlain, capPlain, capPlain, capSide, capPlain], capY);
-      } else {
-        const capGeo = new THREE.CylinderGeometry(baseW / 2, baseW / 2, capH, 128, 1, false, Math.PI, Math.PI * 2);
-        add(capGeo, [capSide, capPlain, capPlain], capY);
-      }
-
-      // Center camera target at the midpoint of the single tube
-      this.target.set(0, (tubeY0 + totalH) / 2, 0);
+      this.target.set(0, TUBE_H * 0.5, 0);
       if (!this._framed) {
-        this.dist = Math.max(12, totalH * 2.3);
-        this.targetDist = this.dist;
+        this.dist = this.targetDist = 14;
         this._framed = true;
       }
     }
 
+    /** Front-projected artwork on the printable wall (exactly what the 2D view shows). */
+    _addArtwork(tube, src, map, m, art) {
+      const geo = makeGeometry(src);
+      const pos = geo.attributes.position, nor = geo.attributes.normal;
+      const uv = new Float32Array(pos.count * 2);
+      for (let i = 0; i < pos.count; i++) {
+        uv[i * 2] = pos.getX(i) / m.w + 0.5;
+        uv[i * 2 + 1] = (pos.getY(i) - art[0]) / (art[1] - art[0]);
+        pos.setXYZ(i, pos.getX(i) + nor.getX(i) * 0.03, pos.getY(i), pos.getZ(i) + nor.getZ(i) * 0.03);
+      }
+      geo.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+      const front = [];
+      for (let i = 0; i < src.x.length; i += 3) {
+        const t = [src.x[i], src.x[i + 1], src.x[i + 2]];
+        if (t.every((v) => nor.getZ(v) > 0.02)) front.push(...t);
+      }
+      geo.setIndex(front);
+      const mat = new THREE.MeshPhysicalMaterial({ map, transparent: true, depthWrite: false, roughness: 0.45, envMapIntensity: 0.6 });
+      this.disposables.push(mat);
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.renderOrder = 10;
+      tube.add(mesh);
+    }
+
+    /** Shimmer surface: light flakes scattered on the outside skin. */
+    _addGlitter(tube, src, part, m, art) {
+      const N = 2600;
+      const pos = new Float32Array(N * 3);
+      const tri = (src.x.length - src.outer) / 3;
+      const area = [];
+      let total = 0;
+      const P = (i, c) => src.q[src.x[src.outer + i] * 3 + c] / 200;
+      const A = new THREE.Vector3(), B = new THREE.Vector3(), C = new THREE.Vector3();
+      const load = (i) => { A.set(P(i * 3, 0), P(i * 3, 1), P(i * 3, 2)); B.set(P(i * 3 + 1, 0), P(i * 3 + 1, 1), P(i * 3 + 1, 2)); C.set(P(i * 3 + 2, 0), P(i * 3 + 2, 1), P(i * 3 + 2, 2)); };
+      for (let i = 0; i < tri; i++) {
+        load(i);
+        total += B.clone().sub(A).cross(C.clone().sub(A)).length();
+        area.push(total);
+      }
+      let seed = 7;
+      const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+      for (let j = 0; j < N; j++) {
+        const r = rnd() * total;
+        let lo = 0, hi = tri - 1;
+        while (lo < hi) { const mid = (lo + hi) >> 1; if (area[mid] < r) lo = mid + 1; else hi = mid; }
+        load(lo);
+        let u = rnd(), v = rnd();
+        if (u + v > 1) { u = 1 - u; v = 1 - v; }
+        const x = A.x + (B.x - A.x) * u + (C.x - A.x) * v;
+        const z = A.z + (B.z - A.z) * u + (C.z - A.z) * v;
+        pos.set([x * 1.006, A.y + (B.y - A.y) * u + (C.y - A.y) * v, z * 1.006], j * 3);
+      }
+      const g = new THREE.BufferGeometry();
+      g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+      const mat = new THREE.PointsMaterial({ color: linear(CL.color.mix(colorsOf(part.fill)[0], '#ffffff', 0.75)), size: 0.045, transparent: true, opacity: 0.85, depthWrite: false });
+      this.disposables.push(mat);
+      const pts = new THREE.Points(g, mat);
+      pts.renderOrder = 2;
+      tube.add(pts);
+    }
+
     dispose() {
       if (!this.ok) return;
+      this._disposed = true;
       cancelAnimationFrame(this._raf);
       this.ro && this.ro.disconnect();
       this._clear();
       this.scene.environment && this.scene.environment.dispose();
       this.renderer.dispose();
+      this.renderer.forceContextLoss();
       this.renderer.domElement.remove();
     }
   }

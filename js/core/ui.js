@@ -10,7 +10,7 @@
     setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 260); }, 2600);
   };
 
-  CL.confirm = function ({ title, message, okText, cancelText, danger }) {
+  CL.confirm = function ({ title, message, body, okText, cancelText, danger }) {
     return new Promise((resolve) => {
       const host = document.getElementById('modalHost');
       const close = (v) => { host.innerHTML = ''; document.removeEventListener('keydown', onKey); resolve(v); };
@@ -28,6 +28,7 @@
         CL.h('div.modal', { role: 'dialog', 'aria-modal': 'true' },
           CL.h('h3', { text: title }),
           message ? CL.h('p', { text: message }) : null,
+          body || null,
           CL.h('div.modal-actions', null,
             CL.h('button.btn.btn-ghost', { onclick: () => close(false), text: cancelText || t('common.cancel') }),
             CL.h('button.btn.btn-primary', { onclick: () => close(true), text: okText || t('common.confirm') }))));
@@ -108,13 +109,36 @@
   window.addEventListener('resize', () => CL.closeMenu());
   window.addEventListener('hashchange', () => CL.closeMenu());
 
+  /** Ask for the PDF quality right before exporting; remembers the last choice. */
+  CL.exportPdf = async function (design) {
+    let dpi = [150, 300, 600].includes(CL.store.settings.exportDPI) ? CL.store.settings.exportDPI : 300;
+    const body = CL.h('div.segmented.block.pdf-quality', { role: 'radiogroup', 'aria-label': t('prefs.pdfQuality') },
+      [[150, 'prefs.q150'], [300, 'prefs.q300'], [600, 'prefs.q600']].map(([v, key]) =>
+        CL.h('button' + (v === dpi ? '.is-active' : ''), {
+          type: 'button',
+          role: 'radio',
+          'aria-checked': String(v === dpi),
+          text: t(key),
+          onclick: (e) => {
+            dpi = v;
+            body.querySelectorAll('button').forEach((b) => {
+              b.classList.toggle('is-active', b === e.currentTarget);
+              b.setAttribute('aria-checked', String(b === e.currentTarget));
+            });
+          },
+        })));
+    if (!(await CL.confirm({ title: t('prefs.pdfQuality'), body, okText: t('editor.export') }))) return;
+    CL.store.saveSettings({ exportDPI: dpi });
+    CL.exporter.exportDesign(design, 'pdf');
+  };
+
   /** Export menu items shared by editor, gallery and my-designs. */
   CL.exportMenuItems = function (getDesign) {
     const run = (fmt) => CL.exporter.exportDesign(getDesign(), fmt);
     return [
       { label: t('editor.exportPng'), icon: 'image', onClick: () => run('png') },
       { label: t('editor.exportJpg'), icon: 'image', onClick: () => run('jpg') },
-      { label: t('editor.exportPdf'), icon: 'file', onClick: () => run('pdf') },
+      { label: t('editor.exportPdf'), icon: 'file', onClick: () => CL.exportPdf(getDesign()) },
       { sep: true },
       { label: t('editor.exportSvg'), icon: 'shapes', onClick: () => run('svg') },
     ];

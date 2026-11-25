@@ -88,7 +88,7 @@
     landing: {
       tagline: '디자인은 당신이, 생산은 우리가.', start: '디자인 시작', explore: '둘러보기',
       collection: '컬렉션', c1: '시그니처 트리오.', c2: '벨벳 매트와 미러 메탈.', c3: '투명한 글라스, 촉촉한 컬러.',
-      forms: '5가지 실루엣', howTitle: '4단계',
+      forms: '12가지 실루엣', howTitle: '4단계',
       step1: '형태', step2: '컬러', step3: '타이포', step4: '로고',
       s1: '프로토타입', s2: '정밀도', s3: '인증 연구소', s4: '마감',
       ctaTitle: '나만의 틴트를.',
@@ -99,11 +99,8 @@
       proceed: '스튜디오 열기', filterAll: '전체 모델',
     },
     models: {
-      classic: '클래식 불렛 (Classic Bullet)', classicDesc: '자석 캡 원통형 클래식 용기와 사선 커팅 립스틱.',
-      slim: '울트라 슬림라인 (Slimline)', slimDesc: '세련되고 슬림한 하이엔드 매트 립스틱 전용 디자인.',
-      square: '스퀘어 모놀리스 (Square Monolith)', squareDesc: '모던한 건축적 사각 기둥 형태와 다이아몬드 치즐 팁.',
-      bold: '볼드 처비 (Bold Chubby)', boldDesc: '귀엽고 볼륨감 넘치는 묵직한 용기와 둥근 돔형 팁.',
-      liquid: '리퀴드 틴트 (Liquid Wand)', liquidDesc: '투명 아크릴 용기와 부드러운 팁 어플리케이터.',
+      capacity: '용량', size: '사이즈', structure: '구조', material: '재질', moq: 'MOQ', ea: '개',
+      single: '단일', round: '원형', square: '사각',
     },
     templates: {
       blank: '클린 캔버스', blankDesc: '자유롭게 디자인을 시작할 수 있는 순백의 캔버스.',

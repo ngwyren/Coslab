@@ -88,7 +88,7 @@
     landing: {
       tagline: 'Design your lip tint. We make it.', start: 'Start designing', explore: 'Explore',
       collection: 'Collection', c1: 'The signature trio.', c2: 'Soft matte meets mirror metal.', c3: 'Clear glass, dewy color.',
-      forms: '5 silhouettes', howTitle: '4 steps',
+      forms: '12 silhouettes', howTitle: '4 steps',
       step1: 'Shape', step2: 'Color', step3: 'Type', step4: 'Logo',
       s1: 'Prototype', s2: 'Precision', s3: 'Certified lab', s4: 'Finishes',
       ctaTitle: 'Your tint, your way.',
@@ -99,20 +99,23 @@
       proceed: 'Open Studio', filterAll: 'All',
     },
     models: {
-      velvetRound: 'Velvet Round', velvetRoundDesc: 'Frosted cylinder',
-      dewyCrystal: 'Dewy Crystal', dewyCrystalDesc: 'Clear acrylic',
-      slimAtelier: 'Slim Atelier', slimAtelierDesc: 'Slender metal',
-      squareMonolith: 'Square Monolith', squareMonolithDesc: 'Square prism',
-      chubbyPot: 'Chubby Pot', chubbyPotDesc: 'Compact pot',
+      capacity: 'Capacity', size: 'Size', structure: 'Structure', material: 'Material', moq: 'MOQ', ea: 'ea',
+      single: 'Single', round: 'Round', square: 'Square',
     },
     templates: {
       'velvet-rose': 'Velvet Rosé', 'velvet-roseDesc': 'Dusty rose MLBB',
       'seoul-noir': 'Seoul Noir', 'seoul-noirDesc': 'Black & 24K gold',
       'dewy-glass': 'Dew Drop', 'dewy-glassDesc': 'Crystal water tint',
-      'chrome-minimal': 'Tamburins 712', 'chrome-minimalDesc': 'Mirror chrome',
+      'chrome-minimal': 'Mirror Chrome', 'chrome-minimalDesc': 'Mirror chrome',
       'fig-mauve': 'Muted Fig', 'fig-mauveDesc': 'Soft plum mauve',
       'porcelain-ivory': 'Porcelain Gold', 'porcelain-ivoryDesc': 'Warm porcelain',
       'chili-gradient': 'Glow Sunset', 'chili-gradientDesc': 'Sunset gradient',
+      'cherry-jelly': 'Cherry Jelly', 'soft-bun': 'Soft Bun', 'red-cap': 'Rouge 03', 'peach-fizz': 'Peach Fizz',
+      'petal-water': 'Petal Water', 'mauve-line': 'Mauve Line', 'noir-cherry': 'Noir Cherry', 'porcelain-rose': 'Maison Rosé',
+      'berry-ombre': 'Berry Ombré', 'sugar-glaze': 'Sugar Glaze', 'cocoa-milk': 'Cocoa Milk', 'tangerine-pop': 'Tangerine Pop',
+      'cloud-nude': 'Cloud Nude', 'plum-seoul': 'Plum Seoul', 'brick-type': 'Brick Type',
+      'gold-dust': 'Gold Dust', 'number-one': 'No.1 Red', 
+      'clear-mono': 'Clear Mono', 'sunset-soda': 'Sunset Soda', 'lilac-milk': 'Lilac Milk', 'ivory-atelier': 'Ivory Atelier',
       'blank-liptint': 'Clean Canvas', 'blank-liptintDesc': 'Pure white base',
     },
     editor: {
@@ -164,7 +167,7 @@
     },
     myDesigns: {
       title: 'Vault.', subtitle: 'SAVED SPECIFICATIONS',
-      newDesign: 'New', emptyTitle: 'Empty Vault', emptyDesc: 'No saved specifications.',
+      newDesign: 'New', emptyTitle: 'You don’t have any designs here yet.', emptyDesc: 'No saved specifications.',
       lastModified: '{date}', editDesign: 'Open', deleteConfirm: 'Delete this design?',
     },
     settings: {

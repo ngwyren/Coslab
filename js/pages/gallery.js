@@ -9,7 +9,6 @@
     ['k-velvet', 'gallery.filterKVelvet'],
     ['k-dewy', 'gallery.filterKDewy'],
     ['k-luxury', 'gallery.filterKLuxury'],
-    ['k-tamburins', 'gallery.filterKTamburins'],
     ['k-gradient', 'gallery.filterKGradient'],
     ['k-minimal', 'gallery.filterKMinimal'],
   ];
@@ -59,12 +58,12 @@
 
           const design = CL.templates.createDesign(tplId, modelId);
           const m = CL.models.getModel(modelId);
-          design.name = `${t('templates.' + tplId)} (${t(m.nameKey)})`;
+          design.name = `${t('templates.' + tplId)} (${m.name})`;
 
           /* Showcase card: closed = image + overlaid name bar with "+";
              open = card grows and spec rows rise in one after another. */
           const P = design.parts;
-          const finish = (part) => t('editor.finishesShort.' + ((P[part] && P[part].finish) || 'matte'));
+          const surface = (part) => t(CL.pantone.surfaceKey(P[part]));
           const swatch = (part) => {
             const f = P[part] && P[part].fill;
             const bg = !f ? '#ccc' : f.type === 'linear'
@@ -87,23 +86,22 @@
 
           const card = CL.h('article.sc-card', null,
             CL.h('div.sc-media', {
-              style: { '--tint': CL.render.tintOf(design) },
+              style: { '--tint': CL.render.tintOf(design, 0.8) },
               onclick: () => setOpen(!card.classList.contains('is-open')),
             },
-              CL.h('div.gallery-badge', { text: t(FILTERS.find(([k]) => k === tpl.category)?.[1] || 'gallery.filterAll') }),
-              CL.h('div.sc-tube', { html: CL.render.renderTight(design, { width: 120 }) }),
+              CL.h('div.sc-tube', null, CL.h('img', { src: `assets/archive/${tplId}.webp?v=4`, alt: t('templates.' + tplId), loading: 'lazy', decoding: 'async' })),
               CL.h('div.sc-bar', null,
                 CL.h('div.sc-title', null,
                   CL.h('h4', { text: t('templates.' + tplId) }),
-                  CL.h('p', { text: t(m.nameKey) })
+                  CL.h('p', { text: m.name })
                 ),
                 toggle
               )
             ),
             CL.h('div.sc-expand', null,
               CL.h('div.sc-inner', null,
-                row(t('pdf.model'), t(m.nameKey)),
-                row(t('editor.colors.finish'), `${finish('cap')} · ${finish('base')}`),
+                row(t('pdf.model'), `${m.name} · ${CL.models.sizeLabel(m)}`),
+                row(t('surface.title'), [...new Set([surface('cap'), surface('base')])].join(' · ')),
                 row(t('editor.tabs.colors'), swatch('cap'), swatch('base')),
                 row(t('editor.tabs.text'), fonts.join(', ') || '—'),
                 CL.h('div.sc-actions', null,

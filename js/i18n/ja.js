@@ -88,7 +88,7 @@
     landing: {
       tagline: 'デザインはあなた、製造は私たち。', start: 'デザインを始める', explore: '見る',
       collection: 'コレクション', c1: 'シグネチャーの3本。', c2: 'ベルベットとミラーメタル。', c3: '透明ガラスに、みずみずしい色。',
-      forms: '5つのシルエット', howTitle: '4ステップ',
+      forms: '12つのシルエット', howTitle: '4ステップ',
       step1: '形', step2: 'カラー', step3: '文字', step4: 'ロゴ',
       s1: '試作', s2: '精度', s3: '認証ラボ', s4: '仕上げ',
       ctaTitle: 'あなただけのティントを。',
@@ -99,11 +99,8 @@
       proceed: 'エディターを開く (Artwork Editor)', filterAll: 'すべての形状',
     },
     models: {
-      classic: 'クラシック丸管 (Classic Bullet)', classicDesc: 'マグネット式円柱ケースと伝統的な斜めカット口紅。',
-      slim: 'ウルトラスリム (Slimline)', slimDesc: '洗練された細身のシルエット。高精度なリップメイクに最適。',
-      square: 'スクエアモノリス (Square Monolith)', squareDesc: '現代的な角柱デザインとシャープなチゼルカット膏体。',
-      bold: 'ボールドチャビー (Bold Chubby)', boldDesc: 'コロンとした厚みのあるボディと丸みのあるドーム型ヘッド。',
-      liquid: 'リキッドティント (Liquid Wand)', liquidDesc: '透明アクリルボディとやわらかなフロッキーチップ。',
+      capacity: '容量', size: 'サイズ', structure: '構造', material: '素材', moq: '最小ロット', ea: '個',
+      single: 'シングル', round: '丸型', square: '角型',
     },
     templates: {
       blank: 'ブランクキャンバス', blankDesc: '自由にデザインできるシンプルな無地ホワイト。',

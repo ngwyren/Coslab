@@ -88,7 +88,7 @@
     landing: {
       tagline: 'Vous dessinez. Nous fabriquons.', start: 'Commencer', explore: 'Explorer',
       collection: 'Collection', c1: 'Le trio signature.', c2: 'Velours mat et métal miroir.', c3: 'Verre clair, couleur rosée.',
-      forms: '5 silhouettes', howTitle: '4 étapes',
+      forms: '12 silhouettes', howTitle: '4 étapes',
       step1: 'Forme', step2: 'Couleur', step3: 'Texte', step4: 'Logo',
       s1: 'Prototype', s2: 'Précision', s3: 'Labo certifié', s4: 'Finitions',
       ctaTitle: 'Votre teinte, à votre façon.',
@@ -99,11 +99,8 @@
       proceed: 'Ouvrir l’Atelier Graphique (Artwork Editor)', filterAll: 'Toutes les silhouettes',
     },
     models: {
-      classic: 'Tube Rond Classique (Classic Bullet)', classicDesc: 'Fourreau rond magnétique iconique avec bâton biseauté.',
-      slim: 'Silhouette Ultra Fine (Slimline)', slimDesc: 'Profil élancé et élégant idéal pour les textures mates haute précision.',
-      square: 'Monolithe Carré (Square Monolith)', squareDesc: 'Étui géométrique moderne avec ogive sculptée en biseau.',
-      bold: 'Chubby Généreux (Bold Chubby)', boldDesc: 'Corps arrondi et généreux avec embout en dôme.',
-      liquid: 'Applicateur Liquide (Liquid Wand)', liquidDesc: 'Réservoir acrylique cristallin avec embout applicateur floqué.',
+      capacity: 'Contenance', size: 'Dimensions', structure: 'Structure', material: 'Matière', moq: 'Qté min.', ea: 'pcs',
+      single: 'Simple', round: 'Rond', square: 'Carré',
     },
     templates: {
       blank: 'Toile Vierge', blankDesc: 'Base blanche épurée pour créer librement.',

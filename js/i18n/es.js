@@ -88,7 +88,7 @@
     landing: {
       tagline: 'Tú diseñas. Nosotros fabricamos.', start: 'Empezar', explore: 'Explorar',
       collection: 'Colección', c1: 'El trío insignia.', c2: 'Terciopelo mate y metal espejo.', c3: 'Cristal claro, color jugoso.',
-      forms: '5 siluetas', howTitle: '4 pasos',
+      forms: '12 siluetas', howTitle: '4 pasos',
       step1: 'Forma', step2: 'Color', step3: 'Texto', step4: 'Logo',
       s1: 'Prototipo', s2: 'Precisión', s3: 'Laboratorio certificado', s4: 'Acabados',
       ctaTitle: 'Tu tinta, a tu manera.',
@@ -99,11 +99,8 @@
       proceed: 'Abrir mesa de diseño (Artwork Editor)', filterAll: 'Todas las siluetas',
     },
     models: {
-      classic: 'Cilindro Clásico (Classic Bullet)', classicDesc: 'Carcasa cilíndrica magnética con barra de labial biselada tradicional.',
-      slim: 'Línea Ultrafina (Slimline)', slimDesc: 'Silueta esbelta y sofisticada ideal para labiales mates de alta definición.',
-      square: 'Monolito Cuadrado (Square Monolith)', squareDesc: 'Diseño geométrico moderno con punta cincelada facetada.',
-      bold: 'Chubby Grueso (Bold Chubby)', boldDesc: 'Cuerpo compacto y redondeado con cabezal en cúpula suave.',
-      liquid: 'Envase Líquido (Liquid Wand)', liquidDesc: 'Cuerpo de acrílico transparente con aplicador afelpado suave.',
+      capacity: 'Capacidad', size: 'Tamaño', structure: 'Estructura', material: 'Material', moq: 'Pedido mín.', ea: 'uds',
+      single: 'Simple', round: 'Redondo', square: 'Cuadrado',
     },
     templates: {
       blank: 'Lienzo en Blanco', blankDesc: 'Superficie limpia para diseñar con total libertad.',

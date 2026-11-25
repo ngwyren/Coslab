@@ -93,7 +93,6 @@
     appMode: false,
 
     render(container) {
-      const s = CL.store.settings;
       const root = CL.h('div.page.container.prefs', { style: { paddingBottom: '72px' } });
 
       const head = CL.h('div.page-head', null, CL.h('h1', { text: t('settings.title') }));
@@ -115,19 +114,7 @@
             onclick: () => CL.setLang(l.code),
           })));
 
-      // 2. PDF quality
-      const quality = CL.h('div.segmented.prefs-seg', null,
-        [[150, 'prefs.q150'], [300, 'prefs.q300'], [600, 'prefs.q600']].map(([dpi, key]) =>
-          CL.h('button' + ((s.exportDPI || 300) === dpi ? '.is-active' : ''), {
-            type: 'button',
-            text: t(key),
-            onclick: (e) => {
-              CL.store.saveSettings({ exportDPI: dpi });
-              e.currentTarget.parentElement.querySelectorAll('button').forEach((b) => b.classList.toggle('is-active', b === e.currentTarget));
-            },
-          })));
-
-      // 3. Data — restore / reset
+      // 2. Data — restore / reset
       const restore = () => {
         const input = CL.h('input', { type: 'file', accept: '.json,application/json' });
         input.onchange = () => {
@@ -163,7 +150,6 @@
 
       root.append(head,
         group(t('settings.languages'), null, langs),
-        group(t('prefs.pdfQuality'), null, quality),
         group(t('prefs.data'), null, data));
       container.appendChild(root);
       return () => {};

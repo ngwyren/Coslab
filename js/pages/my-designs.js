@@ -14,8 +14,7 @@
       const head = CL.h('div.page-head', null,
         CL.h('div.page-head-row', null,
           CL.h('div', null,
-            CL.h('h1', { text: t('myDesigns.title') }),
-            CL.h('p', { text: t('myDesigns.subtitle') })
+            CL.h('h1', { text: t('myDesigns.title') })
           ),
           CL.h('div', null,
             CL.h('a.btn.btn-primary', { href: '#/design', html: CL.icon('plus') + `<span>${t('myDesigns.newDesign')}</span>` })
@@ -32,13 +31,7 @@
         const list = CL.store.listDesigns();
 
         if (!list || !list.length) {
-          const empty = CL.h('div.empty', null,
-            CL.h('div.empty-icon', { html: CL.icon('lipstick') }),
-            CL.h('h3', { text: t('myDesigns.emptyTitle') }),
-            CL.h('p.muted', { text: t('myDesigns.emptyDesc') }),
-            CL.h('a.btn.btn-primary', { href: '#/design', html: CL.icon('star') + `<span>${t('myDesigns.newDesign')}</span>` })
-          );
-          content.appendChild(empty);
+          content.appendChild(CL.h('p.vault-empty', { text: t('myDesigns.emptyTitle') }));
           return;
         }
 

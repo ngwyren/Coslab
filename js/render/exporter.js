@@ -127,9 +127,9 @@
     return rasterize(svg, S.w * scale, S.h * scale, background);
   }
 
-  async function renderFlatCanvas(design, part, { scale = 4, fonts } = {}) {
+  async function renderFlatCanvas(design, part, { scale = 4, fonts, layersOnly = false } = {}) {
     const css = fonts !== undefined ? fonts : await fontCSS(design);
-    const f = CL.render.renderPartFlat(design, part, { scale, fontCSS: css });
+    const f = CL.render.renderPartFlat(design, part, { scale, fontCSS: css, layersOnly });
     return { canvas: await rasterize(f.svg, f.w, f.h), rect: f.rect };
   }
 
@@ -253,10 +253,12 @@
     y += 76;
     ctx.font = `400 36px ${UI}`;
     ctx.fillStyle = '#736e65';
-    ctx.fillText(`Batch Ref: COSLAB-${(design.model || '').toUpperCase()} · ${CL.formatDate(Date.now())}`, x, y);
+    ctx.fillText(`Batch Ref: COSLAB-${CL.models.getModel(design.model).name} · ${CL.formatDate(Date.now())}`, x, y);
 
+    const model = CL.models.getModel(design.model);
     const rows = [
-      [t('pdf.model'), t(CL.models.getModel(design.model).nameKey)],
+      [t('pdf.model'), model.name],
+      ...CL.models.specRows(model),
       [t('pdf.template'), t('templates.' + (design.templateId || 'velvet-rose'))],
       [t('pdf.author'), author.name || '—'],
       [t('pdf.brand'), author.brand || '—'],
@@ -270,10 +272,10 @@
       ctx.fillStyle = '#171615';
       ctx.font = `600 40px ${UI}`;
       ctx.fillText(b, x + 440, y);
-      y += 72;
+      y += 62;
     });
 
-    y += 30;
+    y += 10;
     ctx.fillStyle = '#e5dfd5';
     ctx.fillRect(x, y, W - 160 - x, 2);
     y += 80;
@@ -357,7 +359,7 @@
     g.font = `500 40px ${UI}`;
     g.fillStyle = '#736e65';
     g.textAlign = 'right';
-    g.fillText('1:1 SCALE UNWRAPPED LIPTINT PRINT ARTWORK', W - 160, 210);
+    g.fillText('LIPTINT PRINT ARTWORK · FRONT AREA', W - 160, 210);
     g.textAlign = 'left';
 
     g.fillStyle = '#e5dfd5';
@@ -398,7 +400,7 @@
 
       g.fillStyle = '#736e65';
       g.font = `400 34px ${UI}`;
-      g.fillText(`${f.canvas.width} × ${f.canvas.height} px · Aspect Ratio: ${CL.round(f.rect.w / f.rect.h, 3)}`, cx, top + h + 190);
+      g.fillText(`${f.rect.mm.w} × ${f.rect.mm.h} mm · ${f.canvas.width} × ${f.canvas.height} px`, cx, top + h + 190);
       g.textAlign = 'left';
     });
 

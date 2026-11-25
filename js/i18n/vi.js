@@ -88,7 +88,7 @@
     landing: {
       tagline: 'Bạn thiết kế. Chúng tôi sản xuất.', start: 'Bắt đầu thiết kế', explore: 'Khám phá',
       collection: 'Bộ sưu tập', c1: 'Bộ ba đặc trưng.', c2: 'Nhung lì gặp kim loại gương.', c3: 'Kính trong, màu căng mọng.',
-      forms: '5 dáng vỏ', howTitle: '4 bước',
+      forms: '12 dáng vỏ', howTitle: '4 bước',
       step1: 'Dáng', step2: 'Màu', step3: 'Chữ', step4: 'Logo',
       s1: 'Mẫu thử', s2: 'Độ chính xác', s3: 'Lab đạt chuẩn', s4: 'Chất liệu',
       ctaTitle: 'Son của bạn, theo cách của bạn.',
@@ -99,17 +99,14 @@
       proceed: 'Mở Studio', filterAll: 'Tất cả',
     },
     models: {
-      velvetRound: 'Velvet Round', velvetRoundDesc: 'Trụ tròn mờ sương',
-      dewyCrystal: 'Dewy Crystal', dewyCrystalDesc: 'Pha lê trong suốt',
-      slimAtelier: 'Slim Atelier', slimAtelierDesc: 'Trụ mảnh kim loại',
-      squareMonolith: 'Square Monolith', squareMonolithDesc: 'Vuông nguyên khối',
-      chubbyPot: 'Chubby Pot', chubbyPotDesc: 'Hũ tròn mini',
+      capacity: 'Dung tích', size: 'Kích thước', structure: 'Cấu trúc', material: 'Chất liệu', moq: 'Đặt tối thiểu', ea: 'cái',
+      single: 'Đơn', round: 'Tròn', square: 'Vuông',
     },
     templates: {
       'velvet-rose': 'Velvet Rosé', 'velvet-roseDesc': 'Hồng đất MLBB',
       'seoul-noir': 'Seoul Noir', 'seoul-noirDesc': 'Đen & Vàng 24K',
       'dewy-glass': 'Dew Drop', 'dewy-glassDesc': 'Pha lê nước',
-      'chrome-minimal': 'Tamburins 712', 'chrome-minimalDesc': 'Bạc mạ gương',
+      'chrome-minimal': 'Mirror Chrome', 'chrome-minimalDesc': 'Bạc mạ gương',
       'fig-mauve': 'Muted Fig', 'fig-mauveDesc': 'Tím hoa cà',
       'porcelain-ivory': 'Porcelain Gold', 'porcelain-ivoryDesc': 'Sứ trắng ngà',
       'chili-gradient': 'Glow Sunset', 'chili-gradientDesc': 'Cam chuyển sắc',
@@ -164,7 +161,7 @@
     },
     myDesigns: {
       title: 'Vault.', subtitle: 'SAVED SPECIFICATIONS',
-      newDesign: 'Tạo mới', emptyTitle: 'Trống', emptyDesc: 'Chưa có mẫu lưu trữ.',
+      newDesign: 'Tạo mới', emptyTitle: 'Bạn chưa có thiết kế nào ở đây.', emptyDesc: 'Chưa có mẫu lưu trữ.',
       lastModified: '{date}', editDesign: 'Mở', deleteConfirm: 'Xóa mẫu này?',
     },
     settings: {

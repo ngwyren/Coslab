@@ -88,7 +88,7 @@
     landing: {
       tagline: '你来设计，我们生产。', start: '开始设计', explore: '浏览',
       collection: '系列', c1: '招牌三件套。', c2: '丝绒哑光遇上镜面金属。', c3: '透亮玻璃，水润色彩。',
-      forms: '5 种瓶型', howTitle: '4 个步骤',
+      forms: '12 种瓶型', howTitle: '4 个步骤',
       step1: '瓶型', step2: '颜色', step3: '文字', step4: '标志',
       s1: '打样', s2: '精度', s3: '认证实验室', s4: '质感',
       ctaTitle: '打造你的专属唇釉。',
@@ -99,11 +99,8 @@
       proceed: '进入画板编辑器 (Artwork Editor)', filterAll: '全部管型',
     },
     models: {
-      classic: '经典圆管 (Classic Bullet)', classicDesc: '经典磁吸圆柱外壳，搭配经典斜切膏体。',
-      slim: '超细小金条管 (Slimline)', slimDesc: '纤细优雅的高定金属管身，适合高精度哑光唇膏。',
-      square: '极简方管 (Square Monolith)', squareDesc: '现代建筑感方柱几何造型，搭配菱形刀锋膏体。',
-      bold: '可爱胖胖管 (Bold Chubby)', boldDesc: '圆润厚重的手握感管身，搭配圆弧水滴膏体。',
-      liquid: '晶透唇釉管 (Liquid Wand)', liquidDesc: '高透亚克力管体，搭配柔软天鹅绒唇刷刷头。',
+      capacity: '容量', size: '尺寸', structure: '结构', material: '材质', moq: '起订量', ea: '个',
+      single: '单层', round: '圆形', square: '方形',
     },
     templates: {
       blank: '极简空白画布', blankDesc: '纯净空白外观，随心自由创作。',

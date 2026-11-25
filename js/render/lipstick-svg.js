@@ -1,5 +1,5 @@
 /* ==========================================================
-   COSLAB — Liptint SVG Renderer (Clean 2-Part Tube + Safe Zone)
+   COSLAB — Liptint SVG Renderer (Real container outlines + Safe Zone)
    Up Liptint (Cap) on top, Button Liptint (Base) at bottom.
    Zero protruding ring/lines; strict Safe Zone clipping & auto-fit text.
    ========================================================== */
@@ -18,12 +18,6 @@
       satin: [[0, '#000', .14], [.06, '#fff', .06], [.4, '#fff', .18], [.94, '#000', .04], [1, '#000', .20]],
       gloss: [[0, '#000', .18], [.05, '#fff', .35], [.12, '#fff', .06], [.62, '#fff', 0], [.7, '#fff', .25], [.76, '#fff', .03], [1, '#000', .24]],
       metallic: [[0, '#000', .28], [.06, '#fff', .55], [.3, '#000', .06], [.55, '#fff', .5], [.8, '#000', .08], [1, '#000', .30]],
-    },
-    crystal: {
-      matte: [[0, '#000', .18], [.2, '#fff', .2], [.4, '#fff', .42], [.85, '#000', .1], [1, '#000', .24]],
-      satin: [[0, '#000', .20], [.2, '#fff', .28], [.4, '#fff', .52], [.85, '#000', .12], [1, '#000', .28]],
-      gloss: [[0, '#000', .24], [.15, '#fff', .70], [.3, '#fff', .18], [.65, '#fff', .05], [.8, '#fff', .36], [1, '#000', .32]],
-      metallic: [[0, '#000', .38], [.15, '#fff', .72], [.38, '#fff', .82], [.75, '#fff', .38], [1, '#000', .42]],
     },
   };
 
@@ -52,22 +46,9 @@
     };
   }
 
-  /* Cap Path: Top corners rounded (r), bottom corners crisp seam (2px) */
-  function capShape(r, paint, extra = '') {
-    const x = r.x, y = r.y, w = r.w, h = r.h;
-    const rt = Math.min(r.r || 8, w / 2, h / 2);
-    const rb = 2;
-    const d = `M${x + rt},${y} H${x + w - rt} A${rt},${rt} 0 0 1 ${x + w},${y + rt} V${y + h - rb} A${rb},${rb} 0 0 1 ${x + w - rb},${y + h} H${x + rb} A${rb},${rb} 0 0 1 ${x},${y + h - rb} V${y + rt} A${rt},${rt} 0 0 1 ${x + rt},${y} Z`;
-    return `<path d="${d}" fill="${paint}"${extra}/>`;
-  }
-
-  /* Base Path: Top corners crisp seam (2px), bottom corners rounded (r) */
-  function baseShape(r, paint, extra = '') {
-    const x = r.x, y = r.y, w = r.w, h = r.h;
-    const rt = 2;
-    const rb = Math.min(r.r || 8, w / 2, h / 2);
-    const d = `M${x + rt},${y} H${x + w - rt} A${rt},${rt} 0 0 1 ${x + w},${y + rt} V${y + h - rb} A${rb},${rb} 0 0 1 ${x + w - rb},${y + h} H${x + rb} A${rb},${rb} 0 0 1 ${x},${y + h - rb} V${y + rt} A${rt},${rt} 0 0 1 ${x + rt},${y} Z`;
-    return `<path d="${d}" fill="${paint}"${extra}/>`;
+  /* Outline of one part: real container profile (rect.d, see models.js) */
+  function partShape(r, paint, extra = '') {
+    return `<path d="${r.d}" fill="${paint}"${extra}/>`;
   }
 
   /* Shape markup */
@@ -204,7 +185,7 @@
    * Markup + defs for one part's body according to its surface type.
    * `shape(rect, paint, extra)` draws the outline (cap/base path, or a plain rect for print flats).
    */
-  function surfaceBody(partData, rect, shape, id, isCap, legacyGlassTint) {
+  function surfaceBody(partData, rect, shape, id, isCap) {
     const p = partData || {};
     const surface = SURFACES.includes(p.surface) ? p.surface : 'solid';
     const [cA, cB] = fillColors(p.fill);
@@ -224,10 +205,17 @@
       }
       m += shape(rect, 'none', ' stroke="#ffffff" stroke-opacity="0.8" stroke-width="2.5"');
     } else if (surface === 'clear-gradient') {
-      vGrad(id, `<stop offset="0" stop-color="${cA}" stop-opacity="0.95"/><stop offset="0.55" stop-color="${cB}" stop-opacity="0.45"/><stop offset="1" stop-color="${cB}" stop-opacity="0.06"/>`);
-      m += shape(rect, '#ffffff', ' fill-opacity="0.4"');
-      m += shape(rect, `url(#${id})`);
-      m += shape(rect, 'none', ' stroke="#ffffff" stroke-opacity="0.7" stroke-width="2"');
+      if ([cA, cB].every((c) => CL.pantone.nearest(c).code === 'Clear')) {
+        // plain clear plastic: faint cool tint, so the inside stays visible
+        vGrad(id, `<stop offset="0" stop-color="#cfd8e2" stop-opacity="0.30"/><stop offset="1" stop-color="#cfd8e2" stop-opacity="0.16"/>`);
+        m += shape(rect, `url(#${id})`);
+        m += shape(rect, 'none', ' stroke="#8d97a3" stroke-opacity="0.55" stroke-width="1.6"');
+      } else {
+        vGrad(id, `<stop offset="0" stop-color="${cA}" stop-opacity="0.95"/><stop offset="0.55" stop-color="${cB}" stop-opacity="0.45"/><stop offset="1" stop-color="${cB}" stop-opacity="0.06"/>`);
+        m += shape(rect, '#ffffff', ' fill-opacity="0.25"');
+        m += shape(rect, `url(#${id})`);
+        m += shape(rect, 'none', ' stroke="#ffffff" stroke-opacity="0.7" stroke-width="2"');
+      }
     } else if (surface === 'solid-gradient') {
       vGrad(id, `<stop offset="0" stop-color="${cA}"/><stop offset="1" stop-color="${cB}"/>`);
       m += shape(rect, `url(#${id})`);
@@ -239,10 +227,6 @@
       const f = fillPaint(p.fill, id);
       if (f.def) defs.push(f.def);
       m += shape(rect, f.paint);
-      if (legacyGlassTint && !isCap) {
-        // older "glass" designs saved before surface types existed
-        m += `<rect x="${rect.x + 12}" y="${rect.y + 14}" width="${rect.w - 24}" height="${rect.h - 28}" rx="${Math.max((rect.r || 8) - 4, 3)}" fill="${legacyGlassTint}" opacity="0.88"/>`;
-      }
     }
     return { defs, markup: m };
   }
@@ -256,12 +240,11 @@
     const inter = !!opts.interactive;
     const defs = [];
 
-    const legacyTint = L.model.style === 'glass' && !(P.base && P.base.surface) ? ((P.tint && P.tint.color) || '#b83b48') : null;
-    const sCap = surfaceBody(P.cap, L.cap, capShape, `${u}-f-cap`, true, null);
-    const sBase = surfaceBody(P.base, L.base, baseShape, `${u}-f-base`, false, legacyTint);
+    const sCap = surfaceBody(P.cap, L.capShell, partShape, `${u}-f-cap`, true);
+    const sBase = surfaceBody(P.base, L.baseShell, partShape, `${u}-f-base`, false);
     defs.push(...sCap.defs, ...sBase.defs);
 
-    const shadeKey = (sil === 'square' ? 'square' : sil === 'crystal' ? 'crystal' : 'round');
+    const shadeKey = sil === 'square' ? 'square' : 'round';
     const shadeCapId = `${u}-sh-cap`;
     const shadeBaseId = `${u}-sh-base`;
 
@@ -274,8 +257,8 @@
     defs.push(`<radialGradient id="${u}-shadow"><stop offset="0" stop-color="#141312" stop-opacity=".22"/><stop offset=".45" stop-color="#141312" stop-opacity=".08"/><stop offset="1" stop-color="#141312" stop-opacity="0"/></radialGradient>`);
 
     // Exact shape clip paths + Safe Zone clip paths
-    defs.push(`<clipPath id="${u}-clip-cap">${capShape(L.cap, '#000')}</clipPath>`);
-    defs.push(`<clipPath id="${u}-clip-base">${baseShape(L.base, '#000')}</clipPath>`);
+    defs.push(`<clipPath id="${u}-clip-cap">${partShape(L.capShell, '#000')}</clipPath>`);
+    defs.push(`<clipPath id="${u}-clip-base">${partShape(L.baseShell, '#000')}</clipPath>`);
     defs.push(`<clipPath id="${u}-safe-cap"><rect x="${L.cap.safe.x}" y="${L.cap.safe.y}" width="${L.cap.safe.w}" height="${L.cap.safe.h}" rx="4"/></clipPath>`);
     defs.push(`<clipPath id="${u}-safe-base"><rect x="${L.base.safe.x}" y="${L.base.safe.y}" width="${L.base.safe.w}" height="${L.base.safe.h}" rx="4"/></clipPath>`);
 
@@ -290,10 +273,20 @@
       body += `<ellipse cx="${L.scene.cx}" cy="${L.scene.ground + 5}" rx="${L.base.w * 0.68}" ry="10" fill="url(#${u}-shadow)"/>`;
     }
 
+    // Inside of clear parts: cavity + wand in the body, threaded neck + wand in the cap
+    const isClear = (p) => p && (p.surface === 'clear' || p.surface === 'clear-gradient');
+    const line = ` fill="#fff" fill-opacity=".28" stroke="#8d97a3" stroke-opacity=".38" stroke-width=".8"`;
+    const W = L.wand, F = L.foot, n2 = (v) => CL.round(v, 2);
+    const wandMarkup = `<rect x="${n2(W.x)}" y="${n2(W.y)}" width="${n2(W.w)}" height="${n2(W.h)}" rx="2" fill="#eef1f5" stroke="#8d97a3" stroke-opacity=".35" stroke-width=".7"/>`;
+    const footMarkup = `<ellipse cx="${F.cx}" cy="${n2(F.cy)}" rx="${n2(F.rx)}" ry="${n2(F.ry)}" fill="#f6efe0" stroke="#b9ac92" stroke-opacity=".5" stroke-width=".7"/>`;
+    const innerBase = isClear(P.base) ? `<path d="${L.cavityPath}"${line}/>${wandMarkup}${footMarkup}` : '';
+    const neckFill = isClear(P.base) ? line : ` fill="${fillColors(P.base && P.base.fill)[1]}" stroke="#000" stroke-opacity=".15" stroke-width=".8"`;
+    const innerCap = isClear(P.cap) ? `${wandMarkup}<path d="${L.neckPath}"${neckFill}/>` : '';
+
     // 1. Base (Thân son)
     const baseAttr = inter ? ` data-part="base" class="cl-part"` : '';
     body += `<g${baseAttr} clip-path="url(#${u}-clip-base)">`;
-    body += sBase.markup;
+    body += innerBase + sBase.markup;
     body += `</g>`;
 
     // Artwork on Base (Strictly inside Safe Zone)
@@ -301,15 +294,15 @@
 
     if (shading) {
       body += `<g pointer-events="none" clip-path="url(#${u}-clip-base)">`;
-      body += baseShape(L.base, `url(#${shadeBaseId})`);
-      body += baseShape(L.base, `url(#${u}-v-bot)`);
+      body += partShape(L.baseShell, `url(#${shadeBaseId})`);
+      body += partShape(L.baseShell, `url(#${u}-v-bot)`);
       body += `</g>`;
     }
 
     // 2. Cap (Nắp son)
     const capAttr = inter ? ` data-part="cap" class="cl-part"` : '';
     body += `<g${capAttr} clip-path="url(#${u}-clip-cap)">`;
-    body += sCap.markup;
+    body += innerCap + sCap.markup;
     body += `</g>`;
 
     // Artwork on Cap (Strictly inside Safe Zone)
@@ -317,8 +310,8 @@
 
     if (shading) {
       body += `<g pointer-events="none" clip-path="url(#${u}-clip-cap)">`;
-      body += capShape(L.cap, `url(#${shadeCapId})`);
-      body += capShape(L.cap, `url(#${u}-v-top)`);
+      body += partShape(L.capShell, `url(#${shadeCapId})`);
+      body += partShape(L.capShell, `url(#${u}-v-top)`);
       body += `</g>`;
     }
 
@@ -332,7 +325,7 @@
     // Vector die-line: hairline outline paths of cap & base for AI / CAD (Settings → Vector Outline)
     if (opts.dieline) {
       const cut = ` stroke="#ec008c" stroke-width="0.5" vector-effect="non-scaling-stroke"`;
-      body += `<g id="dieline" pointer-events="none">${capShape(L.cap, 'none', cut)}${baseShape(L.base, 'none', cut)}</g>`;
+      body += `<g id="dieline" pointer-events="none">${partShape(L.capShell, 'none', cut)}${partShape(L.baseShell, 'none', cut)}</g>`;
     }
 
     const vb = opts.viewBox || `0 0 ${L.scene.w} ${L.scene.h}`;
@@ -345,17 +338,16 @@
   function renderPartFlat(design, part, opts = {}) {
     const u = opts.uid || CL.uid('p');
     const L = CL.models.layout(design.model);
-    const r = L[part];
+    const r = L[part]; // printable area only
     const flatRect = (rr, paint, extra = '') => `<rect x="${rr.x}" y="${rr.y}" width="${rr.w}" height="${rr.h}" fill="${paint}"${extra}/>`;
     const P = design.parts || {};
-    const legacyTint = part === 'base' && L.model.style === 'glass' && !(P.base && P.base.surface) ? ((P.tint && P.tint.color) || '#b83b48') : null;
-    const s = surfaceBody(P[part], r, flatRect, `${u}-f`, part === 'cap', legacyTint);
+    const s = surfaceBody(P[part], r, flatRect, `${u}-f`, part === 'cap');
     const layers = (design.layers || []).filter((l) => l.part === part).map((l) => layerMarkup(l, r, false)).join('');
     const scale = opts.scale || 4;
     const style = opts.fontCSS ? `<style>${opts.fontCSS}</style>` : '';
 
     return {
-      svg: `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="${r.x} ${r.y} ${r.w} ${r.h}" width="${r.w * scale}" height="${r.h * scale}">${style}<defs>${s.defs.join('')}</defs>${s.markup}${layers}</svg>`,
+      svg: `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="${r.x} ${r.y} ${r.w} ${r.h}" width="${r.w * scale}" height="${r.h * scale}">${style}<defs>${s.defs.join('')}</defs>${opts.layersOnly ? '' : s.markup}${layers}</svg>`,
       w: r.w * scale,
       h: r.h * scale,
       rect: r,
@@ -366,10 +358,11 @@
   function renderTight(design, opts = {}) {
     const L = CL.models.layout(design.model);
     const padX = 34, padTop = 10, padBottom = 22;
-    const x = L.cap.x - padX;
-    const y = L.cap.y - padTop;
-    const vw = L.cap.w + padX * 2;
-    const vh = (L.base.y + L.base.h) - L.cap.y + padTop + padBottom;
+    const S = L.capShell, B = L.baseShell;
+    const x = B.x - padX;
+    const y = S.y - padTop;
+    const vw = B.w + padX * 2;
+    const vh = (B.y + B.h) - S.y + padTop + padBottom;
     const w = opts.width || 160;
     return renderSVG(design, Object.assign({ shadow: true }, opts, {
       width: w,
