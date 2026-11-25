@@ -39,6 +39,7 @@
     const field = CL.h('div.fg-field', { title: title || '' });
 
     const inputEl = CL.h('input.fg-num-input', {
+      'aria-label': title || prefix,
       id: id || '',
       type: 'number',
       min: String(min),
@@ -106,6 +107,7 @@
         CL.h('button.fg-step-mini', {
           type: 'button',
           text: '−',
+          'aria-label': (title || prefix) + ' −',
           onclick: () => {
             const next = clampVal((parseFloat(inputEl.value) || 0) - step);
             inputEl.value = String(next);
@@ -116,6 +118,7 @@
         CL.h('button.fg-step-mini', {
           type: 'button',
           text: '+',
+          'aria-label': (title || prefix) + ' +',
           onclick: () => {
             const next = clampVal((parseFloat(inputEl.value) || 0) + step);
             inputEl.value = String(next);
@@ -204,11 +207,13 @@
 
         const undoBtn = CL.h('button.icon-btn.sm#btnUndo', {
           html: CL.icon('undo'),
+          'aria-label': 'Undo',
           title: 'Undo (Ctrl+Z)',
           onclick: undo,
         });
         const redoBtn = CL.h('button.icon-btn.sm#btnRedo', {
           html: CL.icon('redo'),
+          'aria-label': 'Redo',
           title: 'Redo (Ctrl+Y)',
           onclick: redo,
         });
@@ -243,6 +248,7 @@
 
         const saveBtn = CL.h('button.btn.btn-sm.btn-outline', {
           html: CL.icon('save') + `<span>${t('editor.save')}</span>`,
+          'aria-label': t('editor.save'),
           onclick: () => {
             const res = CL.store.saveDesign(design);
             if (res) CL.toast(t('editor.saved'));
@@ -252,6 +258,7 @@
 
         const exportBtn = CL.h('button.btn.btn-sm.btn-primary', {
           html: CL.icon('download') + `<span>${t('editor.export')}</span>`,
+          'aria-label': t('editor.export'),
           onclick: (e) => {
             CL.menu(e.currentTarget, CL.exportMenuItems(() => design), { align: 'end' });
           },
@@ -470,7 +477,7 @@
           renderStepPanel();
         }
 
-        function switchView(view) {
+        async function switchView(view) {
           activeView = view;
           document.getElementById('btnView2D').classList.toggle('is-active', view === '2d');
           document.getElementById('btnView3D').classList.toggle('is-active', view === '3d');
@@ -482,6 +489,17 @@
           p3d.style.display = view === '3d' ? 'block' : 'none';
 
           if (view === '3d') {
+            p3d.classList.toggle('is-loading', !window.THREE);
+            try {
+              await CL.loadThree();
+            } catch (err) {
+              CL.toast(I18N.lang === 'vi' ? 'Không tải được bản 3D. Kiểm tra mạng rồi thử lại.' : 'Could not load the 3D view. Check your connection and try again.', 'info');
+              if (activeView === '3d') switchView('2d');
+              return;
+            } finally {
+              p3d.classList.remove('is-loading');
+            }
+            if (activeView !== '3d' || !p3d.isConnected) return; // switched back or left meanwhile
             if (!preview3DInstance && window.THREE) {
               const s = CL.store.settings || {};
               preview3DInstance = new CL.Preview3D(p3d, {
@@ -515,6 +533,137 @@
             }
           }
           return targetLayer;
+        }
+
+        /* ---------- Simple controls (no design knowledge needed) ---------- */
+        const LEVELS = { s: 0.45, m: 0.7, l: 1 };
+        let advancedOpen = false;
+        const measureCtx = document.createElement('canvas').getContext('2d');
+        const isVertical = (lyr) => Math.abs(Math.sin(((lyr.rotation || 0) * Math.PI) / 180)) > 0.7;
+
+        /** Size of a text block at font size 1 (letter spacing excluded). */
+        function textUnit(tx) {
+          const lines = String(tx.content || '').split('\n');
+          measureCtx.font = `${tx.italic ? 'italic ' : ''}${tx.weight || 400} 100px '${tx.font}', sans-serif`;
+          return {
+            w: Math.max(0.3, ...lines.map((l) => measureCtx.measureText(l).width / 100)),
+            h: 1.05 + (lines.length - 1) * (tx.lineHeight || 1.2),
+            gaps: Math.max(0, ...lines.map((l) => l.length - 1)),
+          };
+        }
+
+        /** Largest size that still fits the print area: font size for text, scale factor for a logo. */
+        function maxFit(lyr) {
+          const safe = CL.models.layout(design.model)[lyr.part].safe;
+          const [along, across] = isVertical(lyr) ? [safe.h, safe.w] : [safe.w, safe.h];
+          if (lyr.type === 'text') {
+            const u = textUnit(lyr.text);
+            return Math.max(8, Math.min((along - u.gaps * (lyr.text.spacing || 0)) / u.w, across / u.h));
+          }
+          const box = lyr[lyr.type];
+          return Math.min(along / box.w, across / box.h);
+        }
+
+        function applyLevel(lyr, level) {
+          lyr.fit = level;
+          const k = maxFit(lyr) * LEVELS[level];
+          if (lyr.type === 'text') {
+            lyr.text.size = Math.max(8, Math.floor(k));
+          } else {
+            const box = lyr[lyr.type];
+            box.w = Math.max(4, Math.round(box.w * k));
+            box.h = Math.max(1, Math.round(box.h * k));
+          }
+          keepInside(lyr);
+        }
+
+        /** Half of the layer's height on the tube, as a share of the part's height. */
+        function halfHeight(lyr) {
+          const rect = CL.models.layout(design.model)[lyr.part];
+          let w, h;
+          if (lyr.type === 'text') {
+            const u = textUnit(lyr.text);
+            w = u.w * lyr.text.size + u.gaps * (lyr.text.spacing || 0);
+            h = u.h * lyr.text.size;
+          } else ({ w, h } = lyr[lyr.type]);
+          return (isVertical(lyr) ? w : h) / 2 / rect.h;
+        }
+
+        function yRange(lyr) {
+          const safe = CL.models.layout(design.model)[lyr.part].safe;
+          const half = halfHeight(lyr);
+          const top = safe.minY + half;
+          const bottom = safe.maxY - half;
+          return top > bottom ? [0.5, 0.5] : [top, bottom];
+        }
+
+        function keepInside(lyr) {
+          const [top, bottom] = yRange(lyr);
+          lyr.y = CL.clamp(lyr.y ?? 0.5, top, bottom);
+        }
+
+        function applySpot(lyr, spot) {
+          const [top, bottom] = yRange(lyr);
+          lyr.x = 0.5;
+          lyr.y = spot === 'top' ? top : spot === 'bottom' ? bottom : 0.5;
+        }
+
+        function spotOf(lyr) {
+          const [top, bottom] = yRange(lyr);
+          if (Math.abs((lyr.x ?? 0.5) - 0.5) > 0.01) return null;
+          const near = (v) => Math.abs((lyr.y ?? 0.5) - v) < 0.012;
+          return near(0.5) ? 'mid' : near(top) ? 'top' : near(bottom) ? 'bottom' : null;
+        }
+
+        /** A row of big choice buttons: [[id, label], …]. */
+        function choiceRow(label, options, current, onPick) {
+          return CL.h('div.easy-row', null,
+            CL.h('span.easy-label', { text: label }),
+            CL.h('div.fg-seg', { role: 'group', 'aria-label': label },
+              options.map(([id, text]) => CL.h('button.fg-seg-btn' + (current === id ? '.is-active' : ''), {
+                type: 'button',
+                'aria-pressed': String(current === id),
+                text,
+                onclick: () => {
+                  onPick(id);
+                  pushHistory();
+                  render2DCanvas();
+                  renderStepPanel();
+                },
+              })))
+          );
+        }
+
+        function sizeRow(lyr) {
+          const isVi = I18N.lang === 'vi';
+          return choiceRow(isVi ? 'Cỡ' : 'Size', isVi ? [['s', 'Nhỏ'], ['m', 'Vừa'], ['l', 'Lớn']] : [['s', 'Small'], ['m', 'Medium'], ['l', 'Large']],
+            lyr.fit, (id) => applyLevel(lyr, id));
+        }
+
+        function spotRow(lyr) {
+          const isVi = I18N.lang === 'vi';
+          return choiceRow(isVi ? 'Vị trí' : 'Place', isVi ? [['top', 'Trên'], ['mid', 'Giữa'], ['bottom', 'Dưới']] : [['top', 'Top'], ['mid', 'Middle'], ['bottom', 'Bottom']],
+            spotOf(lyr), (id) => applySpot(lyr, id));
+        }
+
+        /** Exact numbers stay available, folded away. */
+        function advancedBox(...children) {
+          const box = CL.h('details.easy-advanced', null,
+            CL.h('summary', { text: I18N.lang === 'vi' ? 'Chỉnh chi tiết' : 'Fine tuning' }),
+            children
+          );
+          box.open = advancedOpen;
+          box.addEventListener('toggle', () => { advancedOpen = box.open; });
+          return box;
+        }
+
+        function removeLayer(layer) {
+          if (!layer || layer.locked) return;
+          design.layers = design.layers.filter((l) => l.id !== layer.id);
+          selectedLayerId = null;
+          pushHistory();
+          render2DCanvas();
+          renderStepPanel();
         }
 
         // ======================================================
@@ -835,9 +984,10 @@
                     let hudVal = null;
 
                     if (targetLayer.type === 'text') {
-                      const nextSz = CL.clamp(Math.round(origSize * factor), 8, 36);
+                      const nextSz = CL.clamp(Math.round(origSize * factor), 8, 100);
                       if (nextSz !== targetLayer.text.size) {
                         targetLayer.text.size = nextSz;
+                        delete targetLayer.fit;
                         const szIn = document.getElementById('fgInputSize');
                         const szSl = document.getElementById('studioLayerSizeSlider');
                         if (szIn) szIn.value = String(nextSz);
@@ -846,9 +996,10 @@
                       }
                       hudVal = `${nextSz}px`;
                     } else if (targetLayer.type === 'image') {
-                      const nextW = CL.clamp(Math.round(origSize * factor), 14, 96);
+                      const nextW = CL.clamp(Math.round(origSize * factor), 14, 190);
                       if (nextW !== targetLayer.image.w) {
                         targetLayer.image.w = nextW;
+                        delete targetLayer.fit;
                         targetLayer.image.h = Math.round(nextW * origRatio);
                         const wIn = document.getElementById('fgInputGraphicW');
                         if (wIn) wIn.value = String(nextW);
@@ -859,6 +1010,7 @@
                       const nextW = CL.clamp(Math.round(origSize * factor), 12, 90);
                       if (nextW !== targetLayer.shape.w) {
                         targetLayer.shape.w = nextW;
+                        delete targetLayer.fit;
                         if (targetLayer.shape.kind !== 'line') targetLayer.shape.h = nextW;
                         const wIn = document.getElementById('fgInputGraphicW');
                         if (wIn) wIn.value = String(nextW);
@@ -934,13 +1086,13 @@
           const TITLES = {
             model: isVi ? 'Chọn Model' : 'Choose Model',
             colors: isVi ? 'Chọn Màu' : 'Choose Color',
-            text: isVi ? 'Chọn Chữ' : 'Typography',
-            graphics: isVi ? 'Chọn Logo' : 'Choose Logo',
+            text: isVi ? 'Thêm chữ' : 'Add text',
+            graphics: isVi ? 'Thêm logo' : 'Add logo',
           };
 
           stepHeader.innerHTML = '';
           stepHeader.append(
-            CL.h('h2.studio-step-title', { text: TITLES[step.id] }),
+            CL.h('h1.studio-step-title', { text: TITLES[step.id] }),
             CL.h('span.studio-step-eyebrow', { text: t('flow.stepOf', { n: activeStepIdx + 2, t: TOTAL_STEPS }) })
           );
 
@@ -989,6 +1141,7 @@
           { id: 'solid-gradient', key: 'surface.solidGradient' },
           { id: 'clear-gradient', key: 'surface.clearGradient' },
         ];
+        const COMBOS = ['cherry-jelly', 'soft-bun', 'red-cap', 'peach-fizz', 'noir-cherry', 'porcelain-rose', 'cocoa-milk', 'mauve-line'];
         const isGradientSurface = (s) => s === 'solid-gradient' || s === 'clear-gradient';
         const stopEntry = (s) => CL.pantone.of({ color: s.c, pantone: s.pantone });
 
@@ -1008,6 +1161,28 @@
           const toSolid = (p) => CL.pantone.fillFor(p);
           const toLinear = (a, b) => ({ type: 'linear', angle: 180, stops: [{ o: 0, c: a.screen, pantone: a.code }, { o: 1, c: b.screen, pantone: b.code }] });
           const commit = () => { pushHistory(); syncPartChips(); render2DCanvas(); renderStepPanel(); };
+
+          // 0. Ready-made colour pairings (cap + body in one tap), taken from the Archive designs
+          const same = (a, b) => ['cap', 'base'].every((k) => (a[k].surface || 'solid') === (b[k].surface || 'solid') && CL.pantone.describeFill(a[k].fill) === CL.pantone.describeFill(b[k].fill));
+          const comboRow = CL.h('div.combo-grid', null,
+            COMBOS.map((id) => {
+              const preview = CL.templates.createDesign(id, design.model);
+              preview.layers = [];
+              const on = same(preview.parts, design.parts);
+              return CL.h('button.surface-card' + (on ? '.is-active' : ''), {
+                type: 'button',
+                'aria-pressed': String(on),
+                onclick: () => {
+                  design.parts = CL.clone(preview.parts);
+                  colorSlot = 0;
+                  commit();
+                },
+              },
+                CL.h('span.surface-thumb', { html: CL.render.renderTight(preview, { width: 34, shadow: false }) }),
+                CL.h('span.surface-name', { text: t('templates.' + id) })
+              );
+            })
+          );
 
           // 1. Surface type — each option previews the tube with that surface in the current colours
           const surfaceRow = CL.h('div.surface-grid', null,
@@ -1095,6 +1270,12 @@
           stepBody.append(
             CL.h('div.fg-section', null,
               CL.h('div.fg-section-head', null,
+                CL.h('span.fg-section-title', { text: isVi ? 'Phối sẵn · chạm để dùng' : 'Ready-made · tap to use' })
+              ),
+              comboRow
+            ),
+            CL.h('div.fg-section', null,
+              CL.h('div.fg-section-head', null,
                 CL.h('span.fg-section-title', { text: `${t('surface.title')} · ${partName}` })
               ),
               surfaceRow
@@ -1104,7 +1285,7 @@
                 CL.h('span.fg-section-title', { text: isVi ? `Màu ${partName.toLowerCase()} (Pantone)` : `${partName} colour (Pantone)` })
               ),
               slotSwitch,
-              selected,
+              twoColour ? null : selected,
               note,
               group('tint', 'Tông son', 'Tint shades'),
               group('pack', 'Tông bao bì', 'Packaging')
@@ -1119,7 +1300,8 @@
           const isVi = I18N.lang === 'vi';
           const targetPart = activePart === 'cap' ? 'cap' : 'base';
 
-          let curLayer = design.layers.find((l) => l.type === 'text' && l.part === targetPart);
+          const texts = design.layers.filter((l) => l.type === 'text' && l.part === targetPart);
+          let curLayer = texts.find((l) => l.id === selectedLayerId) || texts[0];
           if (curLayer) selectedLayerId = curLayer.id;
 
           function ensureTextLayer(initialText) {
@@ -1148,14 +1330,35 @@
                   lineHeight: 1.2,
                 },
               };
+              // Readable ink on this part's colour, at a size that fits
+              const bg = CL.pantone.of(design.parts[targetPart] && design.parts[targetPart].fill);
+              const [cr, cg, cb] = [1, 3, 5].map((i) => parseInt((bg ? bg.screen : '#000000').slice(i, i + 2), 16));
+              const ink = CL.pantone.byCode.get(cr * 0.299 + cg * 0.587 + cb * 0.114 > 165 ? 'Black 6 C' : 'Opaque White');
+              if (ink) Object.assign(curLayer.text, { color: ink.screen, pantone: ink.code });
+              applyLevel(curLayer, 'm');
               design.layers.push(curLayer);
               selectedLayerId = curLayer.id;
             }
             return curLayer;
           }
 
+          /** Keep the chosen size level; text sized by hand only shrinks when it no longer fits. */
+          function refit(lyr) {
+            if (lyr.fit) applyLevel(lyr, lyr.fit);
+            else if (lyr.text.size > maxFit(lyr)) applyLevel(lyr, 'l');
+            else keepInside(lyr);
+          }
+
           // --- SECTION 1: CONTENT ---
+          const deleteTextBtn = CL.h('button.fg-action-btn.is-danger', {
+            type: 'button',
+            title: (isVi ? 'Xóa chữ' : 'Delete text') + ' (Delete)',
+            html: CL.icon('trash') + `<span>${t('common.delete')}</span>`,
+            onclick: () => removeLayer(curLayer),
+          });
+
           const textInput = CL.h('input.fg-text-input', {
+            'aria-label': isVi ? 'Nội dung chữ' : 'Text',
             value: curLayer ? curLayer.text.content : '',
             placeholder: isVi ? 'Nhập nội dung chữ (VD: 01 ROSÉ)...' : 'Enter text (e.g. 01 ROSÉ)...',
             oninput: () => {
@@ -1167,18 +1370,27 @@
                 render2DCanvas();
                 return;
               }
+              const isNew = !curLayer;
               const lyr = ensureTextLayer(val);
               lyr.text.content = val;
               lyr.name = val;
+              refit(lyr);
               render2DCanvas();
+              if (isNew) {
+                // Show the remaining controls without losing the cursor
+                renderStepPanel();
+                const again = stepBody.querySelector('.fg-text-input');
+                again.focus();
+                again.setSelectionRange(again.value.length, again.value.length);
+              }
             },
-            onchange: pushHistory,
+            onchange: () => { pushHistory(); renderStepPanel(); },
           });
 
           const contentSection = CL.h('div.fg-section', null,
             CL.h('div.fg-section-head', null,
-              CL.h('span.fg-section-title', { text: isVi ? 'Nội dung' : 'Content' }),
-              CL.h('span.fg-badge-pill', { text: 'Safe Zone' })
+              CL.h('span.fg-section-title', { text: isVi ? 'Bạn muốn in chữ gì?' : 'What should it say?' }),
+              curLayer ? deleteTextBtn : null
             ),
             textInput
           );
@@ -1225,6 +1437,7 @@
           });
 
           const rotSlider = CL.h('input.fg-range#studioLayerRotSlider', {
+            'aria-label': isVi ? 'Xoay' : 'Rotation',
             type: 'range',
             min: '-180',
             max: '180',
@@ -1293,62 +1506,44 @@
             });
           }
 
-          const resetCenterBtn = CL.h('button.fg-action-btn', {
-            type: 'button',
-            html: CL.icon('fit') + `<span>${isVi ? 'Căn giữa' : 'Center'}</span>`,
-            onclick: () => {
-              if (curLayer) {
-                curLayer.x = 0.5;
-                curLayer.y = targetPart === 'base' ? 0.5 : 0.72;
-                curLayer.rotation = targetPart === 'base' ? -90 : 0;
-                pushHistory();
-                render2DCanvas();
-                renderStepPanel();
-              }
-            },
-          });
-
-          const positionSection = CL.h('div.fg-section', null,
-            CL.h('div.fg-section-head', null,
-              CL.h('span.fg-section-title', { text: isVi ? 'Vị trí & Xoay' : 'Position' }),
-              resetCenterBtn
-            ),
-            CL.h('div.fg-grid-2', null, xField.el, yField.el),
-            CL.h('div.fg-row', null,
-              CL.h('div', { style: { flex: '0.9', minWidth: 0 } }, rotField.el),
-              rotSeg
-            ),
-            rotSlider
-          );
+          const layoutSection = curLayer ? CL.h('div.fg-section', null,
+            sizeRow(curLayer),
+            choiceRow(isVi ? 'Hướng' : 'Direction', isVi ? [['v', 'Dọc'], ['h', 'Ngang']] : [['v', 'Vertical'], ['h', 'Horizontal']],
+              isVertical(curLayer) ? 'v' : 'h', (id) => {
+                curLayer.rotation = id === 'v' ? -90 : 0;
+                refit(curLayer);
+              }),
+            spotRow(curLayer)
+          ) : null;
 
           // --- SECTION 3: TYPOGRAPHY (FIGMA TYPOGRAPHY BLOCK) ---
           const FONTS = [
-            { f: 'Plus Jakarta Sans', label: 'Jakarta Sans', tag: 'Modern' },
-            { f: 'Cinzel', label: 'Cinzel', tag: 'Luxury' },
-            { f: 'Playfair Display', label: 'Playfair', tag: 'Editorial' },
-            { f: 'Cormorant Garamond', label: 'Cormorant', tag: 'Classic' },
-            { f: 'Montserrat', label: 'Montserrat', tag: 'Geometric' },
-            { f: 'Italiana', label: 'Italiana', tag: 'Fashion' },
+            { f: 'Plus Jakarta Sans', label: 'Jakarta Sans', tag: isVi ? 'Hiện đại' : 'Modern' },
+            { f: 'Cinzel', label: 'Cinzel', tag: isVi ? 'Sang trọng' : 'Luxury' },
+            { f: 'Playfair Display', label: 'Playfair', tag: isVi ? 'Tạp chí' : 'Editorial' },
+            { f: 'Cormorant Garamond', label: 'Cormorant', tag: isVi ? 'Cổ điển' : 'Classic' },
+            { f: 'Montserrat', label: 'Montserrat', tag: isVi ? 'Khỏe khoắn' : 'Geometric' },
+            { f: 'Italiana', label: 'Italiana', tag: isVi ? 'Thời trang' : 'Fashion' },
           ];
           const currentFont = curLayer ? curLayer.text.font : 'Plus Jakarta Sans';
+          const sample = (curLayer && curLayer.text.content.split('\n')[0].slice(0, 12)) || 'Coslab';
           const fontGrid = CL.h('div.studio-font-grid', null,
             FONTS.map((item) =>
               CL.h('button.studio-font-card' + (currentFont === item.f ? '.is-active' : ''), {
                 type: 'button',
+                title: item.label,
                 onclick: () => {
                   const lyr = ensureTextLayer(textInput.value || 'COSLAB');
                   if (!textInput.value) textInput.value = lyr.text.content;
                   lyr.text.font = item.f;
+                  refit(lyr);
                   pushHistory();
                   render2DCanvas();
                   renderStepPanel();
                 },
               },
-                CL.h('span.font-sample', { text: 'Aa', style: { fontFamily: `'${item.f}', sans-serif` } }),
-                CL.h('span.font-meta', null,
-                  CL.h('span.font-name', { text: item.label }),
-                  CL.h('span.font-tag', { text: item.tag })
-                )
+                CL.h('span.font-sample', { text: sample, style: { fontFamily: `'${item.f}', sans-serif` } }),
+                CL.h('span.font-tag', { text: item.tag })
               )
             )
           );
@@ -1357,15 +1552,17 @@
           const curSpacing = curLayer ? Math.round(curLayer.text.spacing ?? 3) : 3;
 
           const sizeSlider = CL.h('input.fg-range#studioLayerSizeSlider', {
+            'aria-label': isVi ? 'Cỡ chữ' : 'Font size',
             type: 'range',
             min: '8',
-            max: '36',
+            max: '100',
             step: '1',
             value: String(curSize),
             oninput: () => {
               const lyr = ensureTextLayer(textInput.value || 'COSLAB');
               const val = parseInt(sizeSlider.value, 10);
               lyr.text.size = val;
+              delete lyr.fit;
               sizeField.input.value = String(val);
               render2DCanvas();
             },
@@ -1378,7 +1575,7 @@
             title: isVi ? 'Cỡ chữ (px)' : 'Font Size (px)',
             value: curSize,
             min: 8,
-            max: 36,
+            max: 100,
             step: 1,
             unit: 'px',
             scrubScale: 0.25,
@@ -1386,6 +1583,7 @@
             onInput: (v) => {
               const lyr = ensureTextLayer(textInput.value || 'COSLAB');
               lyr.text.size = v;
+              delete lyr.fit;
               sizeSlider.value = String(v);
               render2DCanvas();
             },
@@ -1451,12 +1649,9 @@
 
           const typoSection = CL.h('div.fg-section', null,
             CL.h('div.fg-section-head', null,
-              CL.h('span.fg-section-title', { text: isVi ? 'Kiểu chữ' : 'Typography' })
+              CL.h('span.fg-section-title', { text: isVi ? 'Kiểu chữ' : 'Style' })
             ),
-            fontGrid,
-            CL.h('div.fg-grid-2', null, sizeField.el, spacingField.el),
-            sizeSlider,
-            styleBar
+            fontGrid
           );
 
           // --- SECTION 4: TEXT COLOUR — Pantone print colours only (no HEX) ---
@@ -1465,6 +1660,7 @@
           const curOpacity = Math.round((curLayer ? (curLayer.opacity ?? 1) : 1) * 100);
 
           const opacityInput = CL.h('input.fg-num-input', {
+            'aria-label': isVi ? 'Độ đậm (%)' : 'Opacity (%)',
             type: 'number',
             min: '10',
             max: '100',
@@ -1514,11 +1710,26 @@
             CL.h('div.fg-section-head', null,
               CL.h('span.fg-section-title', { text: isVi ? 'Màu chữ (Pantone)' : 'Text colour (Pantone)' })
             ),
-            fillBar,
             txtColorRow
           );
 
-          stepBody.append(contentSection, positionSection, typoSection, fillSection);
+          stepBody.append(contentSection);
+          if (!curLayer) {
+            stepBody.append(CL.h('p.easy-hint', { text: isVi ? 'Nhập chữ ở trên, chữ sẽ tự canh vừa thỏi son. Không cần chữ thì bấm Tiếp.' : 'Type above and the text fits itself to the tube. No text? Just tap Next.' }));
+            return;
+          }
+          stepBody.append(typoSection, layoutSection, fillSection, advancedBox(
+            CL.h('div.fg-grid-2', null, xField.el, yField.el),
+            CL.h('div.fg-row', null,
+              CL.h('div', { style: { flex: '0.9', minWidth: 0 } }, rotField.el),
+              rotSeg
+            ),
+            rotSlider,
+            CL.h('div.fg-grid-2', null, sizeField.el, spacingField.el),
+            sizeSlider,
+            styleBar,
+            fillBar
+          ));
         }
 
         // ======================================================
@@ -1550,10 +1761,11 @@
                   locked: false,
                   image: {
                     src: res.src,
-                    w: Math.min(54, res.w / 4),
-                    h: Math.min(54, res.h / 4),
+                    w: 54,
+                    h: (54 * res.h) / res.w,
                   },
                 };
+                applyLevel(newLayer, 'm');
                 design.layers.push(newLayer);
                 selectedLayerId = newLayer.id;
                 pushHistory();
@@ -1580,7 +1792,8 @@
             fileIn
           );
 
-          const curGraphic = design.layers.find((l) => l.part === targetPart && (l.type === 'image' || l.type === 'shape'))
+          const curGraphic = design.layers.find((l) => l.id === selectedLayerId && l.part === targetPart && l.type !== 'text')
+            || design.layers.find((l) => l.part === targetPart && (l.type === 'image' || l.type === 'shape'))
             || design.layers.find((l) => l.type === 'image' || l.type === 'shape');
 
           let graphicSection = null;
@@ -1593,6 +1806,7 @@
             const curPctY = Math.round((curGraphic.y ?? 0.5) * 100);
 
             const applyScale = (v) => {
+              delete curGraphic.fit;
               if (isImg) {
                 const ratio = (curGraphic.image.h || v) / (curGraphic.image.w || v);
                 curGraphic.image.w = v;
@@ -1631,7 +1845,7 @@
               prefix: 'W',
               value: curScale,
               min: 14,
-              max: 96,
+              max: 190,
               step: 2,
               unit: 'px',
               scrubScale: 0.4,
@@ -1659,9 +1873,10 @@
             });
 
             const scaleSlider = CL.h('input.fg-range', {
+              'aria-label': isVi ? 'Cỡ logo' : 'Logo size',
               type: 'range',
               min: '14',
-              max: '96',
+              max: '190',
               step: '2',
               value: String(curScale),
               oninput: () => {
@@ -1673,6 +1888,7 @@
             });
 
             const gRotSlider = CL.h('input.fg-range#studioLayerRotSlider', {
+              'aria-label': isVi ? 'Xoay' : 'Rotation',
               type: 'range',
               min: '-180',
               max: '180',
@@ -1689,28 +1905,20 @@
 
             graphicSection = CL.h('div.fg-section', null,
               CL.h('div.fg-section-head', null,
-                CL.h('span.fg-section-title', { text: curGraphic.name || (isVi ? 'Thuộc tính Logo' : 'Transform') }),
-                CL.h('button.fg-action-btn', {
-                  type: 'button',
-                  html: CL.icon('fit') + `<span>${isVi ? 'Căn giữa' : 'Center'}</span>`,
-                  onclick: () => {
-                    curGraphic.x = 0.5;
-                    curGraphic.y = 0.5;
-                    curGraphic.rotation = 0;
-                    pushHistory();
-                    render2DCanvas();
-                    renderStepPanel();
-                  },
-                })
+                CL.h('span.fg-section-title', { text: curGraphic.name || (isVi ? 'Logo của bạn' : 'Your logo') })
               ),
-              CL.h('div.fg-grid-2', null, gxField.el, gyField.el),
-              CL.h('div.fg-grid-2', null, gwField.el, gRotField.el),
-              scaleSlider,
-              gRotSlider,
+              sizeRow(curGraphic),
+              spotRow(curGraphic),
+              advancedBox(
+                CL.h('div.fg-grid-2', null, gxField.el, gyField.el),
+                CL.h('div.fg-grid-2', null, gwField.el, gRotField.el),
+                scaleSlider,
+                gRotSlider
+              ),
               CL.h('div.fg-row', { style: { marginTop: '4px' } },
                 isImg ? CL.h('button.btn.btn-primary', {
                   style: { flex: 1, height: '40px', fontSize: '13.5px', borderRadius: '10px' },
-                  text: isVi ? 'AI Xóa nền' : 'AI Remove BG',
+                  text: isVi ? 'Xóa nền trắng' : 'Remove background',
                   onclick: async () => {
                     try {
                       curGraphic.image.src = await CL.removeWhiteBackground(curGraphic.image.src, 236, 20);
@@ -1829,6 +2037,16 @@
             isSpaceDown = true;
             canvasContainer.style.cursor = 'grab';
             e.preventDefault();
+            return;
+          }
+
+          // Delete the selected text / logo
+          if ((e.key === 'Delete' || e.key === 'Backspace') && activeView === '2d' && STEPS[activeStepIdx].id !== 'colors') {
+            const lyr = getActiveTargetLayer();
+            if (lyr) {
+              e.preventDefault();
+              removeLayer(lyr);
+            }
             return;
           }
 

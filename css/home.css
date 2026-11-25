@@ -15,7 +15,7 @@
   gap: 16px;
   margin-bottom: clamp(24px, 3vw, 40px);
 }
-.lp-head h2 {
+.lp-head h1, .lp-head h2 {
   font-size: clamp(32px, 4.4vw, 60px);
   font-weight: 600;
   line-height: 1;
@@ -218,7 +218,7 @@
   .lp-ss-card { border-radius: var(--r-lg); }
   .lp-ss-tube { height: 60%; margin-bottom: 14%; }
   .lp-ss-meta { font-size: 13px; }
-  .lp-head h2 { font-size: 34px; }
+  .lp-head h1, .lp-head h2 { font-size: 34px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

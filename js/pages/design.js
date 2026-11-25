@@ -58,7 +58,7 @@
           CL.h('div.lp-ss-head', null,
             CL.h('div', null,
               CL.h('span.flow-step-of', { text: t('flow.stepOf', { n: 1, t: 4 }) }),
-              CL.h('h2', { text: t('flow.pickShape') })
+              CL.h('h1', { text: t('flow.pickShape') })
             ),
             count
           ),
@@ -87,7 +87,8 @@
         clearTimeout(timer);
         timer = setTimeout(async () => {
           if (!alive) return;
-          if (!window.THREE) { if (document.readyState !== 'complete') load3D(i); return; }
+          try { await CL.loadThree(); } catch (e) { return; } // the still stays
+          if (!alive || i !== active) return;
           if (!preview) {
             try { preview = new CL.Preview3D(glHost, { autoRotate: true }); } catch (e) { preview = { ok: false }; }
           }

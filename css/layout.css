@@ -472,3 +472,8 @@ body.app-mode { overflow: hidden; }
     gap: 14px;
   }
 }
+
+/* Comfortable touch targets in the footer on phones */
+@media (max-width: 760px) {
+  .footer-links a, .site-footer .brand { min-height: 36px; display: inline-flex; align-items: center; }
+}

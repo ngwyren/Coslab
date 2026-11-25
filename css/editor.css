@@ -459,12 +459,13 @@
   font-weight: 600;
   color: var(--fg-text-2);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
 }
 .fg-action-btn:hover {
   background: var(--fg-field);
   color: var(--fg-text);
 }
+.fg-action-btn.is-danger { color: var(--danger); }
 .fg-action-btn svg {
   width: 14px;
   height: 14px;
@@ -493,7 +494,7 @@
   font-weight: 500;
   color: var(--fg-text);
   outline: none;
-  transition: all 0.15s ease;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
 }
 .fg-text-input::placeholder {
   color: var(--fg-muted);
@@ -516,7 +517,7 @@
   border-radius: 10px;
   border: 1.5px solid transparent;
   background: var(--fg-field);
-  transition: all 0.15s ease;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
   gap: 6px;
   min-width: 0;
 }
@@ -689,7 +690,7 @@
   border: 1.5px solid transparent;
   background: var(--fg-field);
   gap: 10px;
-  transition: all 0.15s ease;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
 }
 .fg-fill-row:hover {
   background: var(--fg-field-hover);
@@ -1103,11 +1104,55 @@
   .studio-step-pill .step-name {
     display: none;
   }
-  .studio-workspace {
-    grid-template-columns: 1fr;
-    grid-template-rows: 45% 55%;
+  /* two rows: actions on top, the four steps below */
+  .editor-topbar {
+    height: auto;
+    flex-wrap: wrap;
+    padding-block: 8px;
   }
+  .editor-topbar-left,
+  .editor-topbar-right { gap: 6px; }
+  .editor-topbar-center { order: 3; width: 100%; }
+  .topbar-sep { display: none; }
+  .studio-stepper { width: 100%; }
+  .studio-step-pill { flex: 1; justify-content: center; padding: 0 6px; gap: 6px; height: 40px; min-width: 0; }
+  .studio-step-pill .step-name { display: inline; font-size: 12.5px; }
+  .studio-step-pill .step-num { display: none; }
+  .studio-back-link { width: 40px; height: 40px; padding: 0; justify-content: center; }
+  .studio-back-link span { display: none; }
+  .editor-topbar .icon-btn.sm { width: 40px; height: 40px; }
+  .editor-topbar .segmented button { min-height: 36px; }
+  .editor-topbar-right > .btn { width: 40px; height: 40px; padding: 0; justify-content: center; }
+  .editor-topbar-right > .btn span { display: none; }
+  .studio-workspace {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: 42% 58%;
+  }
+  /* the whole tube stays visible above the controls */
+  .editor-canvas-container { padding-top: 44px; }
+  .canvas-svg-root { max-height: calc((100dvh - 116px) * 0.42 - 48px); }
+  .canvas-part-Quickbar { top: 8px; padding: 3px; }
+  .studio-step-header, .fg-section { padding-inline: 16px; }
+  .easy-advanced, .easy-hint { padding-inline: 16px; }
+  .fg-section .easy-advanced { padding: 0; }
+  .fg-seg-btn { height: 40px; }
+  .fg-step-mini { width: 32px; height: 32px; }
+  .fg-num-input, .fg-text-input { font-size: 16px; } /* stops iOS zooming in on focus */
 }
+.fg-range { touch-action: pan-y; }
+#preview3dHost.is-loading::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 3px solid rgba(0, 0, 0, 0.12);
+  border-top-color: #18181b;
+  animation: p3dSpin 0.8s linear infinite;
+}
+@keyframes p3dSpin { to { transform: rotate(360deg); } }
 
 /* ---------- Customer flow: shared step bar (Design page + Studio) ---------- */
 .flow-bar {
@@ -1252,3 +1297,36 @@
 .colour-slot i { grid-row: 1 / 3; width: 26px; height: 26px; border-radius: 7px; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.1); }
 .colour-slot span { font-size: 11px; color: var(--fg-text-2); }
 .colour-slot strong { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ---------- Simple controls ---------- */
+.easy-row { display: grid; grid-template-columns: 78px 1fr; align-items: center; gap: 12px; }
+.easy-label { font-size: 13.5px; font-weight: 600; color: var(--fg-text-2); }
+.easy-hint { margin: 0; padding: 18px 22px; font-size: 14px; line-height: 1.5; color: var(--fg-text-2); }
+.easy-advanced { padding: 0 22px; }
+.easy-advanced > summary { padding: 16px 0; font-size: 13.5px; font-weight: 600; color: var(--fg-text-2); cursor: pointer; }
+.easy-advanced > summary:hover { color: var(--fg-text); }
+.easy-advanced > * + * { margin-bottom: 12px; }
+.fg-section .easy-advanced { padding: 0; }
+.fg-section .easy-advanced > summary { padding: 6px 0; }
+.combo-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.studio-font-grid .studio-font-card { flex-direction: column; align-items: flex-start; gap: 4px; min-width: 0; }
+.studio-font-grid .font-sample { width: 100%; text-align: start; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Between phone and desktop: icons only, so the whole bar fits */
+@media (max-width: 960px) {
+  .studio-back-link span,
+  .editor-topbar-right > .btn span { display: none; }
+  .studio-step-pill .step-num { display: none; }
+  .editor-topbar { gap: 8px; padding-inline: 12px; }
+}
+@media (max-width: 760px) {
+  .canvas-floating-controls { flex-direction: column; left: auto; right: 8px; bottom: 8px; padding: 2px; }
+  .canvas-floating-controls > :not(button) { display: none; }
+  .preview-3d-hud { display: none; }
+}
+@media (max-width: 360px) {
+  .editor-topbar { padding-inline: 8px; gap: 4px; }
+  .editor-topbar-left, .editor-topbar-right { gap: 2px; }
+  .studio-back-link, .editor-topbar .icon-btn.sm, .editor-topbar-right > .btn { width: 36px; height: 36px; }
+  .editor-topbar .segmented button { padding-inline: 10px; }
+}

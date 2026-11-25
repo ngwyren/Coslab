@@ -432,6 +432,7 @@
         const c = await renderCanvas(design, { scale: 4, background: fmt === 'jpg' ? '#faf9f6' : null });
         CL.download(c.toDataURL(fmt === 'jpg' ? 'image/jpeg' : 'image/png', 0.95), `${base}.${fmt}`);
       } else if (fmt === 'pdf') {
+        await CL.loadPdf();
         const pages = await buildSpecPages(design);
         const JsPDF = window.jspdf && window.jspdf.jsPDF;
         if (!JsPDF) throw new Error('jsPDF missing');

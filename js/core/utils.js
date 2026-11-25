@@ -10,6 +10,27 @@
   CL.clone = (o) => JSON.parse(JSON.stringify(o));
   CL.debounce = (fn, ms = 200) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; };
 
+  /** Load a script once, the first time it is needed. */
+  const scripts = new Map();
+  CL.loadScript = function (src) {
+    if (!scripts.has(src)) {
+      scripts.set(src, new Promise((resolve, reject) => {
+        const el = document.createElement('script');
+        el.src = src;
+        el.onload = () => resolve();
+        el.onerror = () => {
+          scripts.delete(src); // allow another try
+          el.remove();
+          reject(new Error('Could not load ' + src));
+        };
+        document.head.append(el);
+      }));
+    }
+    return scripts.get(src);
+  };
+  CL.loadThree = () => CL.loadScript('vendor/three.min.js');
+  CL.loadPdf = () => CL.loadScript('vendor/jspdf.umd.min.js');
+
   CL.esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
   /** Tiny element helper: h('div.cls#id', {attrs}, children) */
