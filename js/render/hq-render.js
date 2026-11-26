@@ -96,7 +96,7 @@
     return tex;
   }
 
-  async function buildScene(T, design) {
+  async function buildScene(T, design, backdrop) {
     const I = CL.Preview3D.internals;
     const L = CL.models.layout(design.model);
     const m = L.model;
@@ -167,7 +167,7 @@
     cyc.setAttribute('position', new T.Float32BufferAttribute(vtx, 3));
     cyc.setIndex(idx);
     cyc.computeVertexNormals();
-    scene.add(new T.Mesh(cyc, mat({ color: 0xf0f0f0, roughness: 0.95, side: T.DoubleSide })));
+    scene.add(new T.Mesh(cyc, mat({ color: new T.Color(backdrop || '#f0f0f0'), roughness: 0.95, side: T.DoubleSide })));
     return { scene, textures: Object.values(tex) };
   }
 
@@ -183,7 +183,7 @@
     canvas.width = W; canvas.height = H;
     const renderer = new T.WebGLRenderer({ canvas, antialias: false, preserveDrawingBuffer: true });
     renderer.toneMapping = T.NeutralToneMapping; // keeps Pantone colours, rolls off only the highlights
-    renderer.toneMappingExposure = 1;
+    renderer.toneMappingExposure = opts.exposure || 1;
     renderer.setPixelRatio(1);
     renderer.setSize(W, H, false);
 
@@ -202,15 +202,17 @@
     }
     const fill = opts.fill || 0.66;
     const D = (I.TUBE_H / fill) / (2 * Math.tan((camera.fov * Math.PI) / 360));
-    camera.position.set(dir.x * D, ty + dir.y * D, dir.z * D);
-    camera.lookAt(0, ty, 0);
+    // lift: raise the subject by this share of the frame height (room for an overlay at the bottom)
+    const aim = ty - (opts.lift || 0) * (I.TUBE_H / fill);
+    camera.position.set(dir.x * D, aim + dir.y * D, dir.z * D);
+    camera.lookAt(0, aim, 0);
     camera.aspect = W / H;
     camera.updateProjectionMatrix();
 
-    const { scene, textures } = await buildScene(T, design);
+    const { scene, textures } = await buildScene(T, design, opts.backdrop);
     const env = studioEnv(T);
     scene.environment = env;
-    scene.background = new T.Color(0xf2f2f2);
+    scene.background = new T.Color(opts.backdrop || '#f2f2f2');
 
     const pt = new PT.WebGLPathTracer(renderer);
     pt.tiles.set(4, 4); // small pieces of GPU work, so the screen keeps drawing between them

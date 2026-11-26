@@ -32,7 +32,7 @@
     return m;
   };
 
-  const MODEL_VERSION = 6;
+  const MODEL_VERSION = 7;
   const modelCache = new Map();
 
   /** Load one container: { body, cap, wand, foot, wiper, art_body, art_cap } as raw attributes (mm, y-up). */

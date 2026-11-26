@@ -11,7 +11,7 @@
   const WORKS = [
     [
       { src: 'assets/home/dmc-12', alt: 'Lip gloss jars on a coffee table in a sunlit living room' },
-      { src: 'assets/home/dmc-346', alt: 'Two eyeshadow palettes in clear cases' },
+      { src: 'assets/home/dmc-346', max: 2560, alt: 'Two eyeshadow palettes in clear cases' },
     ],
     [{ src: 'assets/home/dmc-2355', alt: 'Oversized lip gloss jar in a warm, sunlit room' }],
     [{ src: 'assets/home/dmc-12345', alt: 'Lip gloss jar suspended between two rock forms' }],
@@ -48,10 +48,11 @@
          Tight gutters, thin page margin, square corners; images only, no labels. */
       const tile = (w, full) => CL.h('figure.lp-work', null,
         CL.h('img', {
-          src: `${w.src}-2000.webp`,
-          srcset: `${w.src}-900.webp 900w, ${w.src}-2000.webp 2000w`,
+          src: `${w.src}-2560.webp`,
+          // sharp on retina: 1280 / 2560 / 3840 wide (exported from the full-size originals)
+          srcset: [1280, 2560, 3840].filter((x) => x <= (w.max || 3840)).map((x) => `${w.src}-${x}.webp ${x}w`).join(', '),
           sizes: full ? '100vw' : '(max-width: 760px) 100vw, 50vw',
-          width: 2000, height: 1125, alt: w.alt, loading: 'lazy', decoding: 'async',
+          width: 2560, height: 1440, alt: w.alt, loading: 'lazy', decoding: 'async',
         }));
       const works = CL.h('section.lp-works#worksSection', { 'aria-label': 'COSLAB studio' },
         WORKS.map((row) => CL.h('div.lp-works-row' + (row.length === 1 ? '.is-full' : ''), null, row.map((w) => tile(w, row.length === 1)))));

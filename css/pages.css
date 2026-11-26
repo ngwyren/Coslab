@@ -801,15 +801,14 @@
   overflow: hidden;
   cursor: pointer;
 }
+/* studio render fills the whole card (4:5, its own tinted backdrop) */
 .sc-tube {
   position: absolute;
-  inset: 3% 0 17%;
-  display: grid;
-  place-items: center;
+  inset: 0;
 }
-.sc-tube img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; transition: transform 0.7s var(--ease-framer); }
+.sc-tube img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform 0.9s var(--ease-framer); }
 .sc-card:hover .sc-tube img,
-.sc-card.is-open .sc-tube img { transform: translateY(-4px) rotate(-4deg) scale(1.03); }
+.sc-card.is-open .sc-tube img { transform: scale(1.04); }
 
 /* name bar overlaid on the image */
 .sc-bar {
