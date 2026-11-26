@@ -32,7 +32,7 @@
     return m;
   };
 
-  const MODEL_VERSION = 7;
+  const MODEL_VERSION = 9;
   const modelCache = new Map();
 
   /** Load one container: { body, cap, wand, foot, wiper, art_body, art_cap } as raw attributes (mm, y-up). */
@@ -110,13 +110,19 @@
 
   /** Per-pixel version of the clear gradient (the decimated walls have too few vertices for a smooth one). */
   function patchClearGradient(sh, part, y0, y1) {
-    const [a, b] = colorsOf(part.fill).map(linear);
-    Object.assign(sh.uniforms, { clA: { value: a }, clB: { value: b }, clY: { value: new THREE.Vector2(y0, y1) }, clR: { value: new THREE.Vector2(...rangeOf(part.fill)) } });
+    const cols = colorsOf(part.fill);
+    // a transparent end ("Clear") fades out in the other end's tint; the dense end sits on the coloured side
+    const clearEnd = cols.map((c) => CL.pantone.nearest(c).code === 'Clear');
+    const flip = clearEnd[0] && !clearEnd[1] ? 1 : 0;
+    let [a, b] = cols.map(linear);
+    if (flip) a = b.clone(); else if (clearEnd[1] && !clearEnd[0]) b = a.clone();
+    Object.assign(sh.uniforms, { clA: { value: a }, clB: { value: b }, clY: { value: new THREE.Vector2(y0, y1) }, clR: { value: new THREE.Vector2(...rangeOf(part.fill)) }, clFlip: { value: flip } });
     sh.vertexShader = 'varying float vClY;\n' + sh.vertexShader.replace('#include <begin_vertex>', 'vClY = position.y;\n#include <begin_vertex>');
-    sh.fragmentShader = 'varying float vClY; uniform vec3 clA; uniform vec3 clB; uniform vec2 clY; uniform vec2 clR;\n' + sh.fragmentShader.replace('#include <color_fragment>', `
+    sh.fragmentShader = 'varying float vClY; uniform vec3 clA; uniform vec3 clB; uniform vec2 clY; uniform vec2 clR; uniform float clFlip;\n' + sh.fragmentShader.replace('#include <color_fragment>', `
       float clU = clamp(((vClY - clY.x) / (clY.y - clY.x) - clR.x) / (clR.y - clR.x), 0.0, 1.0);
       diffuseColor.rgb = mix(clA, clB, min(clU / 0.55, 1.0));
-      diffuseColor.a = clU < 0.55 ? mix(0.92, 0.42, clU / 0.55) : mix(0.42, 0.06, (clU - 0.55) / 0.45);`);
+      float clV = mix(clU, 1.0 - clU, clFlip);
+      diffuseColor.a = clV < 0.55 ? mix(0.92, 0.42, clV / 0.55) : mix(0.42, 0.06, (clV - 0.55) / 0.45);`);
   }
 
   const isClear = (part) => !!part && (part.surface === 'clear' || part.surface === 'clear-gradient');
@@ -354,7 +360,7 @@
       // no browser autoscroll / paste on the middle button; double-click puts the view back
       el.addEventListener('mousedown', (e) => { if (e.button === 1) e.preventDefault(); });
       el.addEventListener('auxclick', (e) => e.preventDefault());
-      el.addEventListener('dblclick', () => this.targetPan.set(0, 0, 0));
+      el.addEventListener('dblclick', () => this.targetPan.set(0, this._home().panY, 0));
 
       el.addEventListener('pointerup', end);
       el.addEventListener('pointercancel', end);
@@ -365,6 +371,24 @@
       }, { passive: false });
     }
 
+    /**
+     * Starting distance and height: the whole container fits in the space above the toolbar
+     * at the bottom of the view (with a small gap), instead of running under it.
+     */
+    _home() {
+      const h = this.container.clientHeight || 0;
+      const hud = this.container.querySelector('.preview-3d-hud');
+      const below = h > 120 && hud && hud.offsetHeight ? (h - hud.offsetTop + 18) / h : (hud ? 0.12 : 0.05); // toolbar + gap, as a share of the height
+      // the Body / Cap switch sits over the top of the view in the Studio: keep the cap clear of it
+      const bar = this.container.parentElement && this.container.parentElement.querySelector('.canvas-part-Quickbar');
+      const top = h > 120 && bar && bar.offsetHeight ? (bar.offsetTop + bar.offsetHeight + 14) / h : 0.05;
+      const band = Math.max(0.5, 1 - below - top);
+      const tan = Math.tan((this.camera.fov * Math.PI) / 360);
+      const dist = CL.clamp((TUBE_H * 1.06) / (band * 2 * tan), 8, 22);
+      const up = 0.5 - (top + band / 2); // the band's centre above the middle of the view, as a share of its height
+      return { dist, panY: -up * 2 * dist * tan };
+    }
+
     /** Back to the starting angle, distance and centre (eases there, the short way round). */
     resetView() {
       const turn = Math.PI * 2;
@@ -372,8 +396,9 @@
       if (d > Math.PI) d -= turn; else if (d < -Math.PI) d += turn;
       this.targetRotY += d;
       this.targetRotX = 0.08;
-      this.targetDist = 14;
-      this.targetPan.set(0, 0, 0);
+      const home = this._home();
+      this.targetDist = home.dist;
+      this.targetPan.set(0, home.panY, 0);
       this.idleAt = performance.now();
     }
 
@@ -384,6 +409,14 @@
       this.renderer.domElement.style.height = '100%';
       this.camera.aspect = w / h;
       this.camera.updateProjectionMatrix();
+      if (this._framed && !this.idleAt) this._goHome(); // not moved by hand yet: keep the start framing for the new size
+    }
+
+    _goHome() {
+      const home = this._home();
+      this.dist = this.targetDist = home.dist;
+      this.pan.set(0, home.panY, 0);
+      this.targetPan.copy(this.pan);
     }
 
     _loop(ts) {
@@ -591,7 +624,7 @@
 
       add(makeGeometry(raw.wand), this._plain('#e6ebf1', 0.8), 0);
       // the lip product filling a clear body (picked in Clear mode)
-      if (isClear(P.base) && P.base.product && P.base.product.color) {
+      if (isClearMaterial(P.base) && P.base.product && P.base.product.color) {
         const cav = m.cavity.map(([z, r]) => new THREE.Vector2(Math.max(r - 0.08, 0.01), z));
         const top = cav[cav.length - 1], bot = cav[0];
         const prof = [new THREE.Vector2(0, bot.y), ...cav, new THREE.Vector2(0, top.y)];
@@ -600,7 +633,7 @@
         add(new THREE.LatheGeometry(prof, 96), pm, 0);
       }
       add(makeGeometry(raw.foot), this._plain('#f4ecdc', 0.9), 0);
-      add(makeGeometry(raw.wiper), this._plain('#eceff2', 0.5), 0);
+      add(makeGeometry(raw.wiper), this._plain('#f4f2ec', 0.45), 0); // milky-white stopper (R04)
 
       const parts = [
         ['body', P.base, 'base', 0, m.seam, m.artBody, 1],
@@ -628,8 +661,8 @@
 
       this.target.set(0, TUBE_H * 0.5, 0);
       if (!this._framed) {
-        this.dist = this.targetDist = 14;
         this._framed = true;
+        this._goHome();
       }
     }
 
@@ -710,6 +743,6 @@
 
   Preview3D.preload = (id) => loadModel(id).catch(() => {});
   // shared with the high quality renderer (js/render/hq-render.js)
-  Preview3D.internals = { loadModel, colorsOf, rangeOf, isClear, TUBE_H };
+  Preview3D.internals = { loadModel, colorsOf, rangeOf, isClear, isClearMaterial, TUBE_H };
   CL.Preview3D = Preview3D;
 })(window.CL);

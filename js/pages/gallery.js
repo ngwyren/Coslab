@@ -64,7 +64,7 @@
               style: { '--tint': CL.render.tintOf(design, 0.8) },
               onclick: () => setOpen(!card.classList.contains('is-open')),
             },
-              CL.h('div.sc-tube', null, CL.h('img', { src: `assets/archive/${tplId}.webp?v=14`, alt: t('templates.' + tplId), loading: 'lazy', decoding: 'async' })),
+              CL.h('div.sc-tube', null, CL.h('img', { src: `assets/archive/${tplId}.webp?v=15`, alt: t('templates.' + tplId), loading: 'lazy', decoding: 'async' })),
               CL.h('div.sc-bar', null,
                 CL.h('div.sc-title', null,
                   CL.h('h4', { text: t('templates.' + tplId) })

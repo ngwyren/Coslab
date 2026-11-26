@@ -96,7 +96,7 @@
     return tex;
   }
 
-  async function buildScene(T, design, backdrop) {
+  async function buildScene(T, design, backdrop, facing = 0) {
     const I = CL.Preview3D.internals;
     const L = CL.models.layout(design.model);
     const m = L.model;
@@ -112,9 +112,9 @@
 
     add(geometry(T, raw.wand), mat(Object.assign({}, ACRYLIC, { color: 0xf2f5f9 })));
     add(geometry(T, raw.foot), mat({ color: new T.Color('#efe5d2'), roughness: 0.95, sheen: 1, sheenRoughness: 0.6, sheenColor: new T.Color('#ffffff') }));
-    add(geometry(T, raw.wiper), mat({ color: 0xf4f5f7, roughness: 0.5, transmission: 0.4, ior: 1.4, thickness: 0.2 }));
+    add(geometry(T, raw.wiper), mat({ color: new T.Color('#f6f4ee'), roughness: 0.42, sheen: 0.3, sheenColor: new T.Color('#ffffff') })); // milky-white stopper (R04)
 
-    if (I.isClear(P.base) && P.base.product && P.base.product.color) {
+    if (I.isClearMaterial(P.base) && P.base.product && P.base.product.color) {
       const cav = m.cavity.map(([z, r]) => new T.Vector2(Math.max(r - 0.06, 0.01), z));
       const prof = [new T.Vector2(0, cav[0].y), ...cav, new T.Vector2(0, cav[cav.length - 1].y)];
       add(new T.LatheGeometry(prof, 128), mat({ color: new T.Color(P.base.product.color), roughness: 0.22, clearcoat: 0.5, clearcoatRoughness: 0.1 }));
@@ -167,7 +167,10 @@
     cyc.setAttribute('position', new T.Float32BufferAttribute(vtx, 3));
     cyc.setIndex(idx);
     cyc.computeVertexNormals();
-    scene.add(new T.Mesh(cyc, mat({ color: new T.Color(backdrop || '#f0f0f0'), roughness: 0.95, side: T.DoubleSide })));
+    const sweepMesh = new T.Mesh(cyc, mat({ color: new T.Color(backdrop || '#f0f0f0'), roughness: 0.95, side: T.DoubleSide }));
+    // the sweep turns with the camera, so its wall is always straight behind the product (never an edge in view)
+    sweepMesh.rotation.y = facing;
+    scene.add(sweepMesh);
     return { scene, textures: Object.values(tex) };
   }
 
@@ -209,7 +212,7 @@
     camera.aspect = W / H;
     camera.updateProjectionMatrix();
 
-    const { scene, textures } = await buildScene(T, design, opts.backdrop);
+    const { scene, textures } = await buildScene(T, design, opts.backdrop, Math.atan2(dir.x, dir.z));
     const env = studioEnv(T);
     scene.environment = env;
     scene.background = new T.Color(opts.backdrop || '#f2f2f2');
@@ -227,6 +230,17 @@
     pt.setScene(scene, camera);
 
     const stop = () => opts.signal && opts.signal.aborted;
+    // edge-aware denoise, drawn over every frame shown (not only the finished one); keeps outlines and print sharp
+    const dn = new Pass.FullScreenQuad(new PT.DenoiseMaterial({ map: pt.target.texture, blending: T.NoBlending }));
+    dn.material.kSigma = 1.0;
+    // stronger while few passes are in (grainy), down to the fine setting at 256+ passes
+    const denoise = () => {
+      const k = Math.min(Math.sqrt(256 / Math.max(pt.samples, 1)), 6);
+      dn.material.sigma = (opts.denoise ?? 3.2) * Math.min(Math.max(k, 1), 2.6);
+      dn.material.threshold = Math.min(0.07 * Math.max(k * k, 1), 0.6);
+      renderer.setRenderTarget(null);
+      dn.render(renderer);
+    };
     try {
       // timers rather than animation frames, so a background tab keeps rendering
       await new Promise((resolve, reject) => {
@@ -234,26 +248,21 @@
         const tick = () => {
           if (stop()) return reject(new DOMException('cancelled', 'AbortError'));
           pt.renderSample();
+          denoise();
           const n = Math.floor(pt.samples);
           if (opts.onProgress && n !== last) { last = n; opts.onProgress(Math.min(n, total), total, canvas); }
           if (n >= total) resolve(); else setTimeout(tick, 12);
         };
         setTimeout(tick, 0);
       });
-      // clean up the last grain: edge-aware denoise on the finished image (keeps outlines and print sharp)
-      const dn = new Pass.FullScreenQuad(new PT.DenoiseMaterial({ map: pt.target.texture, blending: T.NoBlending }));
-      dn.material.sigma = opts.denoise ?? 3.2;
-      dn.material.kSigma = 1.0;
-      dn.material.threshold = 0.07;
-      renderer.setRenderTarget(null);
-      dn.render(renderer);
-      dn.material.dispose();
+      denoise();
       const out = document.createElement('canvas');
       out.width = W; out.height = H;
       out.getContext('2d').drawImage(canvas, 0, 0);
       return out;
     } finally {
       const safe = (fn) => { try { fn(); } catch (e) { /* the library's own clean-up can trip on parts it never built */ } };
+      safe(() => dn.material.dispose());
       safe(() => pt.dispose());
       safe(() => env.dispose());
       textures.forEach((t) => safe(() => t.dispose()));

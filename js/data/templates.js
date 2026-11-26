@@ -162,6 +162,90 @@
       parts: { cap: one('#c09c83'), base: one('#d6d2c4', 'satin') },
       layers: [V('ATELIER', { font: 'Cinzel', weight: 600, size: 34, spacing: 5, color: '#93272c' })],
     },
+    // ---- 15 more concepts (26-11-2026) ----
+    {
+      templateId: 'strawberry-milk', model: 'cl-sc01', category: 'k-dewy',
+      parts: { cap: one('#eab8c3'), base: two('solid-gradient', '#cd545b', '#f4f2ec') },
+      layers: [T('base', 'strawberry\nmilk', { y: 0.45, font: 'Dancing Script', weight: 700, size: 58, color: '#97233f' })],
+    },
+    {
+      templateId: 'grey-latte', model: 'cl-sc02', category: 'k-minimal',
+      parts: { cap: one('#53565a', 'matte'), base: one('#d6d2c4', 'matte') },
+      layers: [
+        V('LATTE', { font: 'Montserrat', weight: 700, size: 42, spacing: 6, color: '#53565a' }),
+        T('cap', 'no.02', { font: 'Instrument Serif', italic: true, weight: 400, size: 20, color: '#d6d2c4' }),
+      ],
+    },
+    {
+      templateId: 'rose-quartz', model: 'cl-sc03', category: 'k-luxury',
+      parts: { cap: one('#844551'), base: part(solid('#eab8c3'), 'shimmer') },
+      layers: [V('Rose Quartz', { font: 'Cormorant Garamond', weight: 600, size: 40, spacing: 1, color: '#844551' })],
+    },
+    {
+      templateId: 'chili-crush', model: 'cl-sc04', category: 'k-velvet',
+      parts: { cap: one('#101820', 'matte'), base: one('#e1523d', 'matte') },
+      layers: [V('CHILI', { font: 'Bebas Neue', weight: 400, size: 92, spacing: 5, color: '#101820' })],
+    },
+    {
+      templateId: 'honey-glow', model: 'cl-sc05', category: 'k-gradient',
+      parts: { cap: one('#c09c83'), base: two('solid-gradient', '#c09c83', '#efdbb2') },
+      layers: [V('honey glow', { font: 'Italiana', weight: 400, size: 40, spacing: 2, color: '#7c2529' })],
+    },
+    {
+      templateId: 'coral-reef', model: 'cl-sc06', category: 'k-dewy',
+      parts: { cap: jelly('#e5554f', CLEAR), base: filled('#e5554f') },
+      layers: [V('CORAL', { y: 0.5, font: 'Montserrat', weight: 700, size: 40, spacing: 6, color: '#7c2529' })],
+    },
+    {
+      templateId: 'silver-mist', model: 'cl-ss01', category: 'k-minimal',
+      parts: { cap: one('#8a8d8f'), base: one('#d9e1e2', 'satin') },
+      layers: [T('base', 'mist', { y: 0.6, font: 'Playfair Display', italic: true, weight: 400, size: 48, color: '#53565a' })],
+    },
+    {
+      templateId: 'velvet-wine', model: 'cl-ss02', category: 'k-velvet',
+      parts: { cap: one('#101820'), base: one('#6f263d', 'matte') },
+      layers: [
+        T('base', 'VELVET\nWINE', { y: 0.5, font: 'Cinzel', weight: 600, size: 30, spacing: 4, color: '#efdbb2' }),
+      ],
+    },
+    {
+      templateId: 'plum-noir', model: 'cl-ss03', category: 'k-luxury',
+      parts: { cap: one('#101820'), base: one('#6a4c6b', 'satin') },
+      layers: [V('PLUM NOIR', { y: 0.55, font: 'Cinzel', weight: 600, size: 26, spacing: 3, color: '#efdbb2' })],
+    },
+    {
+      templateId: 'peony-bloom', model: 'cl-ss04', category: 'k-gradient',
+      parts: { cap: one('#eab8c3'), base: two('solid-gradient', '#ce0058', '#eab8c3') },
+      layers: [V('peony', { y: 0.6, font: 'Dancing Script', weight: 700, size: 64, color: WHITE })],
+    },
+    {
+      templateId: 'butter-cream', model: 'cl-ss05', category: 'k-minimal',
+      parts: { cap: one('#f4f2ec', 'matte'), base: one('#efdbb2', 'matte') },
+      layers: [V('butter cream', { font: 'Plus Jakarta Sans', weight: 700, size: 34, spacing: 1, color: '#c8102e' })],
+    },
+    {
+      templateId: 'ruby-glass', model: 'cl-ss06', category: 'k-dewy',
+      parts: { cap: one('#c8102e'), base: filled('#a6192e') },
+      layers: [V('RUBY', { y: 0.7, font: 'Bebas Neue', weight: 400, size: 64, spacing: 4, color: '#101820' })],
+    },
+    {
+      templateId: 'seoul-blossom', model: 'cl-sc01', category: 'k-gradient',
+      parts: { cap: jelly('#eab8c3', CLEAR), base: two('solid-gradient', '#eab8c3', '#f4f2ec') },
+      layers: [T('base', '벚꽃\n틴트', { y: 0.5, font: 'Noto Sans KR', weight: 700, size: 34, color: '#97233f' })],
+    },
+    {
+      templateId: 'graphite-red', model: 'cl-sc06', category: 'k-velvet',
+      parts: { cap: one('#53565a', 'matte'), base: one('#53565a', 'matte') },
+      layers: [
+        V('RED 01', { font: 'Montserrat', weight: 700, size: 40, spacing: 4, color: '#e5554f' }),
+        T('cap', '01', { font: 'Montserrat', weight: 500, size: 18, color: '#e5554f' }),
+      ],
+    },
+    {
+      templateId: 'champagne-toast', model: 'cl-ss02', category: 'k-luxury',
+      parts: { cap: one('#c09c83'), base: part(solid('#efdbb2'), 'shimmer') },
+      layers: [T('base', 'champagne\ntoast', { y: 0.55, font: 'Instrument Serif', italic: true, weight: 400, size: 46, color: '#7c2529' })],
+    },
     {
       templateId: 'blank-liptint', model: 'cl-sc01', category: 'k-minimal',
       parts: { cap: one('#f4f2ec', 'matte'), base: one('#f4f2ec', 'matte') },

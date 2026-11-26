@@ -242,10 +242,15 @@
         m += shape(rect, `url(#${id})`);
         m += shape(rect, 'none', ' stroke="#a3acb6" stroke-opacity="0.7" stroke-width="1"');
       } else {
-        vGrad(id, `<stop offset="${at(0)}" stop-color="${cA}" stop-opacity="0.95"/><stop offset="${at(0.3)}" stop-color="${CL.color.mix(cA, cB, 0.25)}" stop-opacity="0.8"/><stop offset="${at(0.6)}" stop-color="${CL.color.mix(cA, cB, 0.65)}" stop-opacity="0.5"/><stop offset="${at(0.85)}" stop-color="${cB}" stop-opacity="0.26"/><stop offset="${at(1)}" stop-color="${cB}" stop-opacity="0.18"/>`);
+        // the dense end sits on the coloured side; a transparent ("Clear") end fades out in the other end's tint
+        const isNone = (c) => CL.pantone.nearest(c).code === 'Clear';
+        const flip = isNone(cA) && !isNone(cB);
+        const A = flip ? cB : cA, B = isNone(cB) ? cA : cB;
+        const ops = flip ? [0.18, 0.26, 0.5, 0.8, 0.95] : [0.95, 0.8, 0.5, 0.26, 0.18];
+        vGrad(id, [[0, 0], [0.3, 0.25], [0.6, 0.65], [0.85, 1], [1, 1]].map(([t, k], i) => `<stop offset="${at(t)}" stop-color="${CL.color.mix(A, B, k)}" stop-opacity="${ops[i]}"/>`).join(''));
         m += shape(rect, '#ffffff', ' fill-opacity="0.4"');
         m += shape(rect, `url(#${id})`);
-        m += shape(rect, 'none', ` stroke="${CL.color.mix(cA, '#ffffff', 0.35)}" stroke-opacity="0.45" stroke-width="1.4"`);
+        m += shape(rect, 'none', ` stroke="${CL.color.mix(A, '#ffffff', 0.35)}" stroke-opacity="0.45" stroke-width="1.4"`);
       }
     } else if (surface === 'solid-gradient') {
       vGrad(id, `<stop offset="${at(0.04)}" stop-color="${cA}"/><stop offset="${at(0.28)}" stop-color="${CL.color.mix(cA, cB, 0.18)}"/><stop offset="${at(0.5)}" stop-color="${CL.color.mix(cA, cB, 0.5)}"/><stop offset="${at(0.72)}" stop-color="${CL.color.mix(cA, cB, 0.82)}"/><stop offset="${at(0.96)}" stop-color="${cB}"/>`);
@@ -312,14 +317,22 @@
     const n2 = (v) => CL.round(v, 2);
     let innerBase = '', innerCap = '';
     // the lip product filling a clear body's cavity (picked in Clear mode), seen in both views
-    const prod = isClear(P.base) && P.base.product && P.base.product.color;
+    // the lip colour shows only through a fully clear body (a tinted body hides it)
+    const prod = isClear(P.base) && fillColors(P.base.fill).every((c) => CL.pantone.nearest(c).code === 'Clear') && P.base.product && P.base.product.color;
     const k = L.scale, cx = L.scene.cx, M = L.model, yOf = (z) => L.scene.ground - z * k;
     const edge = 'stroke="#a9b2bc" stroke-width=".7"';
     const glint = (x, y0, y1, o = 0.9) => `<line x1="${n2(x)}" y1="${n2(y0)}" x2="${n2(x)}" y2="${n2(y1)}" stroke="#fff" stroke-width="1.4" stroke-opacity="${o}" stroke-linecap="round"/>`;
-    const cr = Math.max(...M.cavity.map((p) => p[1])), cz0 = Math.min(...M.cavity.map((p) => p[0])), cz1 = Math.max(...M.cavity.map((p) => p[0]));
-    // the lip colour fills the whole clear body; a fine light edge keeps the plastic readable
+    // R09: the lip colour fills the reservoir, drawn from its profile (a straight bore, or CL-SC01's wide well under a narrow neck)
+    const cz0 = Math.min(...M.cavity.map((p) => p[0]));
+    const cavPath = (() => {
+      const pts = M.cavity.map(([z, r]) => [cx + r * k, yOf(z)]);
+      const side = pts.map(([x, y]) => `${n2(x)},${n2(y)}`);
+      const back = pts.slice().reverse().map(([x, y]) => `${n2(2 * cx - x)},${n2(y)}`);
+      return `M${n2(cx)},${n2(yOf(cz0))} L${side.join(' L')} L${back.join(' L')} Z`;
+    })();
     const cavity = prod
-      ? partShape(L.baseShell, prod) + partShape(L.baseShell, 'none', ' stroke="#ffffff" stroke-opacity=".45" stroke-width="1.2"')
+      ? `<path d="${cavPath}" fill="${prod}"/>`
+        + `<path d="${cavPath}" fill="none" stroke="#ffffff" stroke-opacity=".45" stroke-width="1" stroke-linejoin="round"/>`
       : '';
     if (prod && !opts.inside) innerBase = cavity;
     if (opts.inside) {

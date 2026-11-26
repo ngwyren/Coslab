@@ -184,6 +184,8 @@
       if (!f) return;
       if (f.type === 'linear' && f.stops) {
         f.stops.forEach((s) => { const p = byCode.get(s.pantone) || nearest(s.c); s.c = p.screen; s.pantone = p.code; });
+        // only a "Clear" end is see-through: a blend of two colours is solid plastic
+        if (part.surface === 'clear-gradient' && !f.stops.some((s) => s.pantone === 'Clear')) part.surface = 'solid-gradient';
       } else if (!f.pantone || !byCode.has(f.pantone)) {
         Object.assign(part, { fill: fillFor(nearest(f.color || '#b85c66')) });
       }

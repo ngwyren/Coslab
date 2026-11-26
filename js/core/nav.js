@@ -11,7 +11,6 @@
     { href: '#/design', route: 'design', key: 'nav.design' },
     { href: '#/gallery', route: 'gallery', key: 'nav.gallery' },
     { href: '#/my-designs', route: 'my-designs', key: 'nav.myDesigns' },
-    { href: '#/settings', route: 'settings', key: 'nav.settings' },
   ];
 
   let nav, indicator, toggle, overlay, isOpen = false, lastFocus = null;

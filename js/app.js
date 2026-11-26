@@ -16,7 +16,6 @@
     editor: { page: 'editor', nav: 'design' },
     gallery: { page: 'gallery', nav: 'gallery' },
     'my-designs': { page: 'my-designs', nav: 'my-designs' },
-    settings: { page: 'settings', nav: 'settings' },
   };
 
   function parse() {
@@ -135,7 +134,7 @@
     I18N.apply(document);
     CL.rollLetters();
     // place the black pill again once the new page is laid out
-    requestAnimationFrame(() => CL.nav && CL.nav.sync(true));
+    requestAnimationFrame(() => { if (CL.nav) CL.nav.sync(true); if (CL.paceFooter) CL.paceFooter(); });
     document.title = route.page === 'home' ? 'CosLab' : `${t(page.titleKey || 'nav.home')} — CosLab`;
     if (!opts.rerender) {
       if (route.anchor) setTimeout(() => { const el = document.getElementById(route.anchor); el && el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 60);
@@ -184,7 +183,9 @@
       if (navigator.clipboard) navigator.clipboard.writeText(mail).then(done, done); else done();
     }));
     const track = document.querySelector('.mq-track');
-    const pace = () => { if (track) track.style.setProperty('--mq-dur', `${track.scrollWidth / 2 / 90}s`); };
+    // measured again on every page: the footer is hidden in the Studio, where its width reads 0 (no motion)
+    const pace = () => { if (track && track.scrollWidth) track.style.setProperty('--mq-dur', `${track.scrollWidth / 2 / 90}s`); };
+    CL.paceFooter = pace;
     pace();
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(pace);
     window.addEventListener('resize', CL.debounce(pace, 150), { passive: true });

@@ -209,13 +209,13 @@
         const undoBtn = CL.h('button.icon-btn.sm#btnUndo', {
           html: CL.icon('undo'),
           'aria-label': t('ui.undo'),
-          title: 'Undo (Ctrl+Z)',
+          title: t('ui.undo') + ' (Ctrl+Z)',
           onclick: undo,
         });
         const redoBtn = CL.h('button.icon-btn.sm#btnRedo', {
           html: CL.icon('redo'),
           'aria-label': t('ui.redo'),
-          title: 'Redo (Ctrl+Y)',
+          title: t('ui.redo') + ' (Ctrl+Shift+Z)',
           onclick: redo,
         });
 
@@ -313,7 +313,6 @@
           canvasViewport,
           CL.h('div.preview-3d-host#preview3dHost', { style: { display: 'none' } },
             CL.h('div.preview-3d-hud', null,
-              CL.h('span.hud-hint', { html: CL.icon('cube') + '<span> Drag 360°</span>' }),
               CL.h('button.hud-reset', {
                 type: 'button',
                 title: t('ui.resetView'),
@@ -491,7 +490,7 @@
         }
 
         function syncPartChips() {
-          partQuickBar.style.display = activeView === '2d' ? 'flex' : 'none';
+          partQuickBar.style.display = 'flex'; // Body / Cap switch in both the 2D and the 3D view
           partQuickBar.querySelectorAll('.canvas-part-chip').forEach((btn) => {
             const pId = btn.dataset.partChip;
             btn.classList.toggle('is-active', pId === activePart);
@@ -1361,10 +1360,14 @@
               const next = [colours[0], colours[1]];
               next[colorSlot] = p;
               curPart.fill = toLinear(next[0], next[1]);
+              // only a transparent end is see-through: two colours make solid plastic
+              if (!next.some((c) => c.code === 'Clear')) curPart.surface = 'solid-gradient';
             } else if (productMode) {
               curPart.product = { color: p.screen, pantone: p.code };
             } else {
               curPart.fill = toSolid(p);
+              // a clear cap given a colour is solid plastic again (shimmer stays shimmer)
+              if (isGradientSurface(curPart.surface)) curPart.surface = 'solid';
             }
           };
           const pick = (p) => { setColour(p); commit(); };

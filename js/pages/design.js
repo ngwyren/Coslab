@@ -18,7 +18,7 @@
       let active = draft ? FORMS.indexOf(CL.models.getModel(draft.model)) : 0;
 
       // Renders of the clear 3D containers (same view as the live 3D card)
-      const thumbSrc = (m) => `assets/models/thumbs/${m.id}.webp?v=8`;
+      const thumbSrc = (m) => `assets/models/thumbs/${m.id}.webp?v=10`;
       let locked = false;
 
       const looks = FORMS.map((m) => CL.templates.createForModel(m.id));

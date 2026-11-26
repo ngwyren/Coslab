@@ -116,6 +116,10 @@
       'cloud-nude': 'Cloud Nude', 'plum-seoul': 'Plum Seoul', 'brick-type': 'Brick Type',
       'gold-dust': 'Gold Dust', 'number-one': 'No.1 Red', 
       'clear-mono': 'Clear Mono', 'sunset-soda': 'Sunset Soda', 'lilac-milk': 'Lilac Milk', 'ivory-atelier': 'Ivory Atelier',
+      'strawberry-milk': 'Strawberry Milk', 'grey-latte': 'Grey Latte', 'rose-quartz': 'Rose Quartz', 'chili-crush': 'Chili Crush',
+      'honey-glow': 'Honey Glow', 'coral-reef': 'Coral Reef', 'silver-mist': 'Silver Mist', 'velvet-wine': 'Velvet Wine',
+      'plum-noir': 'Plum Noir', 'peony-bloom': 'Peony Bloom', 'butter-cream': 'Butter Cream', 'ruby-glass': 'Ruby Glass',
+      'seoul-blossom': 'Seoul Blossom', 'graphite-red': 'Graphite Red', 'champagne-toast': 'Champagne Toast',
       'blank-liptint': 'Clean Canvas', 'blank-liptintDesc': 'Pure white base',
     },
     editor: {
