@@ -320,6 +320,12 @@
                 'aria-label': I18N.lang === 'vi' ? 'Đặt lại góc nhìn' : 'Reset view',
                 html: CL.icon('rotate') + `<span>${I18N.lang === 'vi' ? 'Góc gốc' : 'Reset'}</span>`,
                 onclick: () => preview3DInstance && preview3DInstance.resetView(),
+              }),
+              CL.h('button.hud-reset.hud-render', {
+                type: 'button',
+                title: I18N.lang === 'vi' ? 'Render chất lượng cao (như Blender)' : 'High quality render (Blender-like)',
+                html: CL.icon('image') + '<span>Render</span>',
+                onclick: () => CL.openRender(design, preview3DInstance && preview3DInstance.camera),
               }))
           ),
           CL.h('div.canvas-floating-controls#canvasFloatingControls', {
@@ -1198,7 +1204,8 @@
         // ======================================================
         // Which colour of a 2-colour surface the palette edits (kept across panel re-renders)
         let colorSlot = 0;
-        const COMBOS = ['cherry-jelly', 'soft-bun', 'red-cap', 'peach-fizz', 'noir-cherry', 'porcelain-rose', 'cocoa-milk', 'mauve-line'];
+        // the six looks people pick most: clear tint, classic red, black luxe, nude, cocoa nude, all white
+        const COMBOS = ['cherry-jelly', 'red-cap', 'noir-cherry', 'soft-bun', 'cocoa-milk', 'porcelain-rose'];
         const isGradientSurface = (s) => s === 'solid-gradient' || s === 'clear-gradient';
         const stopEntry = (s) => CL.pantone.of({ color: s.c, pantone: s.pantone });
 

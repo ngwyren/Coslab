@@ -9,8 +9,8 @@
 
   const FINISH = {
     matte: { roughness: 0.85, metalness: 0, specularIntensity: 0.15 },
-    satin: { roughness: 0.5, metalness: 0, specularIntensity: 0.3 },
-    gloss: { roughness: 0.32, metalness: 0, specularIntensity: 0.4 },
+    satin: { roughness: 0.4, metalness: 0, specularIntensity: 0.35 },
+    gloss: { roughness: 0.16, metalness: 0, specularIntensity: 0.5 },
     metallic: { roughness: 0.38, metalness: 0.75 },
   };
 
@@ -18,13 +18,17 @@
   const TRUE_COLOR = '0.4';
   const trueColor = (m, key, rim = '0.0') => {
     m.onBeforeCompile = (sh) => {
+      withStrips(sh);
       sh.fragmentShader = sh.fragmentShader.replace('#include <output_fragment>', `
-          outgoingLight = mix(outgoingLight, diffuseColor.rgb, ${TRUE_COLOR});
+          outgoingLight = mix(outgoingLight, diffuseColor.rgb, ${TRUE_COLOR}) + ${TRUE_COLOR} * totalSpecular;
+          #ifdef USE_CLEARCOAT
+            outgoingLight += ${TRUE_COLOR} * clearcoatSpecular * material.clearcoat;
+          #endif
           float clEdge = 1.0 - abs(dot(normalize(normal), normalize(vViewPosition)));
           outgoingLight *= 1.0 - ${rim} * clEdge * clEdge;
           #include <output_fragment>`);
     };
-    m.customProgramCacheKey = () => 'clTrue-' + key;
+    m.customProgramCacheKey = () => 'clTrue-' + key + (STRIPS.value ? '-s' : '');
     return m;
   };
 
@@ -140,6 +144,7 @@
    * on the left and a faint fill on the right. The brightness changes smoothly everywhere, so
    * reflections stay soft (no light strips) and neutral white keeps the product's colour.
    */
+  const smooth = (a, b, x) => { const t = CL.clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
   function makeEnv(renderer) {
     const pm = new THREE.PMREMGenerator(renderer);
     const env = new THREE.Scene();
@@ -163,6 +168,54 @@
     mat.dispose();
     pm.dispose();
     return tex;
+  }
+
+  /**
+   * Studio softboxes on black: two tall panels at the front sides and one overhead. Only the
+   * reflections read this map (see withStrips), so the softboxes print long clean highlights
+   * like a product photo without brightening the colour of the part itself.
+   */
+  function makeStrips(renderer) {
+    const pm = new THREE.PMREMGenerator(renderer);
+    const env = new THREE.Scene();
+    const geo = new THREE.SphereGeometry(10, 192, 96);
+    const pos = geo.attributes.position;
+    const rgb = new Float32Array(pos.count * 3);
+    const v = new THREE.Vector3();
+    const box = (az, el, a0, w, e0, e1, k) => k * (1 - smooth(w * 0.6, w, Math.abs(az - a0))) * smooth(e0 - 0.12, e0, el) * (1 - smooth(e1, e1 + 0.12, el));
+    for (let i = 0; i < pos.count; i++) {
+      v.fromBufferAttribute(pos, i).normalize();
+      const az = Math.atan2(v.x, v.z), el = Math.asin(CL.clamp(v.y, -1, 1));
+      const l = box(az, el, -0.95, 0.2, -0.35, 0.85, 16) + box(az, el, 1.05, 0.12, -0.25, 0.7, 9) + (el > 1.0 ? 5 * smooth(1.0, 1.15, el) : 0);
+      rgb.set([l, l, l], i * 3);
+    }
+    geo.setAttribute('color', new THREE.BufferAttribute(rgb, 3));
+    const mat = new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.BackSide, toneMapped: false });
+    env.add(new THREE.Mesh(geo, mat));
+    const tex = pm.fromScene(env, 0.02).texture;
+    geo.dispose();
+    mat.dispose();
+    pm.dispose();
+    return tex;
+  }
+  const STRIPS = { value: null };
+  /** Add the softbox reflections to a physical material's specular (and top coat) only. */
+  function withStrips(sh, k = '1.0') {
+    if (!STRIPS.value) return;
+    sh.uniforms.clStrips = STRIPS;
+    sh.fragmentShader = 'uniform sampler2D clStrips;\n' + sh.fragmentShader.replace('#include <lights_fragment_maps>', `#include <lights_fragment_maps>
+      #if defined( ENVMAP_TYPE_CUBE_UV )
+      {
+        vec3 clR = reflect( - geometry.viewDir, geometry.normal );
+        clR = inverseTransformDirection( normalize( mix( clR, geometry.normal, material.roughness * material.roughness ) ), viewMatrix );
+        radiance += textureCubeUV( clStrips, clR, material.roughness ).rgb * ${k};
+        #ifdef USE_CLEARCOAT
+          vec3 clC = reflect( - geometry.viewDir, geometry.clearcoatNormal );
+          clC = inverseTransformDirection( normalize( mix( clC, geometry.clearcoatNormal, material.clearcoatRoughness * material.clearcoatRoughness ) ), viewMatrix );
+          clearcoatRadiance += textureCubeUV( clStrips, clC, material.clearcoatRoughness ).rgb * ${k};
+        #endif
+      }
+      #endif`);
   }
 
   class Preview3D {
@@ -191,6 +244,7 @@
       this.scene = new THREE.Scene();
       // "PBR Reflections": environment map drives glass/chrome reflections
       this.scene.environment = hq ? makeEnv(r) : null;
+      if (hq && !STRIPS.value) STRIPS.value = makeStrips(r);
 
       this.camera = new THREE.PerspectiveCamera(26, 1, 0.1, 100);
       this.target = new THREE.Vector3(0, 2.8, 0);
@@ -366,11 +420,12 @@
       const pure = isClearMaterial(part);
       const m = new THREE.MeshPhysicalMaterial({
         color: 0xffffff, transparent: true, depthWrite: false,
-        roughness: 0.22, metalness: 0, envMapIntensity: pure ? 1.0 : 0.86,
+        roughness: 0.08, metalness: 0, envMapIntensity: pure ? 1.1 : 0.95,
       });
       const base = pure ? (inner ? '0.10' : '0.13') : (inner ? 'diffuseColor.a * 0.35' : 'diffuseColor.a');
       m.onBeforeCompile = (sh) => {
         patchClearGradient(sh, part, y0, y1);
+        withStrips(sh);
         sh.fragmentShader = sh.fragmentShader.replace('#include <output_fragment>', `
           float clFacing = abs(dot(normalize(normal), normalize(vViewPosition)));
           float clRim = pow(1.0 - clFacing, 1.6);
@@ -385,7 +440,7 @@
           ${inner ? 'diffuseColor.a *= 1.0 - smoothstep(0.35, 0.8, clUp);' : ''}
           #include <output_fragment>`);
       };
-      m.customProgramCacheKey = () => `clGlass-${pure}-${inner}`;
+      m.customProgramCacheKey = () => `clGlass-${pure}-${inner}${STRIPS.value ? '-s' : ''}`;
       this.disposables.push(m);
       return m;
     }
@@ -451,6 +506,8 @@
 
     _plain(color, roughness) {
       const m = new THREE.MeshPhysicalMaterial({ color: linear(color), roughness, envMapIntensity: 0.86 });
+      m.onBeforeCompile = (sh) => withStrips(sh, '0.6');
+      m.customProgramCacheKey = () => 'clPlain' + (STRIPS.value ? '-s' : '');
       this.disposables.push(m);
       return m;
     }
@@ -652,5 +709,7 @@
   }
 
   Preview3D.preload = (id) => loadModel(id).catch(() => {});
+  // shared with the high quality renderer (js/render/hq-render.js)
+  Preview3D.internals = { loadModel, colorsOf, rangeOf, isClear, TUBE_H };
   CL.Preview3D = Preview3D;
 })(window.CL);
