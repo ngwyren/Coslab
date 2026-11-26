@@ -268,10 +268,9 @@
   /** Render dialog: pick a quality, watch the image clear up, then save the PNG. */
   CL.openRender = function (source, camera) {
     const design = CL.clone(source);
-    const vi = I18N.lang === 'vi';
     const QUALITY = [
-      ['draft', vi ? 'Nháp' : 'Draft', 640, 800, 64],
-      ['good', vi ? 'Đẹp' : 'Good', 1080, 1350, 256],
+      ['draft', t('ui.draft'), 640, 800, 64],
+      ['good', t('ui.good'), 1080, 1350, 256],
       ['studio', 'Studio', 2160, 2700, 512],
     ];
     let q = CL.store.settings.renderQuality || 'good';
@@ -287,7 +286,7 @@
     const status = CL.h('p.hq-status', { 'aria-live': 'polite' });
     const saveBtn = CL.h('button.btn.btn-primary', {
       type: 'button', disabled: true,
-      html: CL.icon('download') + `<span>${vi ? 'Tải PNG' : 'Save PNG'}</span>`,
+      html: CL.icon('download') + `<span>${t('ui.savePng')}</span>`,
       onclick: () => {
         if (!result) return;
         const a = document.createElement('a');
@@ -296,7 +295,7 @@
         a.click();
       },
     });
-    const pick = CL.h('div.segmented.block.hq-quality', { role: 'radiogroup', 'aria-label': vi ? 'Chất lượng' : 'Quality' },
+    const pick = CL.h('div.segmented.block.hq-quality', { role: 'radiogroup', 'aria-label': t('ui.quality') },
       ...QUALITY.map(([id, label, w, h]) => CL.h('button', {
         type: 'button', role: 'radio', 'data-id': id, title: `${w} × ${h}px`,
         onclick: () => { if (q !== id) { q = id; CL.store.saveSettings({ renderQuality: q }); start(); } },
@@ -318,7 +317,7 @@
       result = null;
       saveBtn.disabled = true;
       bar.style.width = '0%';
-      status.textContent = vi ? 'Đang chuẩn bị ánh sáng và chất liệu… lần đầu có thể mất khoảng 30 giây.' : 'Preparing light and materials… the first time can take about 30 seconds.';
+      status.textContent = t('ui.preparing');
       const t0 = performance.now();
       try {
         const out = await renderHQ(design, {
@@ -328,30 +327,30 @@
             if (canvas.parentNode !== stage) stage.replaceChildren(canvas);
             bar.style.width = `${(n / all) * 100}%`;
             const left = n > 2 ? Math.round(((performance.now() - t0) / n) * (all - n) / 1000) : null;
-            status.textContent = `${vi ? 'Lượt' : 'Pass'} ${n}/${all}` + (left != null ? ` · ${vi ? 'còn khoảng' : 'about'} ${left}s${vi ? '' : ' left'}` : '');
+            status.textContent = t('ui.pass', { n, all }) + (left != null ? ' · ' + t('ui.left', { s: left }) : '');
           },
         });
         if (ctrl !== job || !open) return;
         result = out;
         stage.replaceChildren(out);
         bar.style.width = '100%';
-        status.textContent = `${vi ? 'Xong' : 'Done'} · ${W} × ${H}px`;
+        status.textContent = `${t('ui.done')} · ${W} × ${H}px`;
         saveBtn.disabled = false;
         saveBtn.focus();
       } catch (e) {
         if (e && e.name === 'AbortError') return;
         console.error(e);
-        if (ctrl === job && open) status.textContent = vi ? 'Máy này chưa render được. Bạn thử lại trên máy tính có card đồ hoạ.' : 'This device could not render it. Try a computer with a graphics card.';
+        if (ctrl === job && open) status.textContent = t('ui.renderFail');
       }
     }
 
-    const modal = CL.h('div.modal.ex-modal.hq-modal', { role: 'dialog', 'aria-modal': 'true', 'aria-label': vi ? 'Render chất lượng cao' : 'High quality render' },
+    const modal = CL.h('div.modal.ex-modal.hq-modal', { role: 'dialog', 'aria-modal': 'true', 'aria-label': t('ui.renderTitle') },
       stage,
       CL.h('div.ex-side', null,
         CL.h('div.ex-head', null,
-          CL.h('h3', { text: vi ? 'Render chất lượng cao' : 'High quality render' }),
+          CL.h('h3', { text: t('ui.renderTitle') }),
           CL.h('button.icon-btn.sm', { type: 'button', 'aria-label': t('common.close'), html: CL.icon('close'), onclick: close })),
-        CL.h('p.hq-note', { text: vi ? 'Ánh sáng studio, nhựa trong khúc xạ thật và bóng đổ mềm, như render bằng Blender. Ảnh mịn dần qua từng lượt.' : 'Studio light, true refraction through clear plastic and soft shadows, like a Blender render. The image clears up pass by pass.' }),
+        CL.h('p.hq-note', { text: t('ui.renderNote') }),
         pick,
         CL.h('div.hq-bar', null, bar),
         status,

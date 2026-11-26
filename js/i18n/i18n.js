@@ -43,6 +43,9 @@
     (root || document).querySelectorAll('[data-i18n-ph]').forEach((el) => {
       el.setAttribute('placeholder', t(el.getAttribute('data-i18n-ph')));
     });
+    (root || document).querySelectorAll('[data-i18n-aria]').forEach((el) => {
+      el.setAttribute('aria-label', t(el.getAttribute('data-i18n-aria')));
+    });
     (root || document).querySelectorAll('[data-i18n-title]').forEach((el) => {
       const v = t(el.getAttribute('data-i18n-title'));
       el.setAttribute('title', v);

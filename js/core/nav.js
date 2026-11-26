@@ -48,7 +48,7 @@
   function buildOverlay() {
     const route = activeLink()?.dataset.route;
     overlay.innerHTML = '';
-    const list = CL.h('nav.nav-ov-links', { 'aria-label': 'Main' },
+    const list = CL.h('nav.nav-ov-links', { 'aria-label': t('ui.mainNav') },
       LINKS.map((l, i) =>
         CL.h('a.nav-ov-link' + (l.route === route ? '.is-active' : ''), {
           href: l.href,
@@ -76,7 +76,7 @@
 
   function setToggleUI() {
     toggle.setAttribute('aria-expanded', String(isOpen));
-    toggle.setAttribute('aria-label', isOpen ? t('common.close') : 'Menu');
+    toggle.setAttribute('aria-label', isOpen ? t('common.close') : t('ui.menu'));
     toggle.classList.toggle('is-open', isOpen);
   }
 

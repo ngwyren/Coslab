@@ -180,7 +180,7 @@
     // Mail links: open the mail app if there is one, and always copy the address with a short note
     document.querySelectorAll('a[data-copy-mail]').forEach((a) => a.addEventListener('click', () => {
       const mail = a.getAttribute('href').replace('mailto:', '');
-      const done = () => CL.toast && CL.toast(I18N.lang === 'vi' ? `Đã chép email: ${mail}` : `Email copied: ${mail}`);
+      const done = () => CL.toast && CL.toast(t('ui.emailCopied', { mail }));
       if (navigator.clipboard) navigator.clipboard.writeText(mail).then(done, done); else done();
     }));
     const track = document.querySelector('.mq-track');
@@ -206,11 +206,13 @@
       document.documentElement.setAttribute('data-theme', mode);
       if (themeBtn) {
         themeBtn.innerHTML = CL.icon(mode === 'dark' ? 'sun' : 'moon');
-        themeBtn.setAttribute('aria-label', mode === 'dark' ? 'Light theme' : 'Dark theme');
+        themeBtn.setAttribute('aria-label', t(mode === 'dark' ? 'ui.lightTheme' : 'ui.darkTheme'));
         themeBtn.title = themeBtn.getAttribute('aria-label');
       }
     };
     setTheme(CL.store.settings.theme === 'dark' ? 'dark' : 'light');
+    // relabel the theme button when the language changes
+    I18N.onChange(() => setTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light'));
     if (themeBtn) themeBtn.addEventListener('click', () => {
       const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
       CL.store.saveSettings({ theme: next });

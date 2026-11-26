@@ -11,7 +11,6 @@
    * onInput(entry): code changed while dragging · onCommit(): drag finished
    */
   CL.PantonePicker = function ({ value, ink = false, onInput, onCommit }) {
-    const isVi = I18N.lang === 'vi';
     const toHex = (c) => CL.color.rgbToHex(CL.color.hsvToRgb(c));
     const hsv = last && value && last.code === value.code && last.ink === ink
       ? Object.assign({}, last.hsv)
@@ -19,8 +18,8 @@
     let code = value ? value.code : '';
 
     const dot = CL.h('i.pp-dot');
-    const area = CL.h('div.pp-area', { tabindex: '0', role: 'slider', 'aria-label': isVi ? 'Đậm nhạt và sáng tối' : 'Saturation and brightness' }, dot);
-    const hue = CL.h('input.pp-hue', { type: 'range', min: '0', max: '360', step: '1', value: String(Math.round(hsv.h)), 'aria-label': isVi ? 'Tông màu' : 'Hue' });
+    const area = CL.h('div.pp-area', { tabindex: '0', role: 'slider', 'aria-label': t('ui.satBright') }, dot);
+    const hue = CL.h('input.pp-hue', { type: 'range', min: '0', max: '360', step: '1', value: String(Math.round(hsv.h)), 'aria-label': t('ui.hue') });
     const swFree = CL.h('i'), swPt = CL.h('i');
     const name = CL.h('strong');
     const near = CL.h('div.pp-near');
@@ -95,11 +94,11 @@
 
     paint();
     const box = CL.h('details.pp', null,
-      CL.h('summary', null, CL.h('i', { 'aria-hidden': 'true' }), CL.h('span', { text: isVi ? 'Tự kéo màu' : 'Drag your own colour' })),
+      CL.h('summary', null, CL.h('i', { 'aria-hidden': 'true' }), CL.h('span', { text: t('ui.dragOwnColour') })),
       area, hue,
       CL.h('div.pp-result', null,
         CL.h('span.pp-pair', { 'aria-hidden': 'true' }, swFree, swPt),
-        CL.h('span.pp-text', null, CL.h('small', { text: isVi ? 'Mã màu gần nhất' : 'Closest colour code' }), name)),
+        CL.h('span.pp-text', null, CL.h('small', { text: t('ui.closestCode') }), name)),
       near
     );
     box.open = open;
