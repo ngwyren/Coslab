@@ -1472,3 +1472,12 @@
 .hq-status { margin: 0; font-size: 12px; color: var(--muted); min-height: 1.5em; }
 .hq-quality button.is-active { background: #111; color: #fff; }
 [data-theme="dark"] .hq-quality button.is-active { background: #fff; color: #000; }
+
+/* More air in the side panel */
+.fg-section { padding: 24px 24px; gap: 22px; }
+.combo-grid { gap: 10px; }
+.blend { gap: 16px; }
+.blend-ends { gap: 10px; }
+.dots { gap: 12px; row-gap: 14px; }
+.fg-section .pp-trigger, .fg-section .color-note-mini { margin-top: 2px; }
+@media (max-width: 760px) { .fg-section { padding: 20px 16px; gap: 18px; } .dots { gap: 10px; } }

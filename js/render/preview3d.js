@@ -244,7 +244,7 @@
       this.scene = new THREE.Scene();
       // "PBR Reflections": environment map drives glass/chrome reflections
       this.scene.environment = hq ? makeEnv(r) : null;
-      if (hq && !STRIPS.value) STRIPS.value = makeStrips(r);
+      // softbox reflections (makeStrips) are off: they printed bright streaks down the tube
 
       this.camera = new THREE.PerspectiveCamera(26, 1, 0.1, 100);
       this.target = new THREE.Vector3(0, 2.8, 0);

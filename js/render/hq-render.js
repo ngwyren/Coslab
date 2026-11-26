@@ -206,9 +206,9 @@
     scene.background = new T.Color(0xf2f2f2);
 
     const pt = new PT.WebGLPathTracer(renderer);
-    pt.tiles.set(2, 2);
-    pt.bounces = 8;
-    pt.transmissiveBounces = 12;
+    pt.tiles.set(4, 4); // small pieces of GPU work, so the screen keeps drawing between them
+    pt.bounces = 6;
+    pt.transmissiveBounces = 10;
     pt.filterGlossyFactor = 0.4;
     pt.renderDelay = 0;
     pt.minSamples = 0;
@@ -227,7 +227,7 @@
           pt.renderSample();
           const n = Math.floor(pt.samples);
           if (opts.onProgress && n !== last) { last = n; opts.onProgress(Math.min(n, total), total, canvas); }
-          if (n >= total) resolve(); else setTimeout(tick, 0);
+          if (n >= total) resolve(); else setTimeout(tick, 12);
         };
         setTimeout(tick, 0);
       });

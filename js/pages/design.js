@@ -50,12 +50,6 @@
       visual.append(still, glHost);
       const name = CL.h('h3.lp-ct-name');
       const specs = CL.h('dl.lp-ct-specs');
-      // technical drawing of the selected container (A4 sheet, mm, 1:1), downloaded as SVG
-      const DRAW = { vi: 'Bản vẽ', en: 'Drawing', ko: '도면', ja: '図面', zh: '图纸', fr: 'Plan', es: 'Plano', ar: 'المخطط' };
-      const drawing = CL.h('a.lp-ct-draw', {
-        html: CL.icon('download') + `<span>${DRAW[I18N.lang] || DRAW.en}</span>`,
-        title: I18N.lang === 'vi' ? 'Tải bản vẽ kỹ thuật (SVG, đơn vị mm)' : 'Download the technical drawing (SVG, mm)',
-      });
 
       const stage = CL.h('div.lp-ss-stage.is-static', { tabindex: '-1' },
         CL.h('div.lp-ss-side.lp-ct-side', null,
@@ -68,13 +62,11 @@
           visual,
           CL.h('div.lp-ct-foot', null,
             CL.h('div.lp-ct-info', null, name, specs),
-            CL.h('div.lp-ct-actions', null,
-              drawing,
-              CL.h('button.lp-ss-cta', {
-                type: 'button',
-                onclick: () => start(),
-                html: `<span>${t('nav.design')}</span>`,
-              }))
+            CL.h('button.lp-ss-cta', {
+              type: 'button',
+              onclick: () => start(),
+              html: `<span>${t('nav.design')}</span>`,
+            })
           )
         )
       );
@@ -135,8 +127,6 @@
           strip.scrollBy({ left: a.left + a.width / 2 - (b.left + b.width / 2), behavior: shown < 0 ? 'auto' : 'smooth' });
         }
         name.textContent = m.name;
-        drawing.href = `assets/drawings/${m.id}.svg`;
-        drawing.setAttribute('download', `${m.name} - ${I18N.lang === 'vi' ? 'Ban ve ky thuat' : 'Technical drawing'}.svg`);
         specs.replaceChildren(...CL.models.specRows(m, true).map(([k, v]) => CL.h('div', null, CL.h('dt.sr-only', { text: k }), CL.h('dd', { text: v }))));
         // once 3D runs, the live tube is swapped in place (no jump back to the smaller still)
         if (!visual.classList.contains('is-3d')) still.src = thumbSrc(m);
