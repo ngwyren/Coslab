@@ -11,7 +11,8 @@
   const load = () => (mods = mods || Promise.all([
     import(new URL('vendor/pathtracer/three.module.js', document.baseURI).href),
     import(new URL('vendor/pathtracer/three-gpu-pathtracer.module.js', document.baseURI).href),
-  ]).then(([T, PT]) => ({ T, PT })));
+    import(new URL('vendor/pathtracer/Pass.js', document.baseURI).href),
+  ]).then(([T, PT, Pass]) => ({ T, PT, Pass })));
 
   const smooth = (a, b, x) => { const t = CL.clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
 
@@ -175,8 +176,8 @@
    * onProgress(samples, total, canvas), signal }. Resolves with a 2D canvas of the finished image.
    */
   async function renderHQ(design, opts = {}) {
-    const { T, PT } = await load();
-    const W = opts.width || 1200, H = opts.height || 1600, total = opts.samples || 256;
+    const { T, PT, Pass } = await load();
+    const W = opts.width || 1080, H = opts.height || 1350, total = opts.samples || 256;
 
     const canvas = document.createElement('canvas');
     canvas.width = W; canvas.height = H;
@@ -187,16 +188,22 @@
     renderer.setSize(W, H, false);
 
     const I = CL.Preview3D.internals;
+    // product-shot framing: the viewing angle comes from the live view, the distance is set so the
+    // container fills about two thirds of the frame height (with air around it), centred
     const camera = new T.PerspectiveCamera(26, W / H, 0.1, 200);
+    const ty = I.TUBE_H * 0.5;
+    let dir = new T.Vector3(Math.sin(-0.28) * Math.cos(0.09), Math.sin(0.09), Math.cos(-0.28) * Math.cos(0.09));
     if (opts.camera) {
-      camera.position.copy(opts.camera.position);
-      camera.quaternion.copy(opts.camera.quaternion);
-      camera.fov = opts.camera.fov;
-    } else {
-      const a = -0.28, b = 0.09, D = 14.2, ty = I.TUBE_H * 0.5;
-      camera.position.set(Math.sin(a) * Math.cos(b) * D, ty + Math.sin(b) * D, Math.cos(a) * Math.cos(b) * D);
-      camera.lookAt(0, ty, 0);
+      const p = opts.camera.position;
+      dir = new T.Vector3(p.x, p.y - ty, p.z);
+      // keep the eye close to level, like a product photo
+      dir.y = CL.clamp(dir.y, -0.05 * dir.length(), 0.25 * dir.length());
+      dir.normalize();
     }
+    const fill = opts.fill || 0.66;
+    const D = (I.TUBE_H / fill) / (2 * Math.tan((camera.fov * Math.PI) / 360));
+    camera.position.set(dir.x * D, ty + dir.y * D, dir.z * D);
+    camera.lookAt(0, ty, 0);
     camera.aspect = W / H;
     camera.updateProjectionMatrix();
 
@@ -231,6 +238,14 @@
         };
         setTimeout(tick, 0);
       });
+      // clean up the last grain: edge-aware denoise on the finished image (keeps outlines and print sharp)
+      const dn = new Pass.FullScreenQuad(new PT.DenoiseMaterial({ map: pt.target.texture, blending: T.NoBlending }));
+      dn.material.sigma = opts.denoise ?? 3.2;
+      dn.material.kSigma = 1.0;
+      dn.material.threshold = 0.07;
+      renderer.setRenderTarget(null);
+      dn.render(renderer);
+      dn.material.dispose();
       const out = document.createElement('canvas');
       out.width = W; out.height = H;
       out.getContext('2d').drawImage(canvas, 0, 0);
@@ -253,9 +268,9 @@
     const design = CL.clone(source);
     const vi = I18N.lang === 'vi';
     const QUALITY = [
-      ['draft', vi ? 'Nháp' : 'Draft', 600, 800, 64],
-      ['good', vi ? 'Đẹp' : 'Good', 1200, 1600, 256],
-      ['studio', 'Studio', 1800, 2400, 640],
+      ['draft', vi ? 'Nháp' : 'Draft', 640, 800, 64],
+      ['good', vi ? 'Đẹp' : 'Good', 1080, 1350, 256],
+      ['studio', 'Studio', 2160, 2700, 512],
     ];
     let q = CL.store.settings.renderQuality || 'good';
     if (!QUALITY.some(([id]) => id === q)) q = 'good';
