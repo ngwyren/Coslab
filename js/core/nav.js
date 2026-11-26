@@ -19,7 +19,12 @@
   /* ---------- Desktop sliding indicator ---------- */
   function moveIndicatorTo(el, instant) {
     if (!indicator) return;
-    if (!el || nav.offsetParent === null) { indicator.style.opacity = '0'; return; }
+    if (!el || nav.offsetParent === null) {
+      // nothing to sit under (menu hidden, e.g. in the Studio): no white text on the light pill either
+      indicator.style.opacity = '0';
+      nav.querySelectorAll('a').forEach((a) => a.classList.remove('is-lit'));
+      return;
+    }
     const navBox = nav.getBoundingClientRect();
     const box = el.getBoundingClientRect();
     if (instant) indicator.classList.add('no-anim');
@@ -51,8 +56,7 @@
           style: { '--i': String(i) },
           onclick: () => close(),
         },
-          CL.h('span.nav-ov-text', { text: t(l.key) }),
-          CL.h('span.nav-ov-num', { text: String(i + 1).padStart(2, '0') })
+          CL.h('span.nav-ov-text', { text: t(l.key) })
         ))
     );
     const langs = CL.h('div.nav-ov-langs', null,
@@ -65,12 +69,7 @@
         }))
     );
     const foot = CL.h('div.nav-ov-foot', null,
-      langs,
-      CL.h('a.btn.btn-primary.btn-lg.nav-ov-cta', {
-        href: '#/design',
-        onclick: () => close(),
-        html: `<span>${t('nav.start')}</span>` + CL.icon('arrowRight'),
-      })
+      langs
     );
     overlay.append(list, foot);
   }

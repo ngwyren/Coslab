@@ -45,6 +45,8 @@
   const two = (surface, bottom, top) => part(grad(bottom, top), surface);
   const jelly = (bottom, top = bottom) => two('clear-gradient', bottom, top);
   const CLEAR = '#fbfaf7';
+  // clear plastic body filled with the lip colour, as on the real CL-SS / CL-SC tubes
+  const filled = (c) => Object.assign(jelly(CLEAR), { product: { color: c } });
   const WHITE = '#ffffff';
   const V = (text, o) => T('base', text, Object.assign({ rotation: -90 }, o)); // vertical lettering on the body
 
@@ -52,7 +54,7 @@
   const TEMPLATES = [
     {
       templateId: 'cherry-jelly', model: 'cl-sc01', category: 'k-dewy',
-      parts: { cap: jelly('#a6192e', '#eab8c3'), base: jelly('#a6192e') },
+      parts: { cap: jelly('#a6192e', '#eab8c3'), base: filled('#a6192e') },
       layers: [T('base', 'cherry\njelly', { y: 0.6, font: 'Instrument Serif', italic: true, weight: 400, size: 44, color: WHITE })],
     },
     {
@@ -72,7 +74,7 @@
     },
     {
       templateId: 'petal-water', model: 'cl-sc05', category: 'k-dewy',
-      parts: { cap: jelly(CLEAR), base: jelly('#eab8c3') },
+      parts: { cap: jelly(CLEAR), base: filled('#eab8c3') },
       layers: [V('petal water', { font: 'Italiana', weight: 400, size: 36, spacing: 2, color: '#844551' })],
     },
     {
@@ -85,7 +87,7 @@
     },
     {
       templateId: 'noir-cherry', model: 'cl-ss01', category: 'k-luxury',
-      parts: { cap: one('#101820'), base: jelly('#97233f') },
+      parts: { cap: one('#101820'), base: filled('#97233f') },
       layers: [T('base', 'noir', { y: 0.66, font: 'Playfair Display', weight: 600, size: 46, color: WHITE })],
     },
     {
@@ -112,7 +114,7 @@
     },
     {
       templateId: 'tangerine-pop', model: 'cl-ss06', category: 'k-gradient',
-      parts: { cap: jelly('#e1523d', CLEAR), base: jelly('#e1523d') },
+      parts: { cap: jelly('#e1523d', CLEAR), base: filled('#e1523d') },
       layers: [V('POP!', { y: 0.72, font: 'Bebas Neue', weight: 400, size: 66, spacing: 2, color: WHITE })],
     },
     {
@@ -122,7 +124,7 @@
     },
     {
       templateId: 'plum-seoul', model: 'cl-sc03', category: 'k-dewy',
-      parts: { cap: one('#6a4c6b'), base: jelly('#6a4c6b') },
+      parts: { cap: one('#6a4c6b'), base: filled('#b0102e') },
       layers: [T('base', '자두\n틴트', { y: 0.68, font: 'Noto Sans KR', weight: 700, size: 34, color: WHITE })],
     },
     {
@@ -142,7 +144,7 @@
     },
     {
       templateId: 'clear-mono', model: 'cl-ss03', category: 'k-minimal',
-      parts: { cap: one('#101820', 'matte'), base: jelly(CLEAR) },
+      parts: { cap: one('#101820', 'matte'), base: filled('#c8102e') },
       layers: [V('clear tint', { font: 'Plus Jakarta Sans', weight: 700, size: 34, color: '#101820' })],
     },
     {

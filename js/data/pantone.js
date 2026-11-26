@@ -22,7 +22,7 @@
     { code: '4985 C', name: 'Fig', screen: '#844551', group: 'tint' },
     { code: '5125 C', name: 'Plum', screen: '#6a4c6b', group: 'tint' },
     // Packaging materials (not Pantone inks): clear acrylic and plain white plastic
-    { code: 'Clear', name: 'Clear acrylic', screen: '#fbfaf7', group: 'pack', special: true, material: true },
+    { code: 'Clear', name: 'Transparent', screen: '#fbfaf7', group: 'pack', special: true, material: true },
     { code: 'White', name: 'Solid white', screen: '#f4f2ec', group: 'pack', special: true, material: true },
     // Packaging neutrals
     { code: '4685 C', name: 'Nude', screen: '#e0c6ad', group: 'pack' },
@@ -155,13 +155,14 @@
   }
 
   // Materials read as their name ("Clear acrylic"), inks as "Opaque White (ink)", the rest as Pantone codes
-  const label = (p) => (!p ? '—' : p.material ? p.name : p.special ? `${p.code} (ink)` : `PANTONE ${p.code}`);
+  // On screen just the code ("7416 C"); `full` adds the word PANTONE for documents sent to the factory
+  const label = (p, full = false) => (!p ? '—' : p.material ? p.name : p.special ? `${p.code} (ink)` : full ? `PANTONE ${p.code}` : p.code);
 
   /** Human label for a part fill, e.g. "PANTONE 4995 C" or "PANTONE 7416 C → PANTONE 186 C". */
-  function describeFill(fill) {
+  function describeFill(fill, full = false) {
     if (!fill) return '—';
-    if (fill.type === 'linear' && fill.stops) return [...new Set(fill.stops.map((s) => label(of({ color: s.c, pantone: s.pantone }))))].join(' → ');
-    return label(of(fill));
+    if (fill.type === 'linear' && fill.stops) return [...new Set(fill.stops.map((s) => label(of({ color: s.c, pantone: s.pantone }), full)))].join(' → ');
+    return label(of(fill), full);
   }
 
   /** A solid fill object for a palette entry. */
@@ -174,6 +175,11 @@
   function normalizeDesign(d) {
     if (!d) return d;
     Object.values(d.parts || {}).forEach((part) => {
+      // the lip colour inside a clear body is a Pantone too
+      if (part && part.product && !byCode.has(part.product.pantone)) {
+        const p = nearest(part.product.color || '#c8102e');
+        part.product = { color: p.screen, pantone: p.code };
+      }
       const f = part && part.fill;
       if (!f) return;
       if (f.type === 'linear' && f.stops) {

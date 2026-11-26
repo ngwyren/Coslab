@@ -382,3 +382,24 @@
 .is-locked .lp-ct.is-active { box-shadow: inset 0 0 0 1.5px #000; }
 .is-locked .lp-ct:not(.is-active):hover { background: #fafafa; }
 .is-locked .lp-ct:not(.is-active):hover .lp-ct-text { color: var(--text-2); }
+
+/* Home action sits in the middle */
+.lp-hero-note { justify-content: center; }
+
+/* Design page: fewer words, calmer list */
+.lp-ct-text strong { font-weight: 500; }
+.lp-ct-specs { display: flex; gap: 20px; font-size: 16px; }
+.lp-ct-specs > div { display: block; }
+.lp-ct-name { margin-bottom: 4px; }
+
+/* Shape card: technical drawing download beside the main action */
+.lp-ct-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.lp-ct-draw { display: inline-flex; align-items: center; gap: 6px; padding: 11px 16px; border-radius: var(--r-pill); border: 1px solid rgba(0, 0, 0, 0.18); color: #111; font-size: 14px; font-weight: 600; white-space: nowrap; transition: background var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease); }
+.lp-ct-draw:hover { background: rgba(0, 0, 0, 0.05); border-color: rgba(0, 0, 0, 0.35); }
+.lp-ct-draw svg { width: 16px; height: 16px; }
+[data-theme="dark"] .lp-ct-draw { color: #fff; border-color: rgba(255, 255, 255, 0.25); }
+[data-theme="dark"] .lp-ct-draw:hover { background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.5); }
+@media (max-width: 760px) {
+  .lp-ct-actions { width: 100%; }
+  .lp-ct-actions > * { flex: 1; justify-content: center; }
+}

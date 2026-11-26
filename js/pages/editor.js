@@ -312,7 +312,15 @@
           partQuickBar,
           canvasViewport,
           CL.h('div.preview-3d-host#preview3dHost', { style: { display: 'none' } },
-            CL.h('div.preview-3d-hud', { html: CL.icon('cube') + '<span> Drag 360°</span>' })
+            CL.h('div.preview-3d-hud', null,
+              CL.h('span.hud-hint', { html: CL.icon('cube') + '<span> Drag 360°</span>' }),
+              CL.h('button.hud-reset', {
+                type: 'button',
+                title: I18N.lang === 'vi' ? 'Đặt lại góc nhìn' : 'Reset view',
+                'aria-label': I18N.lang === 'vi' ? 'Đặt lại góc nhìn' : 'Reset view',
+                html: CL.icon('rotate') + `<span>${I18N.lang === 'vi' ? 'Góc gốc' : 'Reset'}</span>`,
+                onclick: () => preview3DInstance && preview3DInstance.resetView(),
+              }))
           ),
           CL.h('div.canvas-floating-controls#canvasFloatingControls', {
             title: I18N.lang === 'vi' ? 'Lăn chuột để Zoom · Kéo nền để Di chuyển' : 'Scroll to Zoom · Drag canvas to Pan',
@@ -1142,10 +1150,7 @@
           };
 
           stepHeader.innerHTML = '';
-          stepHeader.append(
-            CL.h('h1.studio-step-title', { text: TITLES[step.id] }),
-            CL.h('span.studio-step-eyebrow', { text: t('flow.stepOf', { n: activeStepIdx + 2, t: TOTAL_STEPS }) })
-          );
+          stepHeader.append(CL.h('h1.sr-only', { text: TITLES[step.id] }));
 
           // Same step again (a choice was made): swap the content in place — no fade, same scroll position
           const same = shownStep === step.id;
@@ -1162,7 +1167,8 @@
           stepFooter.innerHTML = '';
           // Back always exists: on the first Studio step it returns to the shape picker
           const backBtn = CL.h('button.btn.btn-outline', {
-            html: CL.icon('arrowLeft') + `<span>${t('common.back')}</span>`,
+            html: CL.icon('arrowLeft'),
+            'aria-label': t('common.back'),
             onclick: () => (activeStepIdx > 0 ? goToStep(activeStepIdx - 1) : CL.go('#/design')),
           });
 
@@ -1170,7 +1176,7 @@
           if (activeStepIdx < STEPS.length - 1) {
             const nextStep = STEPS[activeStepIdx + 1];
             nextBtn = CL.h('button.btn.btn-primary.studio-next-btn', {
-              html: `<span>${t('common.next')}: ${t(nextStep.key)}</span>` + CL.icon('arrowRight'),
+              html: `<span>${t('common.next')}</span>`,
               onclick: () => goToStep(activeStepIdx + 1),
             });
           } else {
@@ -1205,12 +1211,20 @@
           // Current colour(s) as Pantone entries
           const stops = curPart.fill && curPart.fill.type === 'linear' ? curPart.fill.stops : null;
           const colours = stops ? [stopEntry(stops[0]), stopEntry(stops[stops.length - 1])] : [CL.pantone.of(curPart.fill), CL.pantone.of(curPart.fill)];
-          const twoColour = isGradientSurface(surface);
+          // solid · gradient · clear (clear plastic with no colour at all)
+          const allClear = colours[0].code === 'Clear' && colours[1].code === 'Clear';
+          const mode = !isGradientSurface(surface) ? 'solid' : surface === 'clear-gradient' && allClear ? 'clear' : 'gradient';
+          const twoColour = mode === 'gradient';
           if (!twoColour) colorSlot = 0;
-          const current = colours[colorSlot] || colours[0];
+          // Clear body: the palette picks the lip colour that fills it (none = empty)
+          const productMode = mode === 'clear' && activePart === 'base';
+          const product = productMode && curPart.product ? CL.pantone.of({ color: curPart.product.color, pantone: curPart.product.pantone }) : null;
+          const current = productMode ? (product || CL.pantone.byCode.get('Clear')) : colours[colorSlot] || colours[0];
 
           const toSolid = (p) => CL.pantone.fillFor(p);
-          const toLinear = (a, b) => ({ type: 'linear', angle: 180, stops: [{ o: 0, c: a.screen, pantone: a.code }, { o: 1, c: b.screen, pantone: b.code }] });
+          // keeps the blend range the slider set when the colours change
+          const range = stops ? [+stops[0].o || 0, stops[stops.length - 1].o == null ? 1 : +stops[stops.length - 1].o] : [0, 1];
+          const toLinear = (a, b) => ({ type: 'linear', angle: 180, stops: [{ o: range[0], c: a.screen, pantone: a.code }, { o: range[1], c: b.screen, pantone: b.code }] });
           const commit = () => { pushHistory(); syncPartChips(); render2DCanvas(); renderStepPanel(); };
 
           // 0. Ready-made colour pairings (cap + body in one tap), taken from the Archive designs
@@ -1238,21 +1252,25 @@
 
           // Solid or gradient. Clear / shimmer looks come from the ready-made designs and stay
           // until the customer switches kind.
+          const visible = colours[0].code === 'Clear' ? colours[1] : colours[0];
           const modeRow = CL.h('div.fg-seg', { role: 'radiogroup', 'aria-label': isVi ? 'Kiểu màu' : 'Colour style' },
-            [[false, isVi ? 'Một màu' : 'Solid'], [true, isVi ? 'Chuyển màu' : 'Gradient']].map(([two, label]) => CL.h('button.fg-seg-btn' + (two === twoColour ? '.is-active' : ''), {
+            [['solid', isVi ? 'Một màu' : 'Solid'], ['gradient', isVi ? 'Chuyển màu' : 'Gradient']].map(([id, label]) => CL.h('button.fg-seg-btn' + (id === mode ? '.is-active' : ''), {
               type: 'button',
               role: 'radio',
-              'aria-checked': String(two === twoColour),
+              'aria-checked': String(id === mode),
               text: label,
               onclick: () => {
-                if (two === twoColour) return;
-                if (two) {
+                if (id === mode) return;
+                if (id === 'gradient') {
                   curPart.fill = toLinear(colours[0], CL.pantone.byCode.get(colours[0].code === '7430 C' ? '186 C' : '7430 C'));
                   curPart.surface = 'solid-gradient';
+                } else if (id === 'clear') {
+                  // clear plastic, no colour
+                  const c = CL.pantone.byCode.get('Clear');
+                  curPart.fill = toLinear(c, c);
+                  curPart.surface = 'clear-gradient';
                 } else {
-                  // keep the visible colour rather than the clear end
-                  const c = colours[0].code === 'Clear' ? colours[1] : colours[0];
-                  curPart.fill = toSolid(c.code === 'Clear' ? CL.pantone.byCode.get('White') : c);
+                  curPart.fill = toSolid(visible.code === 'Clear' ? CL.pantone.byCode.get('White') : visible);
                   curPart.surface = 'solid';
                 }
                 colorSlot = 0;
@@ -1262,9 +1280,59 @@
 
           // 3. Two colours: named by where they sit on the part, next to a picture of the blend
           const END = [isVi ? 'Màu dưới' : 'Bottom', isVi ? 'Màu trên' : 'Top'];
+          // transparent reads as white with a red slash, like a 'no colour' swatch
+          const SLASH = 'linear-gradient(135deg, transparent calc(50% - 1px), #e0352b calc(50% - 1px), #e0352b calc(50% + 1px), transparent calc(50% + 1px)), #fff';
+          const swatch = (p) => (p && p.code === 'Clear' ? SLASH : p.screen);
+          // The blend bar is the slider: drag the two handles to set where the blend starts and ends
+          const blendSlider = () => {
+            const bar = CL.h('div.blend-bar');
+            const handles = [];
+            const paint = () => {
+              const [a, b] = curPart.fill.stops.map((x) => x.o);
+              bar.style.background = `linear-gradient(to top, ${colours[0].screen} ${a * 100}%, ${colours[1].screen} ${b * 100}%)`;
+              handles.forEach((h, i) => {
+                h.style.bottom = `${curPart.fill.stops[i].o * 100}%`;
+                h.setAttribute('aria-valuenow', String(Math.round(curPart.fill.stops[i].o * 100)));
+              });
+            };
+            const set = (i, v) => {
+              const st = curPart.fill.stops;
+              v = Math.round(CL.clamp(v, 0, 1) * 100) / 100;
+              st[i].o = i === 0 ? Math.min(v, st[1].o - 0.05) : Math.max(v, st[0].o + 0.05);
+              paint(); syncPartChips(); render2DCanvas();
+            };
+            [0, 1].forEach((i) => {
+              const h = CL.h('span.blend-handle', {
+                role: 'slider', tabindex: '0',
+                'aria-label': END[i], 'aria-valuemin': '0', 'aria-valuemax': '100',
+              });
+              h.addEventListener('pointerdown', (e) => {
+                e.preventDefault();
+                h.setPointerCapture(e.pointerId);
+                h.classList.add('is-drag');
+                const box = bar.getBoundingClientRect();
+                const move = (ev) => set(i, (box.bottom - ev.clientY) / box.height);
+                const up = () => { h.removeEventListener('pointermove', move); h.classList.remove('is-drag'); commit(); };
+                h.addEventListener('pointermove', move);
+                h.addEventListener('pointerup', up, { once: true });
+                h.addEventListener('pointercancel', up, { once: true });
+              });
+              h.addEventListener('keydown', (e) => {
+                const d = { ArrowUp: 0.05, ArrowRight: 0.05, ArrowDown: -0.05, ArrowLeft: -0.05 }[e.key];
+                if (!d) return;
+                e.preventDefault();
+                set(i, curPart.fill.stops[i].o + d);
+                pushHistory();
+              });
+              handles.push(h);
+            });
+            bar.append(...handles);
+            paint();
+            return bar;
+          };
           const slotSwitch = twoColour
             ? CL.h('div.blend', null,
-                CL.h('i.blend-bar', { 'aria-hidden': 'true', style: { background: `linear-gradient(to top, ${colours[0].screen}, ${colours[1].screen})` } }),
+                blendSlider(),
                 CL.h('div.blend-ends', { role: 'radiogroup', 'aria-label': isVi ? 'Đổi màu nào' : 'Colour to change' },
                   [1, 0].map((i) => CL.h('button.colour-slot' + (colorSlot === i ? '.is-active' : ''), {
                     type: 'button',
@@ -1272,7 +1340,7 @@
                     'aria-checked': String(colorSlot === i),
                     onclick: () => { colorSlot = i; renderStepPanel(); },
                   },
-                    CL.h('i', { style: { background: colours[i].screen } }),
+                    CL.h('i', { style: { background: swatch(colours[i]) } }),
                     CL.h('span', { text: END[i] }),
                     CL.h('strong', { text: CL.pantone.label(colours[i]) })
                   ))),
@@ -1290,6 +1358,8 @@
               const next = [colours[0], colours[1]];
               next[colorSlot] = p;
               curPart.fill = toLinear(next[0], next[1]);
+            } else if (productMode) {
+              curPart.product = { color: p.screen, pantone: p.code };
             } else {
               curPart.fill = toSolid(p);
             }
@@ -1301,8 +1371,37 @@
             onCommit: commit,
           });
           const label = (p) => `${CL.pantone.label(p)}${p.name && !p.material ? ' — ' + p.name : ''}`;
-          const palette = CL.h('div.dots', null,
-            CL.pantone.LIST.filter((p) => p.group === 'tint' || p.group === 'pack').map((p) => {
+          // "No colour" = clear plastic: on a solid part it makes the part clear,
+          // on a gradient it makes that end fade into clear
+          const CLEAR = CL.pantone.byCode.get('Clear');
+          const noneOn = !!(current && current.code === 'Clear');
+          const noneDot = CL.h('button.dot.dot-none' + (noneOn ? '.is-active' : ''), {
+            type: 'button',
+            title: isVi ? 'Trong suốt (Transparent)' : 'Transparent',
+            'aria-label': isVi ? 'Trong suốt' : 'Transparent',
+            'aria-pressed': String(noneOn),
+            onclick: () => {
+              if (productMode) {
+                delete curPart.product; // empty clear body: the wand shows
+              } else if (twoColour) {
+                const next = [colours[0], colours[1]];
+                next[colorSlot] = CLEAR;
+                curPart.fill = toLinear(next[0], next[1]);
+                curPart.surface = 'clear-gradient';
+              } else {
+                if (activePart === 'base') {
+                  const keep = ['White', 'Clear'].includes(visible.code) ? null : visible;
+                  if (keep) curPart.product = { color: keep.screen, pantone: keep.code };
+                  CL.pantone.normalizeDesign(design);
+                }
+                curPart.fill = toLinear(CLEAR, CLEAR);
+                curPart.surface = 'clear-gradient';
+              }
+              commit();
+            },
+          });
+          const palette = CL.h('div.dots', null, noneDot,
+            CL.pantone.LIST.filter((p) => (p.group === 'tint' || p.group === 'pack') && p.code !== 'Clear' && !(productMode && p.material)).map((p) => {
               const on = !!(current && current.code === p.code);
               return CL.h('button.dot' + (on ? '.is-active' : ''), {
                 type: 'button', title: label(p), 'aria-label': label(p), 'aria-pressed': String(on),
@@ -1319,18 +1418,16 @@
 
           stepBody.append(
             CL.h('div.fg-section', null,
-              CL.h('span.fg-section-title', { text: isVi ? 'Phối sẵn' : 'Ready-made' }),
               comboRow
             ),
             CL.h('div.fg-section', null,
               CL.h('div.fg-section-head', null,
-                CL.h('span.fg-section-title', { text: partName }),
                 twoColour ? null : CL.h('span.font-current', { text: CL.pantone.label(current) })
               ),
               modeRow,
               slotSwitch,
-              palette,
-              partPicker,
+              mode === 'clear' && !productMode ? null : palette,
+              mode === 'clear' && !productMode ? null : partPicker,
               note
             )
           );
@@ -1432,7 +1529,6 @@
 
           const contentSection = CL.h('div.fg-section', null,
             CL.h('div.fg-section-head', null,
-              CL.h('span.fg-section-title', { text: isVi ? 'Bạn muốn in chữ gì?' : 'What should it say?' }),
               curLayer ? deleteTextBtn : null
             ),
             textInput
@@ -1745,10 +1841,6 @@
           );
 
           const typoSection = CL.h('div.fg-section', null,
-            CL.h('div.fg-section-head', null,
-              CL.h('span.fg-section-title', { text: isVi ? 'Kiểu chữ' : 'Style' }),
-              CL.h('span.font-current', { text: currentFont })
-            ),
             fontSearch,
             fontList
           );
@@ -1786,11 +1878,14 @@
             )
           );
 
-          const txtColorRow = CL.h('div.pt-grid', null,
+          const txtColorRow = CL.h('div.dots', null,
             TEXT_CODES.map((code) => CL.pantone.byCode.get(code)).filter(Boolean).map((p) =>
-              CL.h('button.pt-chip' + (curTxt.code === p.code ? '.is-active' : ''), {
+              CL.h('button.dot' + (curTxt.code === p.code ? '.is-active' : ''), {
                 type: 'button',
                 title: `${CL.pantone.label(p)} — ${p.name}`,
+                'aria-label': CL.pantone.label(p),
+                'aria-pressed': String(curTxt.code === p.code),
+                style: { '--c': p.screen },
                 onclick: () => {
                   const lyr = ensureTextLayer(textInput.value || 'COSLAB');
                   lyr.text.color = p.screen;
@@ -1799,10 +1894,7 @@
                   render2DCanvas();
                   renderStepPanel();
                 },
-              },
-                CL.h('i.pt-chip-swatch', { style: { background: p.screen } }),
-                CL.h('span.pt-chip-code', { text: p.special ? 'White' : p.code })
-              ))
+              }))
           );
 
           const textPicker = CL.PantonePicker({
@@ -1819,7 +1911,7 @@
 
           const fillSection = CL.h('div.fg-section', null,
             CL.h('div.fg-section-head', null,
-              CL.h('span.fg-section-title', { text: isVi ? 'Màu chữ (Pantone)' : 'Text colour (Pantone)' })
+              CL.h('span.font-current', { text: CL.pantone.label(curTxt) })
             ),
             txtColorRow,
             textPicker
@@ -1827,7 +1919,6 @@
 
           stepBody.append(contentSection);
           if (!curLayer) {
-            stepBody.append(CL.h('p.easy-hint', { text: isVi ? 'Nhập chữ ở trên, chữ sẽ tự canh vừa thỏi son. Không cần chữ thì bấm Tiếp.' : 'Type above and the text fits itself to the tube. No text? Just tap Next.' }));
             return;
           }
           stepBody.append(typoSection, layoutSection, fillSection, advancedBox(
@@ -1898,9 +1989,6 @@
           );
 
           const uploadSection = CL.h('div.fg-section', null,
-            CL.h('div.fg-section-head', null,
-              CL.h('span.fg-section-title', { text: isVi ? 'Logo & Hình ảnh' : 'Brand Logo' })
-            ),
             uploadBox,
             fileIn
           );
@@ -2017,9 +2105,6 @@
             });
 
             graphicSection = CL.h('div.fg-section', null,
-              CL.h('div.fg-section-head', null,
-                CL.h('span.fg-section-title', { text: curGraphic.name || (isVi ? 'Logo của bạn' : 'Your logo') })
-              ),
               sizeRow(curGraphic),
               spotRow(curGraphic),
               advancedBox(
@@ -2076,9 +2161,6 @@
           const inkCodes = [...new Set(textLayers.map((l) => CL.pantone.label(CL.pantone.of({ color: l.text.color, pantone: l.text.pantone }, { ink: true }))))];
 
           return CL.h('div.fg-section', null,
-            CL.h('div.fg-section-head', null,
-              CL.h('span.fg-section-title', { text: t('flow.summary') })
-            ),
             CL.h('div.flow-summary', null,
               CL.h('div.flow-summary-row', null,
                 CL.h('span', { text: t('landing.step1') }),

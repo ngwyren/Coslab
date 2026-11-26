@@ -99,7 +99,7 @@
       area, hue,
       CL.h('div.pp-result', null,
         CL.h('span.pp-pair', { 'aria-hidden': 'true' }, swFree, swPt),
-        CL.h('span.pp-text', null, CL.h('small', { text: isVi ? 'Pantone gần nhất' : 'Closest Pantone' }), name)),
+        CL.h('span.pp-text', null, CL.h('small', { text: isVi ? 'Mã màu gần nhất' : 'Closest colour code' }), name)),
       near
     );
     box.open = open;

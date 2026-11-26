@@ -34,11 +34,11 @@
       const hero = CL.h('section.lp-hero', null,
         CL.h('div.container.lp-hero-grid', null,
           title,
-          // One large action, right-aligned under the wordmark
+          // One large action, centred under the wordmark
           CL.h('div.lp-hero-note', null,
             CL.h('a.btn.btn-primary.btn-lg.lp-hero-cta', {
               href: '#/design',
-              html: `<span data-i18n="landing.start">${t('landing.start')}</span>` + CL.icon('arrowRight'),
+              html: `<span data-i18n="nav.start">${t('nav.start')}</span>`,
             })
           )
         )

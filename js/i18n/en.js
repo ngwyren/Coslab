@@ -7,7 +7,7 @@
       next: 'Next', apply: 'Apply', search: 'Search...', all: 'All', loading: 'Loading...', actions: 'Actions',
     },
     nav: {
-      home: 'CosLab', design: 'Design', gallery: 'Archive', myDesigns: 'Vault', settings: 'Setting', start: 'Start Design',
+      home: 'CosLab', design: 'Design', gallery: 'Archive', myDesigns: 'Saved', settings: 'Settings', start: 'Let’s Create',
     },
     footer: {
       tagline: 'Korea Lip Color Lab · OEM / ODM',
@@ -160,18 +160,18 @@
       },
     },
     gallery: {
-      title: 'Archive.', subtitle: 'PRESET COLLECTION',
+      title: 'Archive', subtitle: 'PRESET COLLECTION',
       editAsTemplate: 'Customize', downloadAssets: 'Export',
       autoUpdateNote: 'COSLAB ARCHIVE',
       filterAll: 'All', filterKVelvet: 'Velvet', filterKDewy: 'Dewy', filterKLuxury: 'Luxury', filterKTamburins: 'Chrome', filterKGradient: 'Gradient', filterKMinimal: 'Minimal',
     },
     myDesigns: {
-      title: 'Vault.', subtitle: 'SAVED SPECIFICATIONS',
+      title: 'Saved', subtitle: 'SAVED SPECIFICATIONS',
       newDesign: 'New', emptyTitle: 'You don’t have any designs here yet.', emptyDesc: 'No saved specifications.',
       lastModified: '{date}', editDesign: 'Open', deleteConfirm: 'Delete this design?',
     },
     settings: {
-      title: 'Settings.', subtitle: 'STUDIO PREFERENCES',
+      title: 'Settings', subtitle: 'STUDIO PREFERENCES',
       languages: 'Language', languagesDesc: '8 REGIONS',
       theme: 'Theme', themeLight: 'Porcelain White', themeDark: 'Obsidian Black',
       themeDesc: 'Minimalist White',

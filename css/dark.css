@@ -1,0 +1,68 @@
+/* ==========================================================
+   COSLAB — dark theme: colours that are written in directly elsewhere
+   ========================================================== */
+[data-theme="dark"] body { background: var(--bg); color: var(--text); }
+[data-theme="dark"] .site-header,
+[data-theme="dark"] .site-header.scrolled { background: rgba(11, 11, 11, 0.86); border-bottom-color: var(--border); }
+[data-theme="dark"] .nav-indicator { background: #fff; box-shadow: none; }
+[data-theme="dark"] .main-nav a.is-lit { color: #000; }
+[data-theme="dark"] .nav-toggle-bars { background: #fff; }
+[data-theme="dark"] .nav-toggle-bars i { background: #000; }
+[data-theme="dark"] .nav-toggle.is-open { background: #fff; color: #000; border-color: #fff; }
+[data-theme="dark"] .nav-toggle.is-open .nav-toggle-bars { background: #000; }
+[data-theme="dark"] .nav-toggle.is-open .nav-toggle-bars i { background: #fff; }
+[data-theme="dark"] .nav-overlay,
+[data-theme="dark"] body.nav-ov-open .site-header { background: var(--bg); }
+[data-theme="dark"] .nav-ov-lang.is-active { background: #fff; border-color: #fff; color: #000; }
+[data-theme="dark"] .menu { background: rgba(24, 24, 24, 0.98); }
+[data-theme="dark"] .btn-primary:hover { background: #e6e6e6; }
+[data-theme="dark"] .modal { background: var(--surface); }
+[data-theme="dark"] .ex-preview { background: #1b1b1b; }
+[data-theme="dark"] .toast { background: #fff; color: #000; }
+
+/* Design page */
+[data-theme="dark"] .lp-ct-card { background: #17181a; }
+[data-theme="dark"] .lp-ct-thumb { background: #222326; }
+[data-theme="dark"] .lp-ct-text { color: #6e6e6e; }
+[data-theme="dark"] .lp-ct-specs dt { color: var(--muted); }
+[data-theme="dark"] .is-locked .lp-ct.is-active { box-shadow: inset 0 0 0 1.5px #fff; }
+[data-theme="dark"] .is-locked .lp-ct:not(.is-active):hover { background: #161616; }
+/* Archive: the cards keep their tint colour, so their words stay dark */
+[data-theme="dark"] .sc-card { color: #111; --muted: #666; }
+
+/* Studio */
+[data-theme="dark"] .editor-layout {
+  --fg-bg: #131313;
+  --fg-canvas: #0b0b0b;
+  --fg-field: #1f1f1f;
+  --fg-field-hover: #272727;
+  --fg-border: #2a2a2a;
+  --fg-text: #f2f2f2;
+  --fg-text-2: #b8b8b8;
+  --fg-muted: #8a8a8a;
+  background: var(--fg-bg);
+  color: var(--fg-text);
+}
+[data-theme="dark"] .editor-topbar { background: #131313; }
+[data-theme="dark"] .editor-canvas-container { background: #0b0b0b; }
+[data-theme="dark"] .editor-canvas-container::before { background-image: radial-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px); }
+[data-theme="dark"] .canvas-part-Quickbar,
+[data-theme="dark"] .canvas-floating-controls { background: rgba(28, 28, 28, 0.96); }
+[data-theme="dark"] .studio-step-pill.is-active,
+[data-theme="dark"] .canvas-part-chip.is-active,
+[data-theme="dark"] .studio-font-card.is-active { background: #fff; color: #000; }
+[data-theme="dark"] .studio-step-pill.is-active .step-num { background: rgba(0, 0, 0, 0.1); color: #000; }
+[data-theme="dark"] .font-row.is-active { background: #2c2c2c; }
+[data-theme="dark"] .fg-range { background: #333; }
+[data-theme="dark"] .fg-range::-webkit-slider-thumb { background: #131313; border-color: #fff; }
+[data-theme="dark"] .color-note { background: #241d12; border-color: #3d3020; color: #e7c98f; }
+[data-theme="dark"] .studio-step-footer .btn-primary,
+[data-theme="dark"] .editor-topbar .btn-primary { background: #fff; color: #000; }
+[data-theme="dark"] .icon-btn { color: var(--fg-text, var(--text)); }
+[data-theme="dark"] .lp-ss-cta { background: #fff; color: #000; }
+
+/* Studio canvas a step lighter than the page, so black caps still read; swatches get a fine ring */
+[data-theme="dark"] .editor-canvas-container { background: #1a1a1c; }
+[data-theme="dark"] .dot { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18); }
+[data-theme="dark"] .dot.is-active { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18), 0 0 0 2px var(--fg-bg), 0 0 0 4px var(--fg-text); }
+[data-theme="dark"] .preview-3d-host { background: radial-gradient(circle at 50% 40%, #2c2c2f 0%, #161618 100%); }

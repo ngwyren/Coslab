@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="vi" dir="ltr" data-theme="light">
+<script>try{if(JSON.parse(localStorage.getItem("coslab.settings")||"{}").theme==="dark")document.documentElement.setAttribute("data-theme","dark")}catch(e){}</script>
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -16,14 +17,15 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <!-- Primary UI font (fast non-blocking load) + async decorative/international fonts -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Italiana&family=Instrument+Serif:ital@0;1&family=Playfair+Display:wght@400;600&family=Montserrat:wght@500;700&family=Cormorant+Garamond:wght@400;600&family=Bebas+Neue&family=Dancing+Script:wght@400;700&family=Noto+Sans+KR:wght@400;500;700&family=Noto+Sans+SC:wght@400;700&family=Noto+Sans+JP:wght@400;700&family=Noto+Naskh+Arabic:wght@400;700&display=swap" media="print" onload="this.media='all'" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400&family=Cinzel:wght@400;600&family=Italiana&family=Instrument+Serif:ital@0;1&family=Playfair+Display:wght@400;600&family=Montserrat:wght@500;700&family=Cormorant+Garamond:wght@400;600&family=Bebas+Neue&family=Dancing+Script:wght@400;700&family=Noto+Sans+KR:wght@400;500;700&family=Noto+Sans+SC:wght@400;700&family=Noto+Sans+JP:wght@400;700&family=Noto+Naskh+Arabic:wght@400;700&display=swap" media="print" onload="this.media='all'" />
 
-  <link rel="stylesheet" href="css/tokens.css?v=7" />
-  <link rel="stylesheet" href="css/base.css?v=12" />
-  <link rel="stylesheet" href="css/layout.css?v=13" />
-  <link rel="stylesheet" href="css/pages.css?v=17" />
-  <link rel="stylesheet" href="css/home.css?v=44" />
-  <link rel="stylesheet" href="css/editor.css?v=36" />
+  <link rel="stylesheet" href="css/tokens.css?v=9" />
+  <link rel="stylesheet" href="css/base.css?v=14" />
+  <link rel="stylesheet" href="css/layout.css?v=40" />
+  <link rel="stylesheet" href="css/pages.css?v=19" />
+  <link rel="stylesheet" href="css/home.css?v=52" />
+  <link rel="stylesheet" href="css/editor.css?v=45" />
+  <link rel="stylesheet" href="css/dark.css?v=12" />
 </head>
 <body>
   <a class="skip-link" href="#app" data-i18n="common.skip">Skip to content</a>
@@ -37,13 +39,13 @@
       <nav class="main-nav" id="mainNav" aria-label="Main">
         <a href="#/" data-route="home" data-i18n="nav.home">CosLab</a>
         <a href="#/design" data-route="design" data-i18n="nav.design">Design</a>
-        <a href="#/gallery" data-route="gallery" data-i18n="nav.gallery">Gallery</a>
-        <a href="#/my-designs" data-route="my-designs" data-i18n="nav.myDesigns">My Design</a>
-        <a href="#/settings" data-route="settings" data-i18n="nav.settings">Setting</a>
+        <a href="#/gallery" data-route="gallery" data-i18n="nav.gallery">Archive</a>
+        <a href="#/my-designs" data-route="my-designs" data-i18n="nav.myDesigns">Saved</a>
       </nav>
       <div class="header-actions">
+        <a class="header-contact roll-me" href="mailto:coslabkorea@gmail.com" data-copy-mail>Contact</a>
         <div class="lang-switch" id="langSwitch"></div>
-        <a href="#/design" class="btn btn-primary btn-sm header-cta" data-i18n="nav.start">Start Design</a>
+        <button class="theme-btn" id="themeBtn" type="button"></button>
         <button class="nav-toggle" id="navToggle" type="button" aria-label="Menu" aria-expanded="false"></button>
       </div>
     </div>
@@ -52,120 +54,61 @@
   <main id="app" tabindex="-1"></main>
 
   <footer class="site-footer" id="siteFooter">
-    <div class="container">
-      <div class="footer-giant-title">COS<span class="footer-kern-l">L</span>AB ATELIER</div>
-      <div class="footer-grid">
-        <!-- Col 1: Brand & Atelier Information -->
-        <div class="footer-brand-col">
-          <div class="footer-brand-header">
-            <a href="#/" class="brand">
-              <span class="brand-mark"></span>
-              <span class="brand-word">COSLAB</span>
-            </a>
-            <span class="pill-tag">KOREA</span>
-          </div>
-          <div class="footer-status-badge">
-            <span class="status-dot"></span>
-            <span data-i18n="footer.status">SEOUL · INCHEON LIP LAB</span>
-          </div>
-          <div class="footer-location mono muted">
-            032-715-4277 · coslabkorea@gmail.com
-          </div>
-        </div>
-
-        <!-- Col 2: PLATFORM -->
-        <div class="footer-col">
-          <div class="footer-col-header">
-            <h4 data-i18n="footer.explore">Platform</h4>
-          </div>
-          <div class="footer-links">
-            <a href="#/" data-i18n="nav.home">Atelier</a>
-            <a href="#/design" data-i18n="nav.design">Design</a>
-            <a href="#/gallery" data-i18n="nav.gallery">Archive</a>
-            <a href="#/my-designs" data-i18n="nav.myDesigns">Vault</a>
-          </div>
-        </div>
-
-        <!-- Col 3: STUDIO -->
-        <div class="footer-col">
-          <div class="footer-col-header">
-            <h4 data-i18n="footer.studio">Studio</h4>
-          </div>
-          <div class="footer-links">
-            <a href="#/design" data-i18n="nav.start">Start Design</a>
-            <a href="#/settings" data-i18n="nav.settings">Setting</a>
-          </div>
-        </div>
-
-        <!-- Col 4: MANUFACTURING -->
-        <div class="footer-col">
-          <div class="footer-col-header">
-            <h4 data-i18n="footer.mfg">Lab</h4>
-          </div>
-          <div class="footer-links">
-            <span class="mono" style="font-size: 11px; color: var(--muted); line-height: 1.6;">
-              INCHEON, KOREA<br>
-              CGMP · ISO 22716
-            </span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Footer Bottom Bar -->
-      <div class="footer-bottom">
-        <div class="footer-bottom-left">
-          <span>© <span id="year">2026</span> COSLAB.</span>
-          <span class="muted-dot">·</span>
-          <span class="muted">SEOUL · INCHEON</span>
-        </div>
-        <div class="footer-bottom-right">
-          <button type="button" class="footer-back-to-top" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
-            <span data-i18n="footer.backToTop">TOP ↑</span>
-          </button>
-        </div>
-      </div>
+    <div class="footer-marquee" aria-hidden="true"><div class="mq-track"><span class="mq-item">COSLAB ATELIER /&nbsp;</span><span class="mq-item">COSLAB ATELIER /&nbsp;</span><span class="mq-item">COSLAB ATELIER /&nbsp;</span><span class="mq-item">COSLAB ATELIER /&nbsp;</span></div></div>
+    <div class="footer-split">
+      <span class="footer-rule" aria-hidden="true"></span>
+      <nav class="footer-links2" aria-label="Contact">
+        <a href="mailto:coslabkorea@gmail.com" data-copy-mail class="roll-me">coslabkorea@gmail.com</a>
+        <a class="roll-me" href="tel:+82327154277">032-715-4277</a>
+        <a class="roll-me" href="#/settings" data-i18n="nav.settings">Settings</a>
+      </nav>
     </div>
+    <address class="footer-info">
+      <span>Address: 20, 423 Cheongcheon-dong, Bupyeong District, Incheon</span>
+      <span>Business registration number: 337-88-03756</span>
+    </address>
+    <p class="footer-copy">© <span id="year">2026</span> COSLAB</p>
   </footer>
 
   <div class="toast-host" id="toastHost" aria-live="polite"></div>
   <div class="modal-host" id="modalHost"></div>
 
   <!-- i18n -->
-  <script src="js/i18n/i18n.js?v=4"></script>
-  <script src="js/i18n/en.js?v=17"></script>
-  <script src="js/i18n/vi.js?v=15"></script>
-  <script src="js/i18n/zh.js?v=13"></script>
-  <script src="js/i18n/ko.js?v=13"></script>
-  <script src="js/i18n/ja.js?v=13"></script>
-  <script src="js/i18n/ar.js?v=13"></script>
-  <script src="js/i18n/fr.js?v=13"></script>
-  <script src="js/i18n/es.js?v=13"></script>
+  <script src="js/i18n/i18n.js?v=6"></script>
+  <script src="js/i18n/en.js?v=22"></script>
+  <script src="js/i18n/vi.js?v=20"></script>
+  <script src="js/i18n/zh.js?v=15"></script>
+  <script src="js/i18n/ko.js?v=15"></script>
+  <script src="js/i18n/ja.js?v=15"></script>
+  <script src="js/i18n/ar.js?v=15"></script>
+  <script src="js/i18n/fr.js?v=15"></script>
+  <script src="js/i18n/es.js?v=15"></script>
 
   <!-- Core -->
-  <script src="js/core/utils.js?v=6"></script>
-  <script src="js/core/icons.js?v=4"></script>
-  <script src="js/core/store.js?v=4"></script>
-  <script src="js/core/ui.js?v=9"></script>
-  <script src="js/core/nav.js?v=1"></script>
-  <script src="js/data/containers.js?v=2"></script>
-  <script src="js/data/models.js?v=5"></script>
-  <script src="js/data/templates.js?v=12"></script>
-  <script src="js/data/fonts.js?v=2"></script>
-  <script src="js/data/pantone.js?v=8"></script>
-  <script src="js/render/lipstick-svg.js?v=17"></script>
-  <script src="js/render/exporter.js?v=12"></script>
-  <script src="js/render/preview3d.js?v=17"></script>
-  <script src="js/components/pantone-picker.js?v=2"></script>
-  <script src="js/components/color-picker.js?v=4"></script>
+  <script src="js/core/utils.js?v=8"></script>
+  <script src="js/core/icons.js?v=6"></script>
+  <script src="js/core/store.js?v=6"></script>
+  <script src="js/core/ui.js?v=11"></script>
+  <script src="js/core/nav.js?v=4"></script>
+  <script src="js/data/containers.js?v=5"></script>
+  <script src="js/data/models.js?v=15"></script>
+  <script src="js/data/templates.js?v=18"></script>
+  <script src="js/data/fonts.js?v=4"></script>
+  <script src="js/data/pantone.js?v=15"></script>
+  <script src="js/render/lipstick-svg.js?v=40"></script>
+  <script src="js/render/exporter.js?v=15"></script>
+  <script src="js/render/preview3d.js?v=28"></script>
+  <script src="js/components/pantone-picker.js?v=5"></script>
+  <script src="js/components/color-picker.js?v=6"></script>
 
   <!-- Pages -->
-  <script src="js/pages/home.js?v=30"></script>
-  <script src="js/pages/design.js?v=15"></script>
-  <script src="js/pages/editor.js?v=43"></script>
-  <script src="js/pages/gallery.js?v=22"></script>
-  <script src="js/pages/my-designs.js?v=10"></script>
-  <script src="js/pages/settings.js?v=10"></script>
+  <script src="js/pages/home.js?v=35"></script>
+  <script src="js/pages/design.js?v=21"></script>
+  <script src="js/pages/editor.js?v=60"></script>
+  <script src="js/pages/gallery.js?v=29"></script>
+  <script src="js/pages/my-designs.js?v=12"></script>
+  <script src="js/pages/settings.js?v=12"></script>
 
-  <script src="js/app.js?v=8"></script>
+  <script src="js/app.js?v=14"></script>
 </body>
 </html>

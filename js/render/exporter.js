@@ -168,7 +168,7 @@
   // Colours are specified by Pantone code only (no HEX on customer-facing documents)
   function fillDesc(fill) {
     if (!fill) return '-';
-    return CL.pantone.describeFill(fill);
+    return CL.pantone.describeFill(fill, true);
   }
 
   /** Wrap text into lines that fit maxWidth on a canvas context. */
@@ -357,7 +357,7 @@
       ctx.fillStyle = '#171615';
       ctx.font = `400 34px ${UI}`;
       let label = l.type === 'text'
-        ? `“${l.text.content}” · ${l.text.font} ${l.text.size}pt · ${CL.pantone.label(CL.pantone.of({ color: l.text.color, pantone: l.text.pantone }, { ink: true }))}`
+        ? `“${l.text.content}” · ${l.text.font} ${l.text.size}pt · ${CL.pantone.label(CL.pantone.of({ color: l.text.color, pantone: l.text.pantone }, { ink: true }), true)}`
         : l.type === 'image' ? 'Logo Graphic (Nano Banana Model Cleaned)' : `${t('editor.shapes.' + l.shape.kind)} shape`;
 
       if (label.length > 74) label = label.slice(0, 72) + '…';

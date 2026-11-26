@@ -89,6 +89,17 @@
   }
 
   /* Auto-fit text inside Safe Zone smoothly for any rotation angle */
+  /** Height of the letters above / below the baseline: first line's top, last line's bottom. */
+  const inkCtx = document.createElement('canvas').getContext('2d');
+  function inkOf(lines, font, size) {
+    inkCtx.font = font;
+    const m0 = inkCtx.measureText(lines[0] || 'x');
+    const m1 = inkCtx.measureText(lines[lines.length - 1] || 'x');
+    const top = m0.actualBoundingBoxAscent, bottom = m1.actualBoundingBoxDescent;
+    // fall back to typical proportions when the browser cannot measure
+    return Number.isFinite(top) && top > 0 ? { top, bottom: Math.max(0, bottom || 0) } : { top: size * 0.72, bottom: size * 0.04 };
+  }
+
   function textMarkup(tx, rect, rotation = 0) {
     const lines = String(tx.content || '').split('\n');
     const maxChars = Math.max(1, ...lines.map((l) => l.length));
@@ -109,11 +120,16 @@
     }
 
     const lh = (tx.lineHeight || 1.2) * size;
-    const y0 = -((lines.length - 1) * lh) / 2;
     const anchor = tx.align === 'left' ? 'start' : tx.align === 'right' ? 'end' : 'middle';
     const fam = `'${tx.font}',${FONT_FALLBACK}`;
-    const spans = lines.map((ln, i) => `<tspan x="0" y="${CL.round(y0 + i * lh, 2)}">${CL.esc(ln) || ' '}</tspan>`).join('');
-    return `<text text-anchor="${anchor}" dominant-baseline="central" font-family="${fam}" font-size="${size}" font-weight="${tx.weight || 400}" font-style="${tx.italic ? 'italic' : 'normal'}" letter-spacing="${spacing}" fill="${tx.color || '#171615'}" xml:space="preserve">${spans}</text>`;
+    // Centre on the ink of the letters, not the font's em box: lowercase words such as
+    // "cocoa milk" would otherwise sit visibly off-centre.
+    const ink = inkOf(lines, `${tx.italic ? 'italic ' : ''}${tx.weight || 400} ${size}px ${fam}`, size);
+    const y0 = -((ink.top + (lines.length - 1) * lh + ink.bottom) / 2) + ink.top;
+    // the gap after the last letter would push centred text sideways by half a gap
+    const dx = anchor === 'middle' ? spacing / 2 : 0;
+    const spans = lines.map((ln, i) => `<tspan x="${CL.round(dx, 2)}" y="${CL.round(y0 + i * lh, 2)}">${CL.esc(ln) || ' '}</tspan>`).join('');
+    return `<text text-anchor="${anchor}" dominant-baseline="alphabetic" font-family="${fam}" font-size="${size}" font-weight="${tx.weight || 400}" font-style="${tx.italic ? 'italic' : 'normal'}" letter-spacing="${spacing}" fill="${tx.color || '#171615'}" xml:space="preserve">${spans}</text>`;
   }
 
   /* Clamp layer center inside Safe Zone */
@@ -200,6 +216,10 @@
     const [cA, cB] = fillColors(p.fill);
     const defs = [];
     let m = '';
+    // where the blend starts and ends along the part (0 = bottom, 1 = top), set by the gradient slider
+    const st = p.fill && p.fill.type === 'linear' && p.fill.stops ? p.fill.stops : null;
+    const gA = st ? CL.clamp(+st[0].o || 0, 0, 1) : 0, gB = st ? CL.clamp(st[st.length - 1].o == null ? 1 : +st[st.length - 1].o, 0, 1) : 1;
+    const at = (t) => CL.round(gA + (Math.max(gB, gA + 0.01) - gA) * t, 4);
     const vGrad = (gid, stops) => defs.push(`<linearGradient id="${gid}" x1="0" y1="1" x2="0" y2="0">${stops}</linearGradient>`);
 
     if (surface === 'clear') {
@@ -216,17 +236,19 @@
     } else if (surface === 'clear-gradient') {
       if ([cA, cB].every((c) => CL.pantone.nearest(c).code === 'Clear')) {
         // plain clear plastic: faint cool tint, so the inside stays visible
-        vGrad(id, `<stop offset="0" stop-color="#cfd8e2" stop-opacity="0.30"/><stop offset="1" stop-color="#cfd8e2" stop-opacity="0.16"/>`);
+        // frosted clear plastic: hides the page behind it, keeps a cool tint and a fine edge
+        vGrad(id, `<stop offset="0" stop-color="#dde3ea" stop-opacity="0.5"/><stop offset="1" stop-color="#eef1f4" stop-opacity="0.35"/>`);
+        m += shape(rect, '#ffffff', ' fill-opacity="0.72"');
         m += shape(rect, `url(#${id})`);
-        m += shape(rect, 'none', ' stroke="#8d97a3" stroke-opacity="0.55" stroke-width="1.6"');
+        m += shape(rect, 'none', ' stroke="#a3acb6" stroke-opacity="0.7" stroke-width="1"');
       } else {
-        vGrad(id, `<stop offset="0" stop-color="${cA}" stop-opacity="0.95"/><stop offset="0.3" stop-color="${CL.color.mix(cA, cB, 0.25)}" stop-opacity="0.8"/><stop offset="0.6" stop-color="${CL.color.mix(cA, cB, 0.65)}" stop-opacity="0.5"/><stop offset="0.85" stop-color="${cB}" stop-opacity="0.26"/><stop offset="1" stop-color="${cB}" stop-opacity="0.18"/>`);
+        vGrad(id, `<stop offset="${at(0)}" stop-color="${cA}" stop-opacity="0.95"/><stop offset="${at(0.3)}" stop-color="${CL.color.mix(cA, cB, 0.25)}" stop-opacity="0.8"/><stop offset="${at(0.6)}" stop-color="${CL.color.mix(cA, cB, 0.65)}" stop-opacity="0.5"/><stop offset="${at(0.85)}" stop-color="${cB}" stop-opacity="0.26"/><stop offset="${at(1)}" stop-color="${cB}" stop-opacity="0.18"/>`);
         m += shape(rect, '#ffffff', ' fill-opacity="0.4"');
         m += shape(rect, `url(#${id})`);
         m += shape(rect, 'none', ` stroke="${CL.color.mix(cA, '#ffffff', 0.35)}" stroke-opacity="0.45" stroke-width="1.4"`);
       }
     } else if (surface === 'solid-gradient') {
-      vGrad(id, `<stop offset="0.04" stop-color="${cA}"/><stop offset="0.28" stop-color="${CL.color.mix(cA, cB, 0.18)}"/><stop offset="0.5" stop-color="${CL.color.mix(cA, cB, 0.5)}"/><stop offset="0.72" stop-color="${CL.color.mix(cA, cB, 0.82)}"/><stop offset="0.96" stop-color="${cB}"/>`);
+      vGrad(id, `<stop offset="${at(0.04)}" stop-color="${cA}"/><stop offset="${at(0.28)}" stop-color="${CL.color.mix(cA, cB, 0.18)}"/><stop offset="${at(0.5)}" stop-color="${CL.color.mix(cA, cB, 0.5)}"/><stop offset="${at(0.72)}" stop-color="${CL.color.mix(cA, cB, 0.82)}"/><stop offset="${at(0.96)}" stop-color="${cB}"/>`);
       m += shape(rect, `url(#${id})`);
     } else if (surface === 'shimmer') {
       vGrad(id, `<stop offset="0" stop-color="${cA}"/><stop offset="1" stop-color="${CL.color.mix(cB, '#ffffff', 0.18)}"/>`);
@@ -261,8 +283,8 @@
     defs.push(`<linearGradient id="${shadeBaseId}" x1="0" y1="0" x2="1" y2="0">${gradStops((SHADES[shadeKey] || SHADES.round)[P.base?.finish || 'matte'], shadeTone(P.base))}</linearGradient>`);
 
     const tCap = shadeTone(P.cap), tBase = shadeTone(P.base);
-    defs.push(`<linearGradient id="${u}-v-top" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${tCap}" stop-opacity=".06"/><stop offset=".04" stop-color="${tCap}" stop-opacity="0"/><stop offset=".93" stop-color="${tCap}" stop-opacity="0"/><stop offset=".99" stop-color="${tCap}" stop-opacity=".16"/><stop offset="1" stop-color="${tCap}" stop-opacity=".3"/></linearGradient>`);
-    defs.push(`<linearGradient id="${u}-v-bot" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${tBase}" stop-opacity=".18"/><stop offset=".07" stop-color="${tBase}" stop-opacity="0"/><stop offset=".92" stop-color="${tBase}" stop-opacity="0"/><stop offset="1" stop-color="${tBase}" stop-opacity=".2"/></linearGradient>`);
+    defs.push(`<linearGradient id="${u}-v-top" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${tCap}" stop-opacity=".06"/><stop offset=".04" stop-color="${tCap}" stop-opacity="0"/><stop offset="1" stop-color="${tCap}" stop-opacity="0"/></linearGradient>`);
+    defs.push(`<linearGradient id="${u}-v-bot" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${tBase}" stop-opacity="0"/><stop offset=".92" stop-color="${tBase}" stop-opacity="0"/><stop offset="1" stop-color="${tBase}" stop-opacity=".2"/></linearGradient>`);
 
     defs.push(`<radialGradient id="${u}-shadow"><stop offset="0" stop-color="#141312" stop-opacity=".16"/><stop offset=".45" stop-color="#141312" stop-opacity=".06"/><stop offset="1" stop-color="#141312" stop-opacity="0"/></radialGradient>`);
 
@@ -283,20 +305,55 @@
       body += `<ellipse cx="${L.scene.cx}" cy="${L.scene.ground + 5}" rx="${L.base.w * 0.68}" ry="10" fill="url(#${u}-shadow)"/>`;
     }
 
-    // Inside of clear parts: cavity + wand in the body, threaded neck + wand in the cap
+    // Inside of clear parts, drawn after the real thick-walled acrylic tubes: a round bore,
+    // a smooth threaded neck with a white wiper, a clear rod and a white applicator.
+    // Only in the "inside" view (opts.inside); the default view shows the shell alone.
     const isClear = (p) => p && (p.surface === 'clear' || p.surface === 'clear-gradient');
-    const line = ` fill="#fff" fill-opacity=".28" stroke="#8d97a3" stroke-opacity=".38" stroke-width=".8"`;
-    const W = L.wand, F = L.foot, n2 = (v) => CL.round(v, 2);
-    const wandMarkup = `<rect x="${n2(W.x)}" y="${n2(W.y)}" width="${n2(W.w)}" height="${n2(W.h)}" rx="2" fill="#eef1f5" stroke="#8d97a3" stroke-opacity=".35" stroke-width=".7"/>`;
-    const footMarkup = `<ellipse cx="${F.cx}" cy="${n2(F.cy)}" rx="${n2(F.rx)}" ry="${n2(F.ry)}" fill="#f6efe0" stroke="#b9ac92" stroke-opacity=".5" stroke-width=".7"/>`;
-    const innerBase = isClear(P.base) ? `<path d="${L.cavityPath}"${line}/>${wandMarkup}${footMarkup}` : '';
-    const neckFill = isClear(P.base) ? line : ` fill="${fillColors(P.base && P.base.fill)[1]}" fill-opacity=".45"`;
-    const innerCap = isClear(P.cap) ? `${wandMarkup}<path d="${L.neckPath}"${neckFill}/>` : '';
+    const n2 = (v) => CL.round(v, 2);
+    let innerBase = '', innerCap = '';
+    // the lip product filling a clear body's cavity (picked in Clear mode), seen in both views
+    const prod = isClear(P.base) && P.base.product && P.base.product.color;
+    const k = L.scale, cx = L.scene.cx, M = L.model, yOf = (z) => L.scene.ground - z * k;
+    const edge = 'stroke="#a9b2bc" stroke-width=".7"';
+    const glint = (x, y0, y1, o = 0.9) => `<line x1="${n2(x)}" y1="${n2(y0)}" x2="${n2(x)}" y2="${n2(y1)}" stroke="#fff" stroke-width="1.4" stroke-opacity="${o}" stroke-linecap="round"/>`;
+    const cr = Math.max(...M.cavity.map((p) => p[1])), cz0 = Math.min(...M.cavity.map((p) => p[0])), cz1 = Math.max(...M.cavity.map((p) => p[0]));
+    // the lip colour fills the whole clear body; a fine light edge keeps the plastic readable
+    const cavity = prod
+      ? partShape(L.baseShell, prod) + partShape(L.baseShell, 'none', ' stroke="#ffffff" stroke-opacity=".45" stroke-width="1.2"')
+      : '';
+    if (prod && !opts.inside) innerBase = cavity;
+    if (opts.inside) {
+      const N = L.neckBox, W = L.wand, F = L.foot, S = L.capShell;
+      // neck with smooth thread lines, a white wiper on top
+      const neckColour = isClear(P.base) ? 'fill="#f1f4f7"' : `fill="${fillColors(P.base && P.base.fill)[1]}"`;
+      const threadTop = N.y + 1.6 * k, threadBot = Math.min(L.seamY - 1.2 * k, N.y + N.h);
+      let threads = '';
+      for (let i = 0; i < 4; i++) {
+        const y = threadTop + ((threadBot - threadTop) * i) / 3;
+        threads += `<line x1="${n2(N.x + 0.6)}" y1="${n2(y)}" x2="${n2(N.x + N.w - 0.6)}" y2="${n2(y)}" stroke="#b6bec7" stroke-width=".7"/>`;
+      }
+      const wiperW = N.w * 0.8;
+      const neck = `<rect x="${n2(N.x)}" y="${n2(N.y)}" width="${n2(N.w)}" height="${n2(N.h)}" rx="${n2(0.8 * k)}" ${neckColour} ${edge}/>${threads}`
+        + `<rect x="${n2(cx - wiperW / 2)}" y="${n2(N.y - 0.3 * k)}" width="${n2(wiperW)}" height="${n2(2.6 * k)}" rx="${n2(0.6 * k)}" fill="#fff" stroke="#c4cad1" stroke-width=".6"/>`;
+      // clear rod with a fine glint, white applicator at its tip
+      const rod = `<rect x="${n2(W.x)}" y="${n2(W.y)}" width="${n2(W.w)}" height="${n2(W.h)}" rx="${n2(W.w / 2)}" fill="#fff" fill-opacity="${prod ? '.28' : '.6'}" ${edge}/>`
+        + glint(W.x + W.w * 0.35, W.y + 2, W.y + W.h - 2, 0.95);
+      const tip = `<ellipse cx="${F.cx}" cy="${n2(F.cy)}" rx="${n2(F.rx)}" ry="${n2(F.ry)}" fill="${prod ? CL.color.mix(prod, '#ffffff', 0.35) : '#fdfdfc'}" stroke="#cfc9bf" stroke-width=".6"/>`;
+      // cap: a slim plug hangs from the ceiling and holds the top of the rod
+      const plugW = Math.max(W.w * 2.4, N.w * 0.5), plugTop = S.y + 2.4 * k, plugBot = Math.min(W.y + 3 * k, N.y - 0.4 * k);
+      const plug = `<rect x="${n2(cx - plugW / 2)}" y="${n2(plugTop)}" width="${n2(plugW)}" height="${n2(Math.max(plugBot - plugTop, 2))}" rx="${n2(0.8 * k)}" fill="#f6f8fa" fill-opacity=".85" ${edge}/>`
+        + glint(cx - plugW * 0.25, plugTop + 3, plugBot - 3, 0.8);
+      // filled with lip colour, the wand is hidden in it (only its top shows in the neck)
+      if (isClear(P.base)) innerBase = prod ? rod + tip + cavity + neck : cavity + neck + rod + tip;
+      if (isClear(P.cap)) innerCap = neck + rod + plug;
+    }
 
     // 1. Base (Thân son)
     const baseAttr = inter ? ` data-part="base" class="cl-part"` : '';
     body += `<g${baseAttr} clip-path="url(#${u}-clip-base)">`;
-    body += innerBase + sBase.markup;
+    // tinted clear plastic sits over what is inside it; plain clear shows the inside on top
+    const tinted = (p) => isClear(p) && !fillColors(p.fill).every((c) => CL.pantone.nearest(c).code === 'Clear');
+    body += tinted(P.base) ? innerBase + sBase.markup : sBase.markup + innerBase;
     body += `</g>`;
 
     // Artwork on Base (Strictly inside Safe Zone)
@@ -312,7 +369,7 @@
     // 2. Cap (Nắp son)
     const capAttr = inter ? ` data-part="cap" class="cl-part"` : '';
     body += `<g${capAttr} clip-path="url(#${u}-clip-cap)">`;
-    body += innerCap + sCap.markup;
+    body += tinted(P.cap) ? innerCap + sCap.markup : sCap.markup + innerCap;
     body += `</g>`;
 
     // Artwork on Cap (Strictly inside Safe Zone)
@@ -323,6 +380,13 @@
       body += partShape(L.capShell, `url(#${shadeCapId})`);
       body += partShape(L.capShell, `url(#${u}-v-top)`);
       body += `</g>`;
+    }
+
+    // where cap meets body: a fine shadow line with a light edge under it, like a real parting gap
+    {
+      const w = Math.min(L.capShell.w, L.baseShell.w), x = CL.round(L.scene.cx - w / 2, 2), y = L.seamY;
+      body += `<g pointer-events="none"><rect x="${x}" y="${CL.round(y - 0.5, 2)}" width="${CL.round(w, 2)}" height="1" fill="#000" fill-opacity="0.22"/>`
+        + `<rect x="${x}" y="${CL.round(y + 0.3, 2)}" width="${CL.round(w, 2)}" height="1" fill="#fff" fill-opacity="0.8"/></g>`;
     }
 
     // Optional Safe Zone visual guide frame when editing Text or Logo

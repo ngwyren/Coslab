@@ -445,6 +445,7 @@ body.app-mode { overflow: hidden; }
 
 /* Responsive */
 @media (max-width: 960px) {
+  .header-actions .theme-btn { order: -1; }
   /* Pill nav gives way to the overlay menu */
   .main-nav { display: none; }
   .nav-toggle { display: inline-flex; }
@@ -476,4 +477,73 @@ body.app-mode { overflow: hidden; }
 /* Comfortable touch targets in the footer on phones */
 @media (max-width: 760px) {
   .footer-links a, .site-footer .brand { min-height: 36px; display: inline-flex; align-items: center; }
+}
+
+/* ==========================================================
+   One-line footer
+   ========================================================== */
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.site-footer { padding-block: 40px; content-visibility: visible; }
+.footer-line { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 32px; font-size: 15px; color: var(--muted); }
+.footer-line > :first-child { margin-inline-end: auto; }
+.footer-line a { min-height: 32px; display: inline-flex; align-items: center; }
+.footer-line a:hover { color: var(--text); }
+@media (max-width: 640px) { .footer-line { flex-direction: column; } }
+
+/* ---------- Footer: the name across the page, a hairline, three links ---------- */
+.site-footer { padding: clamp(56px, 8vw, 120px) 0 28px; border-top: 0; overflow: clip; }
+.footer-giant { font-size: 12vw; font-weight: 700; line-height: 0.78; letter-spacing: -0.06em; text-align: center; white-space: nowrap; user-select: none; font-kerning: none; }
+.footer-split { display: grid; grid-template-columns: 1fr 1fr; margin-top: clamp(28px, 4vw, 56px); min-height: clamp(160px, 22vw, 320px); }
+.footer-rule { grid-column: 2; grid-row: 1; width: 1px; background: var(--text); opacity: 0.35; }
+.footer-links2 { grid-column: 2; grid-row: 1; display: flex; flex-direction: column; align-items: flex-start; padding-inline-start: 14px; font-size: clamp(18px, 1.6vw, 24px); line-height: 1.25; }
+.footer-links2 a { color: var(--text); }
+.footer-copy { margin: 24px 0 0; text-align: center; font-size: 12px; color: var(--muted); }
+
+/* ---------- Letters roll up on hover (menu and footer links) ---------- */
+.roll { display: inline-flex; }
+/* timing measured on the Framer site: each letter 0.3s, 30ms after the one before, rolls back on leave */
+.roll-ch { position: relative; display: inline-block; overflow: hidden; padding-bottom: 2px; line-height: 1.2; vertical-align: top; }
+.roll-ch > span { display: block; transition: transform 0.3s cubic-bezier(0.45, 0, 0.55, 1); transition-delay: calc(var(--i) * 30ms); }
+.roll-ch > span + span { position: absolute; inset: 0; transform: translateY(120%); }
+a:hover > .roll .roll-ch > span:first-child, a:focus-visible > .roll .roll-ch > span:first-child { transform: translateY(-120%); }
+a:hover > .roll .roll-ch > span + span, a:focus-visible > .roll .roll-ch > span + span { transform: none; }
+
+/* ---------- Page change: the old page fades out, the new one rises in ---------- */
+#app { transition: opacity 0.28s cubic-bezier(0.33, 0, 0.67, 1), transform 0.5s cubic-bezier(0.33, 0, 0.67, 1); }
+#app.is-leaving { opacity: 0; }
+#app.is-entering { opacity: 0; transform: translateY(14px); transition: none; }
+@media (prefers-reduced-motion: reduce) { #app, #app.is-entering { transition: none; transform: none; } }
+
+/* ---------- Light / dark switch ---------- */
+.theme-btn { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; color: var(--text); }
+.theme-btn:hover { background: var(--surface-2); }
+.theme-btn svg { width: 17px; height: 17px; }
+.footer-giant { width: max-content; margin-inline: auto; }
+.footer-giant .footer-kern-l { letter-spacing: 0.015em; }
+/* small Contact link on the right of the header */
+.header-contact { font-size: 13px; font-weight: 500; color: var(--text); padding: 8px 6px; margin-inline-end: 6px; }
+@media (max-width: 960px) { .header-contact { padding-inline: 4px; } }
+/* tiny © line right under the hairline, as on ngwyren.framer.website */
+.footer-copy { margin-top: 10px; font-size: 10px; font-weight: 600; letter-spacing: 0.02em; color: var(--text); text-transform: uppercase; }
+
+/* The name runs across the footer, endlessly (two identical halves loop seamlessly) */
+.footer-marquee { overflow: hidden; user-select: none; }
+.mq-track { display: flex; width: max-content; animation: mqRun var(--mq-dur, 60s) linear infinite; }
+.mq-item { flex: none; font-family: 'Inter', var(--font-ui); font-size: 27.7vw; font-weight: 400; line-height: 0.8; letter-spacing: -0.07em; white-space: nowrap; }
+.mq-item .footer-kern-l { letter-spacing: 0.015em; }
+@keyframes mqRun { to { transform: translateX(-50%); } }
+/* footer and Contact links: a gentle grow on hover */
+
+.header-contact { transform-origin: center; }
+
+
+
+
+/* Company details: one quiet block above the copyright */
+.footer-info { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 2px; margin: 28px auto 0; max-width: 1100px; padding-inline: 16px; font-style: normal; font-size: 11px; line-height: 1.6; color: var(--muted); }
+
+/* phones: the rule moves left so the email fits on one line */
+@media (max-width: 560px) {
+  .footer-split { grid-template-columns: 1fr 3fr; }
+  .footer-links2 { font-size: 16px; }
 }

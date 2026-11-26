@@ -27,6 +27,29 @@
     return { segs, key: segs[0] || '', sub: segs[1] || '', query };
   }
 
+  /** Split a link's words into letters that roll up on hover (the link keeps its name for screen readers). */
+  CL.rollLetters = (root = document) => {
+    root.querySelectorAll('a.roll-me').forEach((a) => {
+      const text = a.textContent.trim();
+      if (!text || a.querySelector('.roll')) return; // already split (a language change puts plain text back)
+      a.setAttribute('aria-label', text);
+      const roll = document.createElement('span');
+      roll.className = 'roll';
+      roll.setAttribute('aria-hidden', 'true');
+      [...text].forEach((c, i) => {
+        const ch = document.createElement('span');
+        ch.className = 'roll-ch';
+        ch.style.setProperty('--i', i);
+        const glyph = c === ' ' ? '\u00a0' : c;
+        ch.innerHTML = '<span></span><span></span>';
+        ch.firstChild.textContent = glyph;
+        ch.lastChild.textContent = glyph;
+        roll.append(ch);
+      });
+      a.replaceChildren(roll);
+    });
+  };
+
   CL.go = (hash) => { if (location.hash === hash) render(); else location.hash = hash; };
 
   // Framer Scroll Reveal & Luxury Motion Engine
@@ -80,6 +103,22 @@
     }
   }
 
+  // Page change: fade the old page out, then build the new one and let it rise in
+  let leaving = 0;
+  function navigate() {
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduce || !app.firstChild) { render(); return; }
+    const id = ++leaving;
+    app.classList.add('is-leaving');
+    setTimeout(() => {
+      if (id !== leaving) return;
+      app.classList.remove('is-leaving');
+      app.classList.add('is-entering');
+      render();
+      requestAnimationFrame(() => requestAnimationFrame(() => app.classList.remove('is-entering')));
+    }, 260);
+  }
+
   function render(opts = {}) {
     const r = parse();
     const route = ROUTES[r.key] || ROUTES[''];
@@ -94,6 +133,9 @@
     current = { route, r };
     cleanup = page.render(app, { query: r.query, sub: r.sub, anchor: route.anchor, rerender: !!opts.rerender });
     I18N.apply(document);
+    CL.rollLetters();
+    // place the black pill again once the new page is laid out
+    requestAnimationFrame(() => CL.nav && CL.nav.sync(true));
     document.title = route.page === 'home' ? 'CosLab' : `${t(page.titleKey || 'nav.home')} — CosLab`;
     if (!opts.rerender) {
       if (route.anchor) setTimeout(() => { const el = document.getElementById(route.anchor); el && el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 60);
@@ -134,17 +176,53 @@
   function init() {
     document.getElementById('year').textContent = new Date().getFullYear();
     CL.nav.init();
+    // footer name runs at a steady ~90 px a second, whatever the screen width
+    // Mail links: open the mail app if there is one, and always copy the address with a short note
+    document.querySelectorAll('a[data-copy-mail]').forEach((a) => a.addEventListener('click', () => {
+      const mail = a.getAttribute('href').replace('mailto:', '');
+      const done = () => CL.toast && CL.toast(I18N.lang === 'vi' ? `Đã chép email: ${mail}` : `Email copied: ${mail}`);
+      if (navigator.clipboard) navigator.clipboard.writeText(mail).then(done, done); else done();
+    }));
+    const track = document.querySelector('.mq-track');
+    const pace = () => { if (track) track.style.setProperty('--mq-dur', `${track.scrollWidth / 2 / 90}s`); };
+    pace();
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(pace);
+    window.addEventListener('resize', CL.debounce(pace, 150), { passive: true });
+    const giant = document.querySelector('.footer-giant');
+    const fitGiant = () => {
+      if (!giant) return;
+      giant.style.fontSize = '100px';
+      giant.style.fontSize = `${(document.documentElement.clientWidth / (giant.scrollWidth || 1)) * 100 * 0.98}px`;
+    };
+    fitGiant();
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitGiant);
+    window.addEventListener('resize', CL.debounce(fitGiant, 100), { passive: true });
     const header = document.getElementById('siteHeader');
     window.addEventListener('scroll', () => header.classList.toggle('scrolled', window.scrollY > 4), { passive: true });
 
-    document.documentElement.setAttribute('data-theme', 'light');
+    // Light / dark, remembered
+    const themeBtn = document.getElementById('themeBtn');
+    const setTheme = (mode) => {
+      document.documentElement.setAttribute('data-theme', mode);
+      if (themeBtn) {
+        themeBtn.innerHTML = CL.icon(mode === 'dark' ? 'sun' : 'moon');
+        themeBtn.setAttribute('aria-label', mode === 'dark' ? 'Light theme' : 'Dark theme');
+        themeBtn.title = themeBtn.getAttribute('aria-label');
+      }
+    };
+    setTheme(CL.store.settings.theme === 'dark' ? 'dark' : 'light');
+    if (themeBtn) themeBtn.addEventListener('click', () => {
+      const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      CL.store.saveSettings({ theme: next });
+      setTheme(next);
+    });
     I18N.onChange(() => {
       buildLangSwitch();
       I18N.apply(document);
       render({ rerender: true });
     });
     I18N.setLang(CL.store.settings.lang || 'vi');
-    window.addEventListener('hashchange', () => render());
+    window.addEventListener('hashchange', navigate);
     window.addEventListener('resize', () => setTimeout(setupFramerMotion, 100), { passive: true });
 
     if (!I18N.LANGS.length) return;

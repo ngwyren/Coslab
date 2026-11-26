@@ -7,7 +7,7 @@
       next: 'Tiếp', apply: 'Áp dụng', search: 'Tìm kiếm...', all: 'Tất cả', loading: 'Đang tải...', actions: 'Thao tác',
     },
     nav: {
-      home: 'CosLab', design: 'Design', gallery: 'Archive', myDesigns: 'Vault', settings: 'Setting', start: 'Start Design',
+      home: 'CosLab', design: 'Thiết kế', gallery: 'Mẫu', myDesigns: 'Đã lưu', settings: 'Cài đặt', start: 'Let’s Create',
     },
     footer: {
       tagline: 'Lab Son Tint Hàn Quốc · OEM / ODM',
@@ -154,18 +154,18 @@
       },
     },
     gallery: {
-      title: 'Archive.', subtitle: 'PRESET COLLECTION',
+      title: 'Mẫu', subtitle: 'PRESET COLLECTION',
       editAsTemplate: 'Tùy biến', downloadAssets: 'Tải',
       autoUpdateNote: 'COSLAB ARCHIVE',
       filterAll: 'Tất cả', filterKVelvet: 'Velvet', filterKDewy: 'Dewy', filterKLuxury: 'Luxury', filterKTamburins: 'Chrome', filterKGradient: 'Gradient', filterKMinimal: 'Minimal',
     },
     myDesigns: {
-      title: 'Vault.', subtitle: 'SAVED SPECIFICATIONS',
+      title: 'Đã lưu', subtitle: 'SAVED SPECIFICATIONS',
       newDesign: 'Tạo mới', emptyTitle: 'Bạn chưa có thiết kế nào ở đây.', emptyDesc: 'Chưa có mẫu lưu trữ.',
       lastModified: '{date}', editDesign: 'Mở', deleteConfirm: 'Xóa mẫu này?',
     },
     settings: {
-      title: 'Settings.', subtitle: 'STUDIO PREFERENCES',
+      title: 'Settings', subtitle: 'STUDIO PREFERENCES',
       languages: 'Ngôn ngữ', languagesDesc: '8 REGIONS',
       theme: 'Giao diện', themeLight: 'Pure White', themeDark: 'Obsidian Black',
       themeDesc: 'Minimalist White',

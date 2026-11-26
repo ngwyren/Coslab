@@ -28,7 +28,7 @@
     return m;
   };
 
-  const MODEL_VERSION = 3;
+  const MODEL_VERSION = 6;
   const modelCache = new Map();
 
   /** Load one container: { body, cap, wand, foot, wiper, art_body, art_cap } as raw attributes (mm, y-up). */
@@ -80,6 +80,14 @@
     return [c, c];
   }
 
+  /** Where the blend starts and ends (0 = bottom, 1 = top), from the gradient slider. */
+  function rangeOf(fill) {
+    const st = fill && fill.type === 'linear' && fill.stops;
+    if (!st || !st.length) return [0, 1];
+    const a = CL.clamp(+st[0].o || 0, 0, 1), last = st[st.length - 1].o;
+    return [a, Math.max(CL.clamp(last == null ? 1 : +last, 0, 1), a + 0.01)];
+  }
+
   /** Vertex colours for an opaque part: plain or 2-colour gradient. */
   function paintGeometry(g, part, y0, y1) {
     const [a, b] = colorsOf(part && part.fill).map(linear);
@@ -87,8 +95,9 @@
     const pos = g.attributes.position;
     const out = new Float32Array(pos.count * 4);
     const mix = new THREE.Color();
+    const [ra, rb] = rangeOf(part && part.fill);
     for (let i = 0; i < pos.count; i++) {
-      const u = CL.clamp((pos.getY(i) - y0) / (y1 - y0), 0, 1);
+      const u = CL.clamp(((pos.getY(i) - y0) / (y1 - y0) - ra) / (rb - ra), 0, 1);
       mix.copy(a).lerp(b, surface === 'solid-gradient' || surface === 'shimmer' ? u : 0);
       out.set([mix.r, mix.g, mix.b, 1], i * 4);
     }
@@ -98,10 +107,10 @@
   /** Per-pixel version of the clear gradient (the decimated walls have too few vertices for a smooth one). */
   function patchClearGradient(sh, part, y0, y1) {
     const [a, b] = colorsOf(part.fill).map(linear);
-    Object.assign(sh.uniforms, { clA: { value: a }, clB: { value: b }, clY: { value: new THREE.Vector2(y0, y1) } });
+    Object.assign(sh.uniforms, { clA: { value: a }, clB: { value: b }, clY: { value: new THREE.Vector2(y0, y1) }, clR: { value: new THREE.Vector2(...rangeOf(part.fill)) } });
     sh.vertexShader = 'varying float vClY;\n' + sh.vertexShader.replace('#include <begin_vertex>', 'vClY = position.y;\n#include <begin_vertex>');
-    sh.fragmentShader = 'varying float vClY; uniform vec3 clA; uniform vec3 clB; uniform vec2 clY;\n' + sh.fragmentShader.replace('#include <color_fragment>', `
-      float clU = clamp((vClY - clY.x) / (clY.y - clY.x), 0.0, 1.0);
+    sh.fragmentShader = 'varying float vClY; uniform vec3 clA; uniform vec3 clB; uniform vec2 clY; uniform vec2 clR;\n' + sh.fragmentShader.replace('#include <color_fragment>', `
+      float clU = clamp(((vClY - clY.x) / (clY.y - clY.x) - clR.x) / (clR.y - clR.x), 0.0, 1.0);
       diffuseColor.rgb = mix(clA, clB, min(clU / 0.55, 1.0));
       diffuseColor.a = clU < 0.55 ? mix(0.92, 0.42, clU / 0.55) : mix(0.42, 0.06, (clU - 0.55) / 0.45);`);
   }
@@ -302,6 +311,18 @@
       }, { passive: false });
     }
 
+    /** Back to the starting angle, distance and centre (eases there, the short way round). */
+    resetView() {
+      const turn = Math.PI * 2;
+      let d = (-0.35 - this.targetRotY) % turn;
+      if (d > Math.PI) d -= turn; else if (d < -Math.PI) d += turn;
+      this.targetRotY += d;
+      this.targetRotX = 0.08;
+      this.targetDist = 14;
+      this.targetPan.set(0, 0, 0);
+      this.idleAt = performance.now();
+    }
+
     _resize() {
       const w = this.container.clientWidth || 300, h = this.container.clientHeight || 300;
       this.renderer.setSize(w, h, false);
@@ -479,9 +500,17 @@
         return false;
       }
 
-      this._clear();
+      // Build the new tube first; the old one goes after the next frame, so its compiled
+      // shaders are reused and the switch does not stutter
+      const old = { nodes: this.group.children.slice(), mats: this.disposables };
+      this.group.remove(...old.nodes);
+      this.disposables = [];
       if (this._modelId !== L.model.id) { this._modelId = L.model.id; this.targetPan.set(0, 0, 0); }
       this._buildTube(design, L, raw, tex);
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        old.nodes.forEach((o) => o.traverse((c) => c.geometry && c.geometry.dispose()));
+        old.mats.forEach((d) => { if (d.map) d.map.dispose(); d.dispose && d.dispose(); });
+      }));
       return true;
     }
 
@@ -504,6 +533,15 @@
       };
 
       add(makeGeometry(raw.wand), this._plain('#e6ebf1', 0.8), 0);
+      // the lip product filling a clear body (picked in Clear mode)
+      if (isClear(P.base) && P.base.product && P.base.product.color) {
+        const cav = m.cavity.map(([z, r]) => new THREE.Vector2(Math.max(r - 0.08, 0.01), z));
+        const top = cav[cav.length - 1], bot = cav[0];
+        const prof = [new THREE.Vector2(0, bot.y), ...cav, new THREE.Vector2(0, top.y)];
+        const pm = trueColor(new THREE.MeshPhysicalMaterial({ color: linear(P.base.product.color), roughness: 0.35, metalness: 0, envMapIntensity: 0.6 }), 'product', '0.15');
+        this.disposables.push(pm);
+        add(new THREE.LatheGeometry(prof, 96), pm, 0);
+      }
       add(makeGeometry(raw.foot), this._plain('#f4ecdc', 0.9), 0);
       add(makeGeometry(raw.wiper), this._plain('#eceff2', 0.5), 0);
 
@@ -613,5 +651,6 @@
     }
   }
 
+  Preview3D.preload = (id) => loadModel(id).catch(() => {});
   CL.Preview3D = Preview3D;
 })(window.CL);
