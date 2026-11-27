@@ -62,7 +62,10 @@
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-  display: flex;
+  /* every item is as wide as the widest one: the pill then only slides, it never changes size */
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
   align-items: center;
   gap: 2px;
   background: var(--surface-2);
@@ -81,12 +84,12 @@
   font-weight: 500;
   color: var(--muted);
   letter-spacing: 0.01em;
-  transition: color 0.35s var(--ease-framer), transform 0.3s var(--ease-framer);
+  text-align: center;
+  transition: color 0.35s var(--ease-framer);
   white-space: nowrap;
 }
 .main-nav a:hover { color: var(--text); }
-.main-nav a:active { transform: scale(0.96); transition-duration: 0.12s; }
-.main-nav a.is-active { color: var(--text); font-weight: 600; }
+.main-nav a.is-active { color: var(--text); } /* same weight as the others, so the label keeps its width */
 /* Text over the sliding black pill turns white */
 .main-nav a.is-lit { color: #fff; }
 

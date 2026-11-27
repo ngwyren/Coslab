@@ -10,8 +10,10 @@ to each other.
 - `fill: 0.68`, `lift: 0.08`: the tallest container (107.9 mm) takes 68% of the frame height and
   every container stands on the same line, clear of the name bar on the card
 - `size`: the container's height divided by the tallest container's height
-- `look`: the four studios in turn, `seq[(i + (i >> 2)) % 4]`, so neighbours differ
-- backdrop: left to the renderer (a pale wash of the product's colour)
+- `look`: the six studios in turn, `seq[(i + (i >> 2)) % 6]`, so neighbours differ (A to D have
+  neutral light and a near-white backdrop; E and F have warm light and a warm grey-cream backdrop)
+- backdrop: left to the renderer (near white with a breath of the product's colour, or the warm
+  grey-cream of the two warm studios)
 - `blank-liptint` has no card and is skipped
 
 ## How
@@ -26,7 +28,7 @@ commit.
 // ids to render; leave empty to render every card
 const only = [];
 
-const T = CL.templates, seq = ['studioA', 'studioB', 'studioC', 'studioD'];
+const T = CL.templates, seq = ['studioA', 'studioB', 'studioC', 'studioD', 'studioE', 'studioF'];
 const tallest = Math.max(...CL.models.MODELS.map((m) => m.h));
 for (let i = 0; i < T.TEMPLATES.length; i++) {
   const tp = T.TEMPLATES[i];
@@ -35,7 +37,7 @@ for (let i = 0; i < T.TEMPLATES.length; i++) {
   const canvas = await CL.renderHQ(design, {
     width: 640, height: 800, samples: 160, fill: 0.68, lift: 0.08,
     size: CL.models.getModel(design.model).h / tallest,
-    look: seq[(i + (i >> 2)) % 4],
+    look: seq[(i + (i >> 2)) % 6],
   });
   const blob = await new Promise((done) => canvas.toBlob(done, 'image/webp', 0.92));
   const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: `${tp.templateId}.webp` });
@@ -47,8 +49,9 @@ for (let i = 0; i < T.TEMPLATES.length; i++) {
 
 ## Status
 
-27 November 2026: all 36 cards were rendered with this recipe. Right after that the renderer
-changed: the backdrop is now nearly white with only a breath of the product's colour, and a soft
-light from above throws a faint shadow. The pictures in `assets/archive/` still show the earlier,
-pinker backdrop without that shadow, so **all 36 need to be rendered again** (leave `only` empty).
-One test of the new look (Rouge 03) was checked; no full set has been made with it yet.
+27 November 2026: all 36 cards were rendered with four studios and a pinker backdrop. Right after
+that the renderer changed: the backdrop is now nearly white with only a breath of the product's
+colour, a soft light from above throws a faint shadow, and two warm studios (E and F) were added.
+The pictures in `assets/archive/` still show the earlier look, so **all 36 need to be rendered
+again** (leave `only` empty). Five single test pictures of the new look were checked (studios A, B,
+E and F); no full set has been made with it yet.

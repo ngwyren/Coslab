@@ -17,7 +17,8 @@
 
   /** Lighting looks: real photo-studio panoramas (HDRI, CC0 from Poly Haven). Each render uses one
    *  (opts.look, or one picked at random), so a set of pictures does not repeat the same
-   *  highlights. Four different studios, levelled to one tone.
+   *  highlights. Four studios with neutral light, and two more turned the other way round with
+   *  warm light and a cream backdrop (warm: true), all levelled to one brightness.
    *  turn: which part of the studio faces the camera (radians); level: fine trim of
    *  its brightness so every look gives the same tone. */
   const LOOKS = {
@@ -25,6 +26,8 @@
     studioB: { file: 'studio_small_06', turn: 0, level: 0.68 },
     studioC: { file: 'studio_small_08', turn: 0, level: 1.08 },
     studioD: { file: 'studio_small_09', turn: 0, level: 0.95 },
+    studioE: { file: 'studio_small_05', turn: Math.PI, level: 1, warm: true },
+    studioF: { file: 'studio_small_08', turn: Math.PI, level: 1.08, warm: true },
   };
   const pickLook = (name) => {
     const ids = Object.keys(LOOKS);
@@ -71,15 +74,29 @@
     return hdris.get(file);
   };
 
-  /** How much light a panorama throws on a level floor (1 = an even sky of brightness 1). The
-   *  renderer reads the rows from the ground (first) up to straight overhead (last). */
-  const floorLight = (data, W, H) => {
-    let s = 0;
+  // The backdrop's wall: how far behind the product it stands and how high it is (in tube heights),
+  // and how much of the circle it takes.
+  const SWEEP = { rad: 5, wall: 2.5, span: Math.PI * 1.1 };
+
+  /** How much light a panorama throws on a level floor: { all } as one brightness (1 = an even sky
+   *  of brightness 1) and { rgb } for each colour. The renderer reads the rows from the ground
+   *  (first) up to straight overhead (last). Given the camera's angle, the part of the panorama
+   *  that the backdrop wall hides is left out, and { wall } says how much of the sky that is. */
+  const floorLight = (data, W, H, facing) => {
+    const s = [0, 0, 0], top = Math.atan(SWEEP.wall / SWEEP.rad), front = Math.PI / 2 - (facing || 0);
+    const edge = Math.cos(Math.PI - SWEEP.span / 2);
+    let wall = 0;
     for (let y = H >> 1; y < H; y++) {
       const up = ((y + 0.5) / H - 0.5) * Math.PI, k = Math.sin(up) * Math.cos(up);
-      for (let x = 0; x < W; x++) { const i = (y * W + x) * 4; s += (0.2126 * data[i] + 0.7152 * data[i + 1] + 0.0722 * data[i + 2]) * k; }
+      for (let x = 0; x < W; x++) {
+        // low and behind the product (seen from the camera): the wall is in the way
+        if (facing != null && up < top && Math.cos(((x + 0.5) / W) * Math.PI * 2 - Math.PI - front) < edge) { wall += k; continue; }
+        const i = (y * W + x) * 4;
+        s[0] += data[i] * k; s[1] += data[i + 1] * k; s[2] += data[i + 2] * k;
+      }
     }
-    return (s * 2 * Math.PI) / (W * H);
+    const unit = (2 * Math.PI) / (W * H), rgb = s.map((v) => v * unit);
+    return { all: 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2], rgb, wall: wall * unit };
   };
 
   /** One soft light from above, on the camera's left: it is what throws the light, soft-edged
@@ -87,7 +104,7 @@
    *  Its strength is a set share of the light the panorama itself throws on the floor. */
   const KEY_UP = 0.96, KEY_SIDE = 1.0, KEY_SOFT = [0.2, 0.5], KEY_SHARE = 0.35; // radians, and its share
   function addKey(data, W, H, facing) {
-    const front = Math.PI / 2 - facing, sky = floorLight(data, W, H);
+    const front = Math.PI / 2 - facing, sky = floorLight(data, W, H).all;
     const cE = Math.cos(KEY_UP), sE = Math.sin(KEY_UP), c0 = Math.cos(KEY_SOFT[0]), c1 = Math.cos(KEY_SOFT[1]);
     const lobe = new Float32Array(W * H);
     let own = 0;
@@ -110,12 +127,12 @@
     }
   }
 
-  const panorama = (T, data, W, H) => {
+  const panorama = (T, data, W, H, facing) => {
     const tex = new T.DataTexture(data, W, H, T.RGBAFormat, T.FloatType);
     tex.mapping = T.EquirectangularReflectionMapping;
     tex.minFilter = tex.magFilter = T.LinearFilter;
     tex.needsUpdate = true;
-    tex.userData.floor = floorLight(data, W, H);
+    tex.userData.floor = floorLight(data, W, H, facing); // the set is balanced against it
     return tex;
   };
 
@@ -133,7 +150,7 @@
       }
     }
     addKey(data, W, H, facing);
-    return panorama(T, data, W, H);
+    return panorama(T, data, W, H, facing);
   }
 
   /** Studio light for one look, as an HDR panorama turned to keep its place relative to the camera.
@@ -185,18 +202,37 @@
     const tone = (ENV_TONE * (LOOKS[look].level || 1)) / (fl / fw || 1);
     for (let i = 0; i < data.length; i += 4) { data[i] *= tone; data[i + 1] *= tone; data[i + 2] *= tone; }
     addKey(data, w, h, facing);
-    return panorama(T, data, w, h);
+    // a warm look: the light itself turns warm (the floor is balanced against the light's colour, so the
+    // backdrop still shows one colour)
+    const tint = LOOKS[look].warm ? WARM_LIGHT : [1, 1, 1];
+    if (LOOKS[look].warm) for (let i = 0; i < data.length; i += 4) { data[i] *= tint[0]; data[i + 1] *= tint[1]; data[i + 2] *= tint[2]; }
+    return panorama(T, data, w, h, facing);
   }
   const ENV_LEVEL = 0.95; // first rough levelling of a studio picture (sets where lamps are capped)
   const ENV_TONE = 1.0; // average light every look is scaled to: the shared, bright tone
   const ENV_GREY = 0.75; // how much of the studio's own colour cast is removed (a little warmth stays)
 
   // Backdrop paper gives off its own even light, so wall and floor show exactly one colour under
-  // any studio (a sweep that is only lit goes darker up the wall and to one side). PAPER_TONE: its
-  // brightness, as a multiple of the paper colour (above 1: the tone mapping holds bright whites
-  // back). PAPER_SHADOW: round the product the floor takes this share of its light from the studio
-  // instead, which is what draws the real, soft shadow.
-  const PAPER_TONE = 1.2, PAPER_SHADOW = 0.75;
+  // any studio (a sweep that is only lit goes darker up the wall and to one side). PAPER_SHADOW:
+  // round the product the floor takes this share of its light from the studio instead, which is
+  // what draws the real, soft shadow.
+  const PAPER_SHADOW = 0.75;
+
+  /** The light a surface has to give off to be shown in exactly this colour: the renderer's tone
+   *  mapping (Khronos Neutral, which holds bright values back) worked backwards. */
+  function paperLight(T, hex) {
+    const o = new T.Color(hex), out = Math.max(o.r, o.g, o.b), start = 0.76, d = 1 - start;
+    let c = [o.r, o.g, o.b];
+    if (out > start) {
+      const peak = (d * d) / (1 - Math.min(out, 0.995)) - d + start; // undo the shoulder
+      const g = 1 - 1 / (0.15 * (peak - out) + 1); // and the slight pull towards white
+      c = c.map((v) => ((v - g * out) / (1 - g)) * (peak / out));
+    }
+    return new T.Color(c[0] + 0.04, c[1] + 0.04, c[2] + 0.04); // the mapping takes 0.04 off first
+  }
+  // Warm looks: how much each colour of the light is turned (its brightness stays), and the warm,
+  // soft grey-cream the backdrop is shown in.
+  const WARM_LIGHT = [1.02, 1, 0.95], WARM_PAPER = '#e6e3de';
 
   /** Two round maps for the floor: how much studio light it takes (all of its share near the
    *  middle, none towards the rim) and how much it glows by itself (the rest, so that open floor
@@ -218,7 +254,7 @@
       map.colorSpace = T.SRGBColorSpace;
       return map;
     };
-    return [make((lit) => albedo * lit), make((lit) => PAPER_TONE - share * lit)];
+    return [make((lit) => albedo * lit), make((lit) => 1 - share * lit)];
   }
 
   const ACRYLIC = { transmission: 1, ior: 1.49, roughness: 0.03, metalness: 0, thickness: 0.3 };
@@ -272,7 +308,7 @@
     return tex;
   }
 
-  async function buildScene(T, design, backdrop, facing = 0, sky = 1, size = 1) {
+  async function buildScene(T, design, backdrop, facing = 0, light = { rgb: [1, 1, 1], wall: 0 }, size = 1) {
     const I = CL.Preview3D.internals;
     const L = CL.models.layout(design.model);
     const m = L.model;
@@ -325,24 +361,28 @@
 
     // photo-studio sweep: a round floor that curves up into a wall behind the product (seen from
     // the camera), so there is no horizon line; the front is open to the studio light
-    const TH = I.TUBE_H, rad = TH * 5, cove = TH, wallH = TH * 2.5;
+    const TH = I.TUBE_H, rad = TH * SWEEP.rad, cove = TH, wallH = TH * SWEEP.wall;
     const prof2 = [new T.Vector2(rad - cove, 0)];
     for (let i = 1; i <= 24; i++) {
       const a = (i / 24) * Math.PI / 2;
       prof2.push(new T.Vector2(rad - cove + Math.sin(a) * cove, cove - Math.cos(a) * cove));
     }
     prof2.push(new T.Vector2(rad, wallH));
-    const tone = new T.Color(backdrop || '#f0f0f0');
-    const wall = mat({ color: 0x000000, emissive: tone, emissiveIntensity: PAPER_TONE, roughness: 1, side: T.DoubleSide });
-    const span = Math.PI * 1.1; // a little more than the back half
+    const tone = paperLight(T, backdrop || '#f0f0f0'); // the light that shows as the backdrop colour
+    const wall = mat({ color: 0x000000, emissive: tone, roughness: 1, side: T.DoubleSide });
+    const span = SWEEP.span; // a little more than the back half
     scene.add(new T.Mesh(new T.LatheGeometry(prof2, 64, facing + Math.PI - span / 2, span), wall));
     scene.add(new T.Mesh(new T.RingGeometry(rad - cove, rad * 4, 64, 1, facing + Math.PI / 2 + span / 2, Math.PI * 2 - span).rotateX(-Math.PI / 2), wall));
-    // the floor round the product: `sky` is the studio light that reaches open floor, so there
-    // the lit share and the glow add up to exactly the wall's tone
-    const albedo = Math.min(0.9, (PAPER_SHADOW * PAPER_TONE) / Math.max(sky, 0.05));
+    // the floor round the product. What reaches open floor is the studio's light past the wall plus
+    // the wall's own glow (`sky`, and `lit` for each colour); balanced against it,
+    // the lit share and the floor's own glow add up to exactly the wall's tone
+    const lit = light.rgb.map((v, i) => v + (light.wall || 0) * [tone.r, tone.g, tone.b][i]);
+    const sky = 0.2126 * lit[0] + 0.7152 * lit[1] + 0.0722 * lit[2];
+    const albedo = Math.min(0.9, PAPER_SHADOW / Math.max(sky, 0.05));
     [tex.__lit, tex.__glow] = floorMaps(T, albedo, albedo * sky);
     scene.add(new T.Mesh(new T.CircleGeometry(rad - cove, 96).rotateX(-Math.PI / 2),
-      mat({ color: tone, map: tex.__lit, emissive: tone, emissiveMap: tex.__glow, roughness: 0.95, side: T.DoubleSide })));
+      // the lit share is corrected for the colour of the studio's light, so it lands as the paper colour
+      mat({ color: new T.Color((tone.r * sky) / lit[0], (tone.g * sky) / lit[1], (tone.b * sky) / lit[2]), map: tex.__lit, emissive: tone, emissiveMap: tex.__glow, roughness: 0.95, side: T.DoubleSide })));
     return { scene, textures: Object.values(tex) };
   }
 
@@ -350,7 +390,7 @@
    *  most colourful part (cap, body, or the tint inside a clear body), so the set suits the
    *  lipstick without competing with it. Products with next to no colour (clear, white, black,
    *  grey) get a warm white. */
-  function backdropOf(design) {
+  function backdropOf(design, warm) {
     const I = CL.Preview3D.internals;
     let hue = 0, sat = 0, top = 0;
     ['cap', 'base'].forEach((k) => {
@@ -363,8 +403,9 @@
         if (score > top) { top = score; hue = h; sat = s; }
       });
     });
-    if (top < 0.1) return '#f8f6f3';
-    return CL.color.rgbToHex(CL.color.hsvToRgb({ h: hue, s: Math.min(0.035, 0.01 + sat * 0.04), v: 0.98 }));
+    const pale = top < 0.1 ? '#f2f0ed'
+      : CL.color.rgbToHex(CL.color.hsvToRgb({ h: hue, s: Math.min(0.037, 0.011 + sat * 0.042), v: 0.957 }));
+    return warm ? WARM_PAPER : pale; // a warm look has its own backdrop
   }
 
   /** Phones, tablets and low-memory devices: the render is sized down so their GPU can finish it. */
@@ -447,11 +488,11 @@
 
     const look = pickLook(opts.look);
     if (opts.onLook) opts.onLook(look);
-    const backdrop = opts.backdrop || backdropOf(design);
+    const backdrop = opts.backdrop || backdropOf(design, LOOKS[look].warm);
     const env = await studioEnv(T, look, Math.atan2(dir.x, dir.z));
     const { scene, textures } = await buildScene(T, design, backdrop, Math.atan2(dir.x, dir.z), env.userData.floor, opts.size || 1);
     scene.environment = env;
-    scene.background = new T.Color(backdrop).multiplyScalar(PAPER_TONE); // same as the wall, should the frame ever look past it
+    scene.background = paperLight(T, backdrop); // same as the wall, should the frame ever look past it
 
     const pt = new PT.WebGLPathTracer(renderer);
     // phones and other small GPUs: smaller textures and fewer light bounces
