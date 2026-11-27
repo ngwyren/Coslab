@@ -708,10 +708,6 @@
   font-size: 12px;
   color: var(--muted);
 }
-.gallery-actions .btn-sm { opacity: 0; transform: translateY(4px); transition: opacity 0.3s var(--ease-framer), transform 0.3s var(--ease-framer); }
-.gallery-card:hover .gallery-actions .btn-sm,
-.gallery-card:focus-within .gallery-actions .btn-sm { opacity: 1; transform: none; }
-@media (hover: none) { .gallery-actions .btn-sm { opacity: 1; transform: none; } }
 
 /* ---------- Responsive Breakpoints ---------- */
 @media (max-width: 1040px) {
@@ -935,8 +931,7 @@
 .gallery-tube.is-3d { inset: 0 0 9%; }
 .gallery-shot { height: 100%; width: auto; max-width: 100%; object-fit: contain; animation: framerFadeIn 0.35s var(--ease-framer) both; transition: transform 0.7s var(--ease-framer); }
 .gallery-card:hover .gallery-shot { transform: translateY(-6px) scale(1.02); }
-.gallery-actions { display: flex; align-items: center; gap: 2px; flex-shrink: 0; }
-.gallery-actions > div { display: contents; }
+.gallery-actions { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
 
 /* Full-width pages: the card grid gains columns on wide screens so cards keep a sensible size */
 @media (min-width: 1500px) { .gallery-grid.grid-4 { grid-template-columns: repeat(5, 1fr); } }

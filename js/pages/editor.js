@@ -605,6 +605,7 @@
           syncPartChips();
 
           const p3d = document.getElementById('preview3dHost');
+          if (preview3DInstance) preview3DInstance.paused = view !== '3d'; // no drawing into a hidden view
           p3d.style.display = view === '3d' ? 'block' : 'none';
           // the view that comes in fades up instead of popping
           const shown = view === '3d' ? p3d : document.getElementById('canvasViewport');

@@ -96,39 +96,37 @@
                     CL.go('#/editor');
                   },
                 }),
-                CL.h('div', { style: { display: 'flex', gap: '4px' } },
-                  CL.h('button.icon-btn.sm', {
-                    title: t('common.copy'),
-                    html: CL.icon('copy'),
-                    onclick: () => {
-                      if (CL.store.duplicateDesign(dsn.id)) CL.toast(t('common.copy'));
-                      else CL.toast(t('editor.quotaWarning'), 'info');
+                CL.h('button.icon-btn.sm', {
+                  title: t('common.copy'),
+                  html: CL.icon('copy'),
+                  onclick: () => {
+                    if (CL.store.duplicateDesign(dsn.id)) CL.toast(t('common.copy'));
+                    else CL.toast(t('editor.quotaWarning'), 'info');
+                    renderList();
+                  },
+                }),
+                CL.h('button.icon-btn.sm', {
+                  title: t('common.download'),
+                  html: CL.icon('download'),
+                  onclick: () => {
+                    CL.openExport(dsn);
+                  },
+                }),
+                CL.h('button.icon-btn.sm', {
+                  title: t('common.delete'),
+                  html: CL.icon('trash'),
+                  onclick: async () => {
+                    const ok = await CL.confirm({
+                      title: t('common.delete'),
+                      message: t('myDesigns.deleteConfirm'),
+                    });
+                    if (ok) {
+                      CL.store.deleteDesign(dsn.id);
+                      CL.toast(t('common.delete'));
                       renderList();
-                    },
-                  }),
-                  CL.h('button.icon-btn.sm', {
-                    title: t('common.download'),
-                    html: CL.icon('download'),
-                    onclick: () => {
-                      CL.openExport(dsn);
-                    },
-                  }),
-                  CL.h('button.icon-btn.sm', {
-                    title: t('common.delete'),
-                    html: CL.icon('trash'),
-                    onclick: async () => {
-                      const ok = await CL.confirm({
-                        title: t('common.delete'),
-                        message: t('myDesigns.deleteConfirm'),
-                      });
-                      if (ok) {
-                        CL.store.deleteDesign(dsn.id);
-                        CL.toast(t('common.delete'));
-                        renderList();
-                      }
-                    },
-                  })
-                )
+                    }
+                  },
+                })
               )
             )
           );

@@ -721,7 +721,7 @@ html::-webkit-scrollbar, body::-webkit-scrollbar, *::-webkit-scrollbar { width: 
 }
 
 /* ---------- Leaving: dialogs and menus go as softly as they come ---------- */
-.modal-backdrop.is-leaving { animation: leaveFade 0.18s ease forwards; }
+.modal-backdrop.is-leaving { animation: leaveFade 0.18s ease forwards; pointer-events: none; }
 .modal-backdrop.is-leaving .modal { animation: leaveModal 0.18s ease forwards; }
 .menu.is-leaving { animation: leaveMenu 0.12s ease forwards; }
 @keyframes leaveFade { to { opacity: 0; } }
