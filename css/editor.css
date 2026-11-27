@@ -1532,3 +1532,5 @@
 @media (prefers-reduced-motion: reduce) { .view-in, .view-out { animation: none; } }
 /* three answers in the leave dialog: they wrap instead of running past the edge */
 .leave-actions { flex-wrap: wrap; }
+/* the render dialog shrinks into the corner card (and back), so its backdrop fades for as long */
+.modal-backdrop.is-leaving:has(.hq-modal) { animation-duration: 0.34s; }

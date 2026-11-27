@@ -484,15 +484,50 @@
     showDialog(false);
     showDock(false);
   }
+  /* The dialog and the corner card are two sizes of the same thing: one shrinks or grows into
+     the place of the other, instead of one vanishing and the other popping up. */
+  const MORPH_MS = 340;
+  /** A small still of the render, for the view that is leaving (the live canvas moves to the new one). */
+  function ghostOf(canvas) {
+    if (!canvas || !canvas.width) return null;
+    const g = document.createElement('canvas'), k = Math.min(1, 480 / canvas.width);
+    g.width = Math.round(canvas.width * k); g.height = Math.round(canvas.height * k);
+    try { g.getContext('2d').drawImage(canvas, 0, 0, g.width, g.height); } catch (e) { return null; }
+    return g;
+  }
+  function morph(from, to) {
+    if (!from || !to || !from.animate || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const a = from.getBoundingClientRect(), b = to.getBoundingClientRect();
+    if (!a.width || !b.width) return;
+    const timing = { duration: MORPH_MS, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' };
+    from.style.transformOrigin = to.style.transformOrigin = '0 0';
+    from.animate([
+      { transform: 'none', opacity: 1 },
+      { transform: `translate(${b.left - a.left}px, ${b.top - a.top}px) scale(${b.width / a.width}, ${b.height / a.height})`, opacity: 0 },
+    ], Object.assign({ fill: 'forwards' }, timing));
+    to.animate([
+      { transform: `translate(${a.left - b.left}px, ${a.top - b.top}px) scale(${a.width / b.width}, ${a.height / b.height})`, opacity: 0 },
+      { transform: 'none', opacity: 1 },
+    ], Object.assign({ fill: 'backwards' }, timing));
+  }
   /** Leave the dialog: a running or finished render goes on in the corner. */
   function toDock() {
+    const from = dialogEl && dialogEl.querySelector('.hq-modal'), stage = from && from.querySelector('.hq-stage');
+    const ghost = job && ghostOf(job.canvas);
     showDialog(false);
-    if (job && job.state !== 'failed') showDock(true);
-    else job = null;
+    if (job && job.state !== 'failed') {
+      showDock(true);
+      if (stage && ghost) stage.replaceChildren(ghost);
+      morph(from, dockEl);
+    } else job = null;
   }
   function toDialog() {
+    const from = dockEl, thumb = from && from.querySelector('.hq-dock-thumb');
+    const ghost = job && ghostOf(job.canvas);
     showDock(false);
     showDialog(true);
+    if (thumb && ghost) thumb.replaceChildren(ghost);
+    morph(from, dialogEl && dialogEl.querySelector('.hq-modal'));
   }
 
   /* ---- dialog ---- */
@@ -504,7 +539,7 @@
         views.delete(dialogEl._sync);
         const gone = dialogEl;
         gone.classList.add('is-leaving'); // fades out, then goes
-        setTimeout(() => gone.remove(), 180);
+        setTimeout(() => gone.remove(), MORPH_MS);
         dialogEl = null;
         window.removeEventListener('hashchange', toDock);
         if (dialogOpener && dialogOpener.isConnected) dialogOpener.focus();
@@ -571,7 +606,7 @@
         const gone = dockEl;
         views.delete(gone._sync);
         gone.classList.add('is-leaving'); // slides out, then goes
-        setTimeout(() => gone.remove(), 200);
+        setTimeout(() => gone.remove(), MORPH_MS);
         dockEl = null;
       }
       if (mode === 'dock') mode = null;
