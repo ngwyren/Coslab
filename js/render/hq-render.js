@@ -450,7 +450,7 @@
       if (!job.canvas) stage.replaceChildren();
       bar.style.width = `${progress()}%`;
       status.textContent = statusText();
-      saveBtn.disabled = job.state !== 'done';
+      saveBtn.hidden = job.state !== 'done'; // running: Cancel + Run in background; done: Close + Save
       bgBtn.hidden = job.state !== 'running';
       stopBtn.textContent = job.state === 'running' ? t('common.cancel') : t('common.close');
     };
@@ -495,6 +495,8 @@
       closeBtn.setAttribute('aria-label', stopLabel);
       el.classList.toggle('is-done', job.state === 'done');
     };
+    // the whole card opens the dialog again, not only the thumbnail
+    el.addEventListener('click', (e) => { if (!e.target.closest('button')) toDialog(); });
     dockEl = el;
     views.add(el._sync);
     document.body.append(el);

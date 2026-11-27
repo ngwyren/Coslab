@@ -1504,3 +1504,7 @@
 .hq-dock.is-done .hq-dock-status { color: var(--text); }
 @media (prefers-reduced-motion: reduce) { .hq-dock { animation: none; } }
 .hq-dock [hidden], .hq-modal [hidden] { display: none !important; }
+/* the actions never run past the dialog edge, whatever the language */
+.hq-modal .modal-actions { flex-wrap: wrap; }
+.hq-modal .modal-actions .btn { min-width: 0; white-space: nowrap; }
+.hq-dock { cursor: pointer; }
