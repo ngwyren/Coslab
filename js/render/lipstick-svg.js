@@ -334,19 +334,9 @@
     defs.push(`<clipPath id="${u}-clip-base">${partShape(L.baseShell, '#000')}</clipPath>`);
     defs.push(`<clipPath id="${u}-safe-cap"><rect x="${L.cap.safe.x}" y="${L.cap.safe.y}" width="${L.cap.safe.w}" height="${L.cap.safe.h}" rx="4"/></clipPath>`);
     defs.push(`<clipPath id="${u}-safe-base"><rect x="${L.base.safe.x}" y="${L.base.safe.y}" width="${L.base.safe.w}" height="${L.base.safe.h}" rx="4"/></clipPath>`);
-    // layers sized by hand may fill the whole print band (the band the 3D view prints on)
-    defs.push(`<clipPath id="${u}-print-cap"><rect x="${L.cap.x}" y="${L.cap.y}" width="${L.cap.w}" height="${L.cap.h}"/></clipPath>`);
-    defs.push(`<clipPath id="${u}-print-base"><rect x="${L.base.x}" y="${L.base.y}" width="${L.base.w}" height="${L.base.h}"/></clipPath>`);
-
-    const layersOf = (part, free) => (design.layers || [])
-      .filter((l) => l.part === part && !!l.free === free)
-      .map((l) => layerMarkup(l, L[part], inter)).join('');
-    /** Artwork on a part: fitted layers stay in the safe zone; hand-sized ones may fill the print band, never past the outline. */
-    const artwork = (part) => {
-      const tag = inter ? ` data-layers="${part}"` : '';
-      return `<g clip-path="url(#${u}-safe-${part})"${tag}>${layersOf(part, false)}</g>`
-        + `<g clip-path="url(#${u}-clip-${part})"><g clip-path="url(#${u}-print-${part})"${tag}>${layersOf(part, true)}</g></g>`;
-    };
+    const layersOf = (part) => (design.layers || []).filter((l) => l.part === part).map((l) => layerMarkup(l, L[part], inter)).join('');
+    /** Artwork on a part is cut at the dashed safe zone, also when it was sized by hand. */
+    const artwork = (part) => `<g clip-path="url(#${u}-safe-${part})"${inter ? ` data-layers="${part}"` : ''}>${layersOf(part)}</g>`;
 
     let body = '';
     if (opts.background) {

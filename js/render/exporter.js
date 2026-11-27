@@ -133,22 +133,13 @@
     return { canvas: await rasterize(f.svg, f.w, f.h), rect: f.rect };
   }
 
-  /**
-   * Artwork of one part for the 3D views, cut like the 2D view: fitted layers stay in the
-   * safe zone, layers sized by hand ("free") may fill the whole print band.
-   */
+  /** Artwork of one part for the 3D views, cut at the safe zone like the 2D view. */
   async function renderArtCanvas(design, part, { scale = 4, fonts } = {}) {
     const r = CL.models.layout(design.model)[part];
-    const only = (free) => Object.assign({}, design, { layers: (design.layers || []).filter((l) => !!l.free === free) });
-    const flat = await renderFlatCanvas(only(false), part, { scale, fonts, layersOnly: true });
-    const c = flat.canvas, k = c.width / r.w, ctx = c.getContext('2d');
+    const c = (await renderFlatCanvas(design, part, { scale, fonts, layersOnly: true })).canvas;
+    const k = c.width / r.w, ctx = c.getContext('2d');
     ctx.globalCompositeOperation = 'destination-in';
     ctx.fillRect((r.safe.x - r.x) * k, (r.safe.y - r.y) * k, r.safe.w * k, r.safe.h * k);
-    ctx.globalCompositeOperation = 'source-over';
-    if ((design.layers || []).some((l) => l.part === part && l.free && l.visible !== false)) {
-      const free = await renderFlatCanvas(only(true), part, { scale, fonts, layersOnly: true });
-      ctx.drawImage(free.canvas, 0, 0, c.width, c.height);
-    }
     return c;
   }
 
