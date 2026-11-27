@@ -930,3 +930,10 @@
 
 /* Vault without designs: one quiet line */
 .vault-empty { display: grid; place-items: center; min-height: 46vh; font-size: 17px; color: var(--muted); text-align: center; }
+
+/* Saved designs: 3D picture on the card, one row of actions beside the name */
+.gallery-tube.is-3d { inset: 0 0 9%; }
+.gallery-shot { height: 100%; width: auto; max-width: 100%; object-fit: contain; animation: framerFadeIn 0.35s var(--ease-framer) both; transition: transform 0.7s var(--ease-framer); }
+.gallery-card:hover .gallery-shot { transform: translateY(-6px) scale(1.02); }
+.gallery-actions { display: flex; align-items: center; gap: 2px; flex-shrink: 0; }
+.gallery-actions > div { display: contents; }
