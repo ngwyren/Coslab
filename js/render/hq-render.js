@@ -17,15 +17,14 @@
 
   /** Lighting looks: real photo-studio panoramas (HDRI, CC0 from Poly Haven). Each render uses one
    *  (opts.look, or one picked at random), so a set of pictures does not repeat the same
-   *  highlights. Five different studios, levelled to one tone.
+   *  highlights. Four different studios, levelled to one tone.
    *  turn: which part of the studio faces the camera (radians); level: fine trim of
    *  its brightness so every look gives the same tone. */
   const LOOKS = {
-    studioA: { file: 'studio_small_03', turn: 0, level: 0.86 },
-    studioB: { file: 'studio_small_05', turn: 0, level: 1 },
-    studioC: { file: 'studio_small_06', turn: 0, level: 0.68 },
-    studioD: { file: 'studio_small_08', turn: 0, level: 1.08 },
-    studioE: { file: 'studio_small_09', turn: 0, level: 0.95 },
+    studioA: { file: 'studio_small_05', turn: 0, level: 1 },
+    studioB: { file: 'studio_small_06', turn: 0, level: 0.68 },
+    studioC: { file: 'studio_small_08', turn: 0, level: 1.08 },
+    studioD: { file: 'studio_small_09', turn: 0, level: 0.95 },
   };
   const pickLook = (name) => {
     const ids = Object.keys(LOOKS);
