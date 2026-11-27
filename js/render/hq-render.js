@@ -174,6 +174,24 @@
   /** Phones, tablets and low-memory devices: the render is sized down so their GPU can finish it. */
   const weakDevice = () => matchMedia('(hover: none) and (pointer: coarse)').matches || (navigator.deviceMemory || 8) <= 2;
 
+  /** No real graphics card: no WebGL 2, or WebGL drawn by the processor (SwiftShader, llvmpipe, Basic Render). */
+  let gpuless = null;
+  function noGpu() {
+    if (gpuless !== null) return gpuless;
+    try {
+      const gl = document.createElement('canvas').getContext('webgl2', { failIfMajorPerformanceCaveat: true });
+      if (!gl) return (gpuless = true);
+      const info = gl.getExtension('WEBGL_debug_renderer_info');
+      const name = info ? String(gl.getParameter(info.UNMASKED_RENDERER_WEBGL)) : '';
+      gpuless = /swiftshader|llvmpipe|softpipe|software|basic render/i.test(name);
+      const lose = gl.getExtension('WEBGL_lose_context');
+      if (lose) lose.loseContext();
+    } catch (e) {
+      gpuless = true;
+    }
+    return gpuless;
+  }
+
   /**
    * Render a design. opts: { width, height, samples, camera ({position, quaternion, fov}),
    * onProgress(samples, total, canvas), signal }. Resolves with a 2D canvas of the finished image.
@@ -495,7 +513,7 @@
         type: 'button', role: 'radio', 'data-id': id, title: `${w} × ${h}px`,
         onclick: () => {
           if (!job || job.q === id) return;
-          CL.store.saveSettings({ renderQuality: id });
+          CL.store.saveSettings({ renderPick: id }); // the visitor's own choice wins over the automatic one
           start(job.design, job.cam, id);
         },
       }, label)));
@@ -576,10 +594,10 @@
   /** Render dialog: pick a quality, watch the image clear up, then save the PNG. */
   CL.openRender = function (source, camera) {
     const design = CL.clone(source);
-    // a site with a render worker starts on AI (light on any device) until the visitor picks another
-    let q = CL.store.settings.renderQuality || (aiUrl() ? 'ai' : 'good');
-    if (aiUrl() && !CL.store.settings.renderAiOffered) { q = 'ai'; CL.store.saveSettings({ renderAiOffered: true, renderQuality: 'ai' }); }
-    if (!QUALITIES().some(([id]) => id === q)) q = 'good';
+    // Without a choice of their own: devices without a real GPU (or phones) send the work to the
+    // render worker, devices with one render here.
+    let q = CL.store.settings.renderPick;
+    if (!QUALITIES().some(([id]) => id === q)) q = aiUrl() && (noGpu() || weakDevice()) ? 'ai' : 'good';
     const cam = camera ? { position: camera.position.clone(), quaternion: camera.quaternion.clone(), fov: camera.fov } : null;
     showDock(false);
     start(design, cam, q);
