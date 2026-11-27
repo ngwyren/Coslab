@@ -284,7 +284,7 @@
       });
     });
     if (top < 0.1) return '#ebe8e3';
-    return CL.color.rgbToHex(CL.color.hsvToRgb({ h: hue, s: Math.min(0.075, 0.025 + sat * 0.08), v: 0.93 }));
+    return CL.color.rgbToHex(CL.color.hsvToRgb({ h: hue, s: Math.min(0.04, 0.012 + sat * 0.045), v: 0.93 }));
   }
 
   /** Phones, tablets and low-memory devices: the render is sized down so their GPU can finish it. */
