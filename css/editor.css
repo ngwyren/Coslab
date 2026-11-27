@@ -1534,3 +1534,17 @@
 .leave-actions { flex-wrap: wrap; }
 /* the render dialog shrinks into the corner card (and back), so its backdrop fades for as long */
 .modal-backdrop.is-leaving:has(.hq-modal) { animation-duration: 0.34s; }
+
+/* ---------- Hover: controls change colour only, they do not move or grow ----------
+   (pressing still gives a small squeeze; pictures and cards keep their own hover) */
+.btn:hover, .btn:hover svg, [dir="rtl"] .btn:hover svg,
+.icon-btn:hover, .studio-back-link:hover, .studio-accent-btn:hover,
+.studio-color-dot:hover, .quick-color-dot:hover, .dot:hover,
+.smart-switch:hover, .footer-back-to-top:hover, .footer-links a:hover, [dir="rtl"] .footer-links a:hover,
+.campaign-cta-pill:hover, .card-choice:hover, .card-choice:hover .choice-preview-box svg { transform: none; }
+.btn-primary:hover { background: #333; box-shadow: none; }
+.btn-outline:hover { box-shadow: none; }
+[data-theme="dark"] .btn-primary:hover { background: #d9d9d9; }
+/* colour dots have no colour of their own to change: a ring shows the one under the pointer */
+.studio-color-dot:not(.is-active):hover, .quick-color-dot:not(.is-active):hover, .dot:not(.is-active):hover { box-shadow: 0 0 0 2px var(--surface, #fff), 0 0 0 3.5px rgba(0, 0, 0, 0.28); }
+[data-theme="dark"] .studio-color-dot:not(.is-active):hover, [data-theme="dark"] .quick-color-dot:not(.is-active):hover, [data-theme="dark"] .dot:not(.is-active):hover { box-shadow: 0 0 0 2px #1c1c1e, 0 0 0 3.5px rgba(255, 255, 255, 0.45); }

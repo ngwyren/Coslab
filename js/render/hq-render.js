@@ -296,6 +296,8 @@
       let last = -1, shown = 0, batch = 1, slow = 0;
       while (true) {
         if (stop()) throw new DOMException('cancelled', 'AbortError');
+        // a dialog or card is animating: leave the GPU to it
+        while (opts.pause && opts.pause() && !stop()) await sleep(40);
         if (lost) throw new Error('WebGL context lost');
         // light: the render runs in the corner while people keep working, so it rests longer
         // between batches and refreshes the shown frame less often
@@ -439,13 +441,15 @@
     return out;
   }
 
-  async function start(design, cam, q) {
+  /** wait: ms to leave the page alone first (an opening animation), before the heavy set-up starts. */
+  async function start(design, cam, q, wait = 0) {
     if (job && job.ctrl) job.ctrl.abort();
     const [, , W, H, total] = QUALITIES().find(([id]) => id === q);
     const ctrl = new AbortController();
     const me = (job = { design, cam, q, ctrl, W, H, canvas: null, result: null, n: 0, all: total, t0: performance.now(), state: 'running' });
     emit();
     try {
+      if (wait) { await new Promise((r) => setTimeout(r, wait)); if (job !== me) return; }
       let out;
       if (q === 'ai') {
         const base = await snapshot(design, cam, W, H);
@@ -460,6 +464,7 @@
           width: W, height: H, samples: total, camera: cam, signal: ctrl.signal,
           // in the corner card (or a hidden tab) the render gives way to the rest of the page
           light: () => mode !== 'dialog' || document.hidden,
+          pause: () => performance.now() < busyUntil,
           onProgress: (n, all, canvas) => {
             if (job !== me) return;
             me.n = n; me.all = all; me.canvas = canvas;
@@ -487,6 +492,8 @@
   /* The dialog and the corner card are two sizes of the same thing: one shrinks or grows into
      the place of the other, instead of one vanishing and the other popping up. */
   const MORPH_MS = 340;
+  let busyUntil = 0; // until then the render loop rests (see renderHQ's pause)
+  const busyFor = (ms) => { busyUntil = Math.max(busyUntil, performance.now() + ms + 80); };
   /** A small still of the render, for the view that is leaving (the live canvas moves to the new one). */
   function ghostOf(canvas) {
     if (!canvas || !canvas.width) return null;
@@ -500,6 +507,7 @@
     const a = from.getBoundingClientRect(), b = to.getBoundingClientRect();
     if (!a.width || !b.width) return;
     const timing = { duration: MORPH_MS, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' };
+    busyFor(MORPH_MS);
     from.style.transformOrigin = to.style.transformOrigin = '0 0';
     from.animate([
       { transform: 'none', opacity: 1 },
@@ -516,8 +524,9 @@
     const a = opener.getBoundingClientRect(), b = el.getBoundingClientRect();
     if (!a.width || !b.width) return;
     el.style.transformOrigin = '0 0';
+    busyFor(420);
     el.animate([
-      { transform: `translate(${a.left - b.left}px, ${a.top - b.top}px) scale(${a.width / b.width}, ${a.height / b.height})`, opacity: 0, borderRadius: '999px' },
+      { transform: `translate(${a.left - b.left}px, ${a.top - b.top}px) scale(${a.width / b.width}, ${a.height / b.height})`, opacity: 0 },
       { opacity: 1, offset: 0.35 },
       { transform: 'none', opacity: 1 },
     ], { duration: 420, easing: 'cubic-bezier(0.22, 1, 0.36, 1)', fill: 'backwards' });
@@ -557,9 +566,11 @@
         if (dialogOpener && dialogOpener.isConnected) dialogOpener.focus();
       }
       if (mode === 'dialog') mode = null;
+      CL.Preview3D.hold = false;
       return;
     }
     mode = 'dialog';
+    CL.Preview3D.hold = true; // the live 3D view behind the dialog stops drawing
     dialogOpener = document.activeElement;
     const stage = CL.h('div.ex-preview.hq-stage');
     const bar = CL.h('i.hq-bar-fill');
@@ -667,7 +678,7 @@
     if (!QUALITIES().some(([id]) => id === q)) q = aiUrl() && (noGpu() || weakDevice()) ? 'ai' : 'good';
     const cam = camera ? { position: camera.position.clone(), quaternion: camera.quaternion.clone(), fov: camera.fov } : null;
     showDock(false);
-    start(design, cam, q);
+    start(design, cam, q, 460); // the dialog opens first, then the work begins
     showDialog(true);
     growFrom(pressed, dialogEl && dialogEl.querySelector('.hq-modal'));
   };

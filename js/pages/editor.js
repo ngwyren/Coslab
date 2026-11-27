@@ -258,6 +258,9 @@
           })
         );
 
+        /** The colour's name as shown above the swatches: "Pantone 7418 C" (other labels stay as they are). */
+        const pantoneName = (fill) => { const s = CL.pantone.label(fill); return / C$/.test(s) ? `Pantone ${s}` : s; };
+
         /* ---- Unsaved changes: leaving the Studio asks whether to save first ---- */
         const snap = (d) => JSON.stringify(Object.assign({}, d, { updatedAt: 0, createdAt: 0 }));
         // the saved copy goes through the same clean-up as the draft, so only real edits count
@@ -1540,7 +1543,7 @@
             ),
             CL.h('div.fg-section', null,
               CL.h('div.fg-section-head', null,
-                twoColour ? null : CL.h('span.font-current', { text: CL.pantone.label(current) })
+                twoColour ? null : CL.h('span.font-current', { text: pantoneName(current) })
               ),
               modeRow,
               slotSwitch,
@@ -2033,7 +2036,7 @@
 
           const fillSection = CL.h('div.fg-section', null,
             CL.h('div.fg-section-head', null,
-              CL.h('span.font-current', { text: CL.pantone.label(curTxt) })
+              CL.h('span.font-current', { text: pantoneName(curTxt) })
             ),
             txtColorRow,
             textPicker

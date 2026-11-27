@@ -421,6 +421,8 @@
 
     _loop(ts) {
       this._raf = requestAnimationFrame(this._loop);
+      // something in front needs the GPU (the render dialog); stills made off screen still draw
+      if (Preview3D.hold && this.opts.interactive) return;
       if (this.opts.autoRotate && (!this.idleAt || ts - this.idleAt > 1800)) {
         this.targetRotY += 0.0035;
       }
