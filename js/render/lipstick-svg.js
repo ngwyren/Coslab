@@ -100,7 +100,8 @@
     return Number.isFinite(top) && top > 0 ? { top, bottom: Math.max(0, bottom || 0) } : { top: size * 0.72, bottom: size * 0.04 };
   }
 
-  function textMarkup(tx, rect, rotation = 0) {
+  /** Size, spacing and line positions of a text block, exactly as textMarkup draws it. */
+  function textLayout(tx, rect, rotation = 0) {
     const lines = String(tx.content || '').split('\n');
     const maxChars = Math.max(1, ...lines.map((l) => l.length));
     const safe = rect && rect.safe ? rect.safe : { w: (rect?.w || 110) * 0.72, h: (rect?.h || 220) * 0.74 };
@@ -124,10 +125,44 @@
     const fam = `'${tx.font}',${FONT_FALLBACK}`;
     // Centre on the ink of the letters, not the font's em box: lowercase words such as
     // "cocoa milk" would otherwise sit visibly off-centre.
-    const ink = inkOf(lines, `${tx.italic ? 'italic ' : ''}${tx.weight || 400} ${size}px ${fam}`, size);
+    const font = `${tx.italic ? 'italic ' : ''}${tx.weight || 400} ${size}px ${fam}`;
+    const ink = inkOf(lines, font, size);
     const y0 = -((ink.top + (lines.length - 1) * lh + ink.bottom) / 2) + ink.top;
     // the gap after the last letter would push centred text sideways by half a gap
     const dx = anchor === 'middle' ? spacing / 2 : 0;
+    return { lines, size, spacing, lh, anchor, fam, font, y0, dx };
+  }
+
+  /**
+   * Box around the letters themselves (not the font's em box), in the layer's own
+   * coordinates (before its rotation): { x, y, w, h }. Used for the selection frame.
+   */
+  function textInk(tx, rect, rotation = 0) {
+    const { lines, spacing, lh, anchor, font, y0, dx } = textLayout(tx, rect, rotation);
+    inkCtx.font = font;
+    const canSpace = 'letterSpacing' in inkCtx;
+    if (canSpace) inkCtx.letterSpacing = `${spacing}px`;
+    let left = Infinity, right = -Infinity, top = Infinity, bottom = -Infinity;
+    lines.forEach((ln, i) => {
+      if (!ln.trim()) return;
+      const m = inkCtx.measureText(ln);
+      const extra = canSpace ? 0 : spacing * ln.length;
+      const advance = m.width + extra; // SVG letter-spacing also follows the last letter
+      const start = anchor === 'middle' ? dx - advance / 2 : anchor === 'end' ? dx - advance : dx;
+      const inkRight = m.actualBoundingBoxRight + (canSpace ? 0 : spacing * Math.max(0, ln.length - 1));
+      left = Math.min(left, start - m.actualBoundingBoxLeft);
+      right = Math.max(right, start + inkRight);
+      const base = y0 + i * lh;
+      top = Math.min(top, base - m.actualBoundingBoxAscent);
+      bottom = Math.max(bottom, base + m.actualBoundingBoxDescent);
+    });
+    if (canSpace) inkCtx.letterSpacing = '0px';
+    if (!Number.isFinite(left) || !Number.isFinite(top)) return null;
+    return { x: left, y: top, w: right - left, h: bottom - top };
+  }
+
+  function textMarkup(tx, rect, rotation = 0) {
+    const { lines, size, spacing, lh, anchor, fam, y0, dx } = textLayout(tx, rect, rotation);
     const spans = lines.map((ln, i) => `<tspan x="${CL.round(dx, 2)}" y="${CL.round(y0 + i * lh, 2)}">${CL.esc(ln) || ' '}</tspan>`).join('');
     return `<text text-anchor="${anchor}" dominant-baseline="alphabetic" font-family="${fam}" font-size="${size}" font-weight="${tx.weight || 400}" font-style="${tx.italic ? 'italic' : 'normal'}" letter-spacing="${spacing}" fill="${tx.color || '#171615'}" xml:space="preserve">${spans}</text>`;
   }
@@ -475,6 +510,7 @@
     layerMarkup,
     layerCenter,
     layerTransform,
+    textInk,
     fillPaint,
     FONT_FALLBACK,
   };

@@ -803,11 +803,23 @@
                 bH = (targetLayer.shape && targetLayer.shape.h) || 30;
               }
 
-              const padX = 8, padY = 6;
-              const boxW = Math.round(bW + padX * 2);
-              const boxH = Math.round(bH + padY * 2);
+              // Text: hug the letters themselves (getBBox is the font's em box, with room for
+              // accents and descenders that capitals never use)
+              let offX = 0, offY = 0; // centre of the box in the layer's own coordinates
+              let pad = 8;
+              if (targetLayer.type === 'text') {
+                const ink = CL.render.textInk(targetLayer.text, partRect, targetLayer.rotation);
+                if (ink && ink.w > 0 && ink.h > 0) {
+                  bW = ink.w; bH = ink.h;
+                  offX = ink.x + ink.w / 2; offY = ink.y + ink.h / 2;
+                  pad = 3;
+                }
+              }
+              const boxW = CL.round(bW + pad * 2, 1);
+              const boxH = CL.round(bH + pad * 2, 1);
+              const bx = CL.round(offX - boxW / 2, 2), by = CL.round(offY - boxH / 2, 2);
               const stemLen = 22;
-              const handleY = -boxH / 2 - stemLen;
+              const handleY = by - stemLen;
 
               // Smart Center Guides (Figma Pink)
               const guideG = document.createElementNS('http://www.w3.org/2000/svg', 'g');
@@ -828,30 +840,30 @@
               gizmoG.setAttribute('transform', `translate(${CL.round(cx, 2)} ${CL.round(cy, 2)}) rotate(${CL.round(rot, 2)})`);
 
               const corners = [
-                { id: 'nw', x: -boxW / 2, y: -boxH / 2, cur: 'nwse-resize' },
-                { id: 'ne', x: boxW / 2, y: -boxH / 2, cur: 'nesw-resize' },
-                { id: 'sw', x: -boxW / 2, y: boxH / 2, cur: 'nesw-resize' },
-                { id: 'se', x: boxW / 2, y: boxH / 2, cur: 'nwse-resize' },
+                { id: 'nw', x: bx, y: by, cur: 'nwse-resize' },
+                { id: 'ne', x: bx + boxW, y: by, cur: 'nesw-resize' },
+                { id: 'sw', x: bx, y: by + boxH, cur: 'nesw-resize' },
+                { id: 'se', x: bx + boxW, y: by + boxH, cur: 'nwse-resize' },
               ];
 
               gizmoG.innerHTML = `
-                <rect class="gizmo-hit" x="${-boxW / 2}" y="${-boxH / 2}" width="${boxW}" height="${boxH}" fill="rgba(13,153,255,0.03)"/>
-                <rect class="gizmo-box-halo" x="${-boxW / 2}" y="${-boxH / 2}" width="${boxW}" height="${boxH}" rx="2" fill="none"/>
-                <rect class="gizmo-box-main" x="${-boxW / 2}" y="${-boxH / 2}" width="${boxW}" height="${boxH}" rx="2" fill="none"/>
-                <line class="gizmo-stem-halo" x1="0" y1="${-boxH / 2}" x2="0" y2="${handleY}"/>
-                <line class="gizmo-stem-main" x1="0" y1="${-boxH / 2}" x2="0" y2="${handleY}"/>
+                <rect class="gizmo-hit" x="${bx}" y="${by}" width="${boxW}" height="${boxH}" fill="rgba(13,153,255,0.03)"/>
+                <rect class="gizmo-box-halo" x="${bx}" y="${by}" width="${boxW}" height="${boxH}" rx="2" fill="none"/>
+                <rect class="gizmo-box-main" x="${bx}" y="${by}" width="${boxW}" height="${boxH}" rx="2" fill="none"/>
+                <line class="gizmo-stem-halo" x1="${offX}" y1="${by}" x2="${offX}" y2="${handleY}"/>
+                <line class="gizmo-stem-main" x1="${offX}" y1="${by}" x2="${offX}" y2="${handleY}"/>
                 ${corners.map((c) => `
                   <g class="gizmo-corner-wrap" data-corner="${c.id}" style="cursor:${c.cur}">
                     <circle cx="${c.x}" cy="${c.y}" r="10" fill="transparent"/>
                     <rect class="gizmo-corner" x="${c.x - 4}" y="${c.y - 4}" width="8" height="8" rx="1.5"/>
                   </g>
                 `).join('')}
-                <g class="gizmo-rot-handle" transform="translate(0 ${handleY})">
+                <g class="gizmo-rot-handle" transform="translate(${offX} ${handleY})">
                   <circle class="gizmo-rot-hit" r="15" fill="transparent"/>
                   <circle class="gizmo-rot-bg" r="9"/>
                   <path class="gizmo-rot-icon" d="M -3.2 -1.2 A 3.8 3.8 0 1 1 -1 3.4 M -4.8 -2.8 L -3.3 -1 L -1.6 -2.5" fill="none" stroke="#0d99ff" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
                 </g>
-                <g class="gizmo-hud-pill" style="display: none;" transform="translate(0 ${boxH / 2 + 18})">
+                <g class="gizmo-hud-pill" style="display: none;" transform="translate(${offX} ${by + boxH + 18})">
                   <rect x="-24" y="-10" width="48" height="20"/>
                   <text x="0" y="0.5">${Math.round(rot)}°</text>
                 </g>
