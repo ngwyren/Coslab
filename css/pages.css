@@ -815,8 +815,8 @@
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  padding: 10px 10px 10px 14px;
-  border-radius: 14px;
+  padding: 8px 8px 8px 20px; /* a pill: the name sits clear of the round end, the + button nests in the other */
+  border-radius: 999px;
   background: rgba(255, 255, 255, 0.72);
   -webkit-backdrop-filter: blur(14px) saturate(160%);
           backdrop-filter: blur(14px) saturate(160%);
