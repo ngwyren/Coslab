@@ -14,35 +14,138 @@
     import(new URL('vendor/pathtracer/Pass.js', document.baseURI).href),
   ]).then(([T, PT, Pass]) => ({ T, PT, Pass })));
 
-  const smooth = (a, b, x) => { const t = CL.clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
 
-  /** Studio light as an HDR panorama: soft surround, an overhead panel and two tall front softboxes.
-   *  The softboxes are wide and mild with feathered edges, so gloss surfaces catch a soft band of
-   *  light rather than a hard white streak. */
-  function studioEnv(T) {
-    const W = 1024, H = 512;
-    const data = new Float32Array(W * H * 4);
-    const box = (az, el, a0, w, e0, e1, k) => {
-      let da = Math.abs(az - a0); if (da > Math.PI) da = Math.PI * 2 - da;
-      return k * (1 - smooth(w * 0.2, w, da)) * smooth(e0 - 0.25, e0, el) * (1 - smooth(e1, e1 + 0.25, el));
-    };
-    for (let y = 0; y < H; y++) {
-      const el = (0.5 - (y + 0.5) / H) * Math.PI;
-      for (let x = 0; x < W; x++) {
-        const az = ((x + 0.5) / W) * Math.PI * 2 - Math.PI;
-        let l = el > 0 ? 0.95 + 0.2 * Math.sin(el) : 0.95 + 0.1 * Math.sin(el);
-        l += box(az, el, -0.95, 0.62, -0.3, 0.9, 1.9) + box(az, el, 1.1, 0.45, -0.2, 0.75, 1.1) + (el > 1.05 ? 3 * smooth(1.05, 1.2, el) : 0);
-        const i = (y * W + x) * 4;
-        data[i] = data[i + 1] = data[i + 2] = l;
-        data[i + 3] = 1;
+  /** Lighting looks: real photo-studio panoramas (HDRI, CC0 from Poly Haven). Each render uses one
+   *  (opts.look, or one picked at random), so a set of pictures does not repeat the same
+   *  highlights. Five different studios, levelled to one tone.
+   *  turn: which part of the studio faces the camera (radians); level: fine trim of
+   *  its brightness so every look gives the same tone. */
+  const LOOKS = {
+    studioA: { file: 'studio_small_03', turn: 0, level: 0.86 },
+    studioB: { file: 'studio_small_05', turn: 0, level: 1 },
+    studioC: { file: 'studio_small_06', turn: 0, level: 0.68 },
+    studioD: { file: 'studio_small_08', turn: 0, level: 1.08 },
+    studioE: { file: 'studio_small_09', turn: 0, level: 0.95 },
+  };
+  const pickLook = (name) => {
+    const ids = Object.keys(LOOKS);
+    return LOOKS[name] ? name : ids[Math.floor(Math.random() * ids.length)];
+  };
+
+  /** Read a Radiance .hdr picture: { w, h, rgb: Float32Array (linear, 3 per pixel) }. */
+  function parseHDR(buf) {
+    const b = new Uint8Array(buf);
+    let p = 0, line = '';
+    const next = () => { let s = ''; while (p < b.length && b[p] !== 10) s += String.fromCharCode(b[p++]); p++; return s; };
+    if (!/^#\?(RADIANCE|RGBE)/.test(next())) throw new Error('not an HDR file');
+    while ((line = next()) !== '') { /* header lines */ }
+    const m = /-Y (\d+) \+X (\d+)/.exec(next());
+    if (!m) throw new Error('unsupported HDR layout');
+    const h = +m[1], w = +m[2], rgb = new Float32Array(w * h * 3), row = new Uint8Array(w * 4);
+    for (let y = 0; y < h; y++) {
+      if (b[p] !== 2 || b[p + 1] !== 2 || ((b[p + 2] << 8) | b[p + 3]) !== w) throw new Error('unsupported HDR packing');
+      p += 4;
+      for (let c = 0; c < 4; c++) {
+        for (let x = 0; x < w;) {
+          let n = b[p++];
+          if (n > 128) { n -= 128; const v = b[p++]; while (n--) row[c * w + x++] = v; }
+          else while (n--) row[c * w + x++] = b[p++];
+        }
+      }
+      for (let x = 0; x < w; x++) {
+        const e = row[3 * w + x], s = e ? Math.pow(2, e - 136) : 0, o = (y * w + x) * 3;
+        rgb[o] = row[x] * s; rgb[o + 1] = row[w + x] * s; rgb[o + 2] = row[2 * w + x] * s;
       }
     }
+    return { w, h, rgb };
+  }
+
+  const hdris = new Map(); // file -> Promise<{ w, h, rgb }>
+  const loadHDR = (file) => {
+    if (!hdris.has(file)) {
+      const job = fetch(new URL(`assets/hdri/${file}.hdr`, document.baseURI).href)
+        .then((r) => { if (!r.ok) throw new Error(`HDRI ${r.status}`); return r.arrayBuffer(); })
+        .then(parseHDR);
+      job.catch(() => hdris.delete(file));
+      hdris.set(file, job);
+    }
+    return hdris.get(file);
+  };
+
+  const panorama = (T, data, W, H) => {
     const tex = new T.DataTexture(data, W, H, T.RGBAFormat, T.FloatType);
     tex.mapping = T.EquirectangularReflectionMapping;
     tex.minFilter = tex.magFilter = T.LinearFilter;
     tex.needsUpdate = true;
     return tex;
+  };
+
+  /** Plain studio light (no file needed): even surround and one big soft key from above. Used when
+   *  the studio picture cannot be loaded. */
+  function plainEnv(T, facing) {
+    const W = 512, H = 256, data = new Float32Array(W * H * 4), front = Math.PI / 2 - facing;
+    for (let y = 0; y < H; y++) {
+      const el = (0.5 - (y + 0.5) / H) * Math.PI;
+      for (let x = 0; x < W; x++) {
+        const rel = ((x + 0.5) / W) * Math.PI * 2 - Math.PI - front;
+        const kd = Math.cos(el) * Math.cos(1.0) * Math.cos(rel - 0.58) + Math.sin(el) * Math.sin(1.0);
+        const i = (y * W + x) * 4;
+        data[i] = data[i + 1] = data[i + 2] = 1.14 * ((el > 0 ? 0.98 + 0.19 * Math.sin(el) : 0.98) + 4 * Math.pow(Math.max(0, kd), 3));
+        data[i + 3] = 1;
+      }
+    }
+    return panorama(T, data, W, H);
   }
+
+  /** Studio light for one look, as an HDR panorama turned to keep its place relative to the camera.
+   *  The picture is levelled to one overall brightness, its colour cast is mostly taken out (so
+   *  Pantone colours stay true) and bare lamps are capped (no sparkle noise). */
+  async function studioEnv(T, look, facing = 0) {
+    let src;
+    try { src = await loadHDR(LOOKS[look].file); } catch (e) { console.warn(e); return plainEnv(T, facing); }
+    const { w, h, rgb } = src, data = new Float32Array(w * h * 4);
+    const lum = new Float32Array(w * h);
+    let sum = 0, wt = 0;
+    for (let y = 0; y < h; y++) {
+      const k = Math.cos((0.5 - (y + 0.5) / h) * Math.PI);
+      for (let x = 0; x < w; x++) {
+        const o = (y * w + x) * 3, l = 0.2126 * rgb[o] + 0.7152 * rgb[o + 1] + 0.0722 * rgb[o + 2];
+        lum[y * w + x] = l; sum += Math.min(l, 50) * k; wt += k;
+      }
+    }
+    // level by the room, not by its lamps: average again with everything far above the first average held down
+    const m0 = sum / wt || 1;
+    let s2 = 0;
+    for (let y = 0; y < h; y++) {
+      const k = Math.cos((0.5 - (y + 0.5) / h) * Math.PI);
+      for (let x = 0; x < w; x++) s2 += Math.min(lum[y * w + x], m0 * 2) * k;
+    }
+    const gain = ENV_LEVEL / (s2 / wt || 1), cap = ENV_LEVEL * 14;
+    // the camera sits at panorama angle (PI/2 - facing); bring the look's own front there
+    const shift = Math.round(((LOOKS[look].turn - (Math.PI / 2 - facing)) / (Math.PI * 2)) * w);
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        const sx = (((x + shift) % w) + w) % w, o = (y * w + sx) * 3, i = (y * w + x) * 4;
+        const l = lum[y * w + sx], s = gain * (l * gain > cap ? cap / (l * gain) : 1);
+        for (let c = 0; c < 3; c++) data[i + c] = s * (l * ENV_GREY + rgb[o + c] * (1 - ENV_GREY));
+        data[i + 3] = 1;
+      }
+    }
+    // same tone in every studio: scale so the total light of the room, lamps included, is equal
+    // (that is what sets the brightness of the backdrop); only highlights and shadow then differ
+    let fl = 0, fw = 0;
+    for (let y = 0; y < h; y++) {
+      const k = Math.cos((0.5 - (y + 0.5) / h) * Math.PI);
+      for (let x = 0; x < w; x++) fl += data[(y * w + x) * 4 + 1] * k;
+      fw += k * w;
+    }
+    const tone = (ENV_TONE * (LOOKS[look].level || 1)) / (fl / fw || 1);
+    for (let i = 0; i < data.length; i += 4) { data[i] *= tone; data[i + 1] *= tone; data[i + 2] *= tone; }
+    return panorama(T, data, w, h);
+  }
+  const ENV_LEVEL = 0.95; // first rough levelling of a studio picture (sets where lamps are capped)
+  const ENV_TONE = 1.0; // average light every look is scaled to: the shared, bright tone
+  const ENV_GREY = 0.75; // how much of the studio's own colour cast is removed (a little warmth stays)
 
   const ACRYLIC = { transmission: 1, ior: 1.49, roughness: 0.03, metalness: 0, thickness: 0.3 };
   const FINISH = {
@@ -146,31 +249,42 @@
       }
     });
 
-    // white sweep floor that catches soft shadows and the coloured bounce
-    // photo-studio sweep: the floor curves up into the back wall, so there is no horizon line
-    const sweep = [];
-    const R = 7, back = -6;
-    sweep.push(new T.Vector2(40, 0), new T.Vector2(back, 0));
+    // photo-studio sweep: a round floor that curves up into a wall behind the product (seen from
+    // the camera), so there is no horizon line; the front is open to the studio light
+    const TH = I.TUBE_H, rad = TH * 5, cove = TH, wallH = TH * 2.5;
+    const prof2 = [new T.Vector2(rad - cove, 0)];
     for (let i = 1; i <= 24; i++) {
       const a = (i / 24) * Math.PI / 2;
-      sweep.push(new T.Vector2(back - Math.sin(a) * R, R - Math.cos(a) * R));
+      prof2.push(new T.Vector2(rad - cove + Math.sin(a) * cove, cove - Math.cos(a) * cove));
     }
-    sweep.push(new T.Vector2(back - R, 60));
-    // a ribbon 80 wide following the profile (z, y)
-    const vtx = [], idx = [];
-    sweep.forEach((p, i) => {
-      vtx.push(-40, p.y, p.x, 40, p.y, p.x);
-      if (i) { const a = (i - 1) * 2; idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); }
-    });
-    const cyc = new T.BufferGeometry();
-    cyc.setAttribute('position', new T.Float32BufferAttribute(vtx, 3));
-    cyc.setIndex(idx);
-    cyc.computeVertexNormals();
-    const sweepMesh = new T.Mesh(cyc, mat({ color: new T.Color(backdrop || '#f0f0f0'), roughness: 0.95, side: T.DoubleSide }));
-    // the sweep turns with the camera, so its wall is always straight behind the product (never an edge in view)
-    sweepMesh.rotation.y = facing;
-    scene.add(sweepMesh);
+    prof2.push(new T.Vector2(rad, wallH));
+    const paper = mat({ color: new T.Color(backdrop || '#f0f0f0'), roughness: 0.95, side: T.DoubleSide });
+    const span = Math.PI * 1.1; // a little more than the back half
+    scene.add(new T.Mesh(new T.LatheGeometry(prof2, 64, facing + Math.PI - span / 2, span), paper));
+    scene.add(new T.Mesh(new T.RingGeometry(rad - cove, rad * 4, 64, 1, facing + Math.PI / 2 + span / 2, Math.PI * 2 - span).rotateX(-Math.PI / 2), paper));
+    scene.add(new T.Mesh(new T.CircleGeometry(rad - cove, 96).rotateX(-Math.PI / 2), paper));
     return { scene, textures: Object.values(tex) };
+  }
+
+  /** Backdrop paper chosen from the product: a pale wash of its most colourful part (cap or body),
+   *  or the tint inside a clear body), so the set suits the lipstick without competing with it.
+   *  Products with next to no colour
+   *  (clear, white, black, grey) get a warm neutral. */
+  function backdropOf(design) {
+    const I = CL.Preview3D.internals;
+    let hue = 0, sat = 0, top = 0;
+    ['cap', 'base'].forEach((k) => {
+      const part = design && design.parts && design.parts[k];
+      const cols = I.colorsOf(part && part.fill);
+      if (part && part.product && part.product.color) cols.push(part.product.color);
+      cols.forEach((c) => {
+        const { h, s, v } = CL.color.rgbToHsv(CL.color.hexToRgb(c));
+        const score = s * v; // colourful and not dark (a black cap has no say)
+        if (score > top) { top = score; hue = h; sat = s; }
+      });
+    });
+    if (top < 0.1) return '#ebe8e3';
+    return CL.color.rgbToHex(CL.color.hsvToRgb({ h: hue, s: Math.min(0.075, 0.025 + sat * 0.08), v: 0.93 }));
   }
 
   /** Phones, tablets and low-memory devices: the render is sized down so their GPU can finish it. */
@@ -237,15 +351,22 @@
     const D = (I.TUBE_H / fill) / (2 * Math.tan((camera.fov * Math.PI) / 360));
     // lift: raise the subject by this share of the frame height (room for an overlay at the bottom)
     const aim = ty - (opts.lift || 0) * (I.TUBE_H / fill);
+    // The camera stays level (a shifted lens, as in product photography): it stands a little
+    // above the middle of the tube yet looks straight ahead, so the sides of the container stay
+    // upright and parallel instead of leaning in; the frame is slid down to keep it centred.
+    const flatLen = Math.hypot(dir.x, dir.z) || 1;
     camera.position.set(dir.x * D, aim + dir.y * D, dir.z * D);
-    camera.lookAt(0, aim, 0);
+    camera.lookAt(0, aim + dir.y * D, 0);
     camera.aspect = W / H;
+    camera.setViewOffset(W, H, 0, Math.round(((H / 2) / Math.tan((camera.fov * Math.PI) / 360)) * (dir.y / flatLen)), W, H);
     camera.updateProjectionMatrix();
 
-    const { scene, textures } = await buildScene(T, design, opts.backdrop, Math.atan2(dir.x, dir.z));
-    const env = studioEnv(T);
+    const look = pickLook(opts.look);
+    const backdrop = opts.backdrop || backdropOf(design);
+    const { scene, textures } = await buildScene(T, design, backdrop, Math.atan2(dir.x, dir.z));
+    const env = await studioEnv(T, look, Math.atan2(dir.x, dir.z));
     scene.environment = env;
-    scene.background = new T.Color(opts.backdrop || '#f2f2f2');
+    scene.background = new T.Color(backdrop);
 
     const pt = new PT.WebGLPathTracer(renderer);
     // phones and other small GPUs: smaller textures and fewer light bounces
@@ -267,12 +388,12 @@
     const stop = () => opts.signal && opts.signal.aborted;
     // edge-aware denoise, drawn over every frame shown (not only the finished one); keeps outlines and print sharp
     const dn = new Pass.FullScreenQuad(new PT.DenoiseMaterial({ map: pt.target.texture, blending: T.NoBlending }));
-    dn.material.kSigma = 1.0;
+    dn.material.kSigma = 1.5;
     // stronger while few passes are in (grainy), down to the fine setting at 256+ passes
     const denoise = () => {
       const k = Math.min(Math.sqrt(256 / Math.max(pt.samples, 1)), 6);
-      dn.material.sigma = (opts.denoise ?? 3.2) * Math.min(Math.max(k, 1), 2.6);
-      dn.material.threshold = Math.min(0.07 * Math.max(k * k, 1), 0.6);
+      dn.material.sigma = (opts.denoise ?? 4) * Math.min(Math.max(k, 1), 2.6);
+      dn.material.threshold = Math.min(0.12 * Math.max(k * k, 1), 0.6);
       renderer.setRenderTarget(null);
       dn.render(renderer);
     };
@@ -286,6 +407,9 @@
       const gl = renderer.getContext();
       const now = () => performance.now();
       const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+      // a turn of the event loop without a timer: browsers hold the timers of a tab hidden for
+      // minutes back to one a minute, which would freeze the render there
+      const tick = () => new Promise((r) => { const c = new MessageChannel(); c.port1.onmessage = () => r(); c.port2.postMessage(0); });
       const gpuDone = async () => {
         const sync = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0);
         gl.flush();
@@ -331,7 +455,7 @@
         const n = Math.floor(pt.samples);
         if (opts.onProgress && n !== last) { last = n; opts.onProgress(Math.min(n, total), total, canvas); }
         if (n >= total) break;
-        await sleep(hidden ? 0 : light ? Math.max(40, dt * 2) : dt * 0.3);
+        if (hidden) await tick(); else await sleep(light ? Math.max(40, dt * 2) : dt * 0.3);
       }
       denoise();
       const out = document.createElement('canvas');
@@ -355,6 +479,7 @@
   }
 
   CL.renderHQ = renderHQ;
+  CL.renderBackdrop = backdropOf;
 
   /* ---------- Render: one job at a time, shown in a dialog or as a small card in a corner ----------
      Leaving the dialog (outside click, Esc, another page, "Run in background") keeps the render
