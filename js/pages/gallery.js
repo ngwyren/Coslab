@@ -29,8 +29,6 @@
         const samples = CL.templates.SAMPLES;
 
         samples.forEach(([tplId, modelId]) => {
-          const tpl = CL.templates.TEMPLATES.find((item) => item.templateId === tplId) || CL.templates.TEMPLATES[0];
-
           const design = CL.templates.createDesign(tplId, modelId);
           const m = CL.models.getModel(modelId);
           design.name = `${t('templates.' + tplId)} (${m.name})`;
@@ -38,14 +36,12 @@
           /* Showcase card: closed = image + overlaid name bar with "+";
              open = card grows and spec rows rise in one after another. */
           const P = design.parts;
-          const surface = (part) => t(CL.pantone.surfaceKey(P[part]));
           const swatch = (part) => {
             const f = P[part] && P[part].fill;
             const bg = !f ? '#ccc' : f.type === 'linear'
               ? `linear-gradient(135deg, ${f.stops.map((s) => s.c).join(', ')})` : f.color;
             return CL.h('i.sc-swatch', { style: { background: bg }, title: t('editor.partsShort.' + part) });
           };
-          const fonts = [...new Set((design.layers || []).filter((l) => l.type === 'text').map((l) => l.text.font))];
           const openStudio = () => { CL.store.saveDraft(design); CL.go('#/editor'); };
 
           const row = (label, ...value) => CL.h('div.sc-row', null,

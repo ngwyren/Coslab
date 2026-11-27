@@ -174,6 +174,8 @@
 
   function init() {
     document.getElementById('year').textContent = new Date().getFullYear();
+    // Set the language before any change listener exists: the first page is then built once, below
+    I18N.setLang(CL.store.settings.lang || 'vi');
     CL.nav.init();
     // footer name runs at a steady ~90 px a second, whatever the screen width
     // Mail links: open the mail app if there is one, and always copy the address with a short note
@@ -224,7 +226,6 @@
       I18N.apply(document);
       render({ rerender: true });
     });
-    I18N.setLang(CL.store.settings.lang || 'vi');
     window.addEventListener('hashchange', navigate);
     window.addEventListener('resize', () => setTimeout(setupFramerMotion, 100), { passive: true });
 

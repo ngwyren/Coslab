@@ -68,8 +68,8 @@
                     title: t('common.copy'),
                     html: CL.icon('copy'),
                     onclick: () => {
-                      CL.store.duplicateDesign(dsn.id);
-                      CL.toast(t('common.copy'));
+                      if (CL.store.duplicateDesign(dsn.id)) CL.toast(t('common.copy'));
+                      else CL.toast(t('editor.quotaWarning'), 'info');
                       renderList();
                     },
                   }),

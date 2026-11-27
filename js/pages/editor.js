@@ -69,7 +69,7 @@
 
     const prefixEl = CL.h('span.fg-prefix.is-scrub', {
       text: prefix,
-      title: title ? `${title} (Kéo ngang để chỉnh)` : 'Drag horizontally to scrub',
+      title: title ? `${title} (${t('ui.scrubHint')})` : t('ui.scrubHint'),
     });
 
     prefixEl.addEventListener('pointerdown', (e) => {
@@ -90,6 +90,7 @@
       const onUp = () => {
         window.removeEventListener('pointermove', onMove);
         window.removeEventListener('pointerup', onUp);
+        window.removeEventListener('pointercancel', onUp);
         field.classList.remove('is-scrubbing');
         document.body.style.cursor = '';
         if (latestVal !== startVal && onCommit) onCommit(latestVal);
@@ -97,6 +98,7 @@
 
       window.addEventListener('pointermove', onMove);
       window.addEventListener('pointerup', onUp);
+      window.addEventListener('pointercancel', onUp);
     });
 
     field.append(prefixEl, inputEl);
@@ -153,12 +155,21 @@
         const history = [CL.clone(design)];
         let historyIdx = 0;
 
+        /** Keep the draft in the browser; warn (once until it works again) when storage is full. */
+        let draftWarned = false;
+        function persistDraft() {
+          if (CL.store.saveDraft(design)) { draftWarned = false; return; }
+          if (draftWarned) return;
+          draftWarned = true;
+          CL.toast(t('ui.draftNotSaved'), 'info');
+        }
+
         function pushHistory() {
           if (historyIdx < history.length - 1) history.splice(historyIdx + 1);
           history.push(CL.clone(design));
           if (history.length > 30) history.shift();
           else historyIdx++;
-          CL.store.saveDraft(design);
+          persistDraft();
           updateUndoRedoUI();
         }
 
@@ -166,7 +177,7 @@
           if (historyIdx > 0) {
             historyIdx--;
             design = CL.clone(history[historyIdx]);
-            CL.store.saveDraft(design);
+            persistDraft();
             refreshAll();
             updateUndoRedoUI();
           }
@@ -176,7 +187,7 @@
           if (historyIdx < history.length - 1) {
             historyIdx++;
             design = CL.clone(history[historyIdx]);
-            CL.store.saveDraft(design);
+            persistDraft();
             refreshAll();
             updateUndoRedoUI();
           }
@@ -957,6 +968,7 @@
                   const curCenterCx = cx;
                   const curCenterCy = cy;
                   const [screenCx, screenCy] = svgToScreen(cx, cy);
+                  const startRot = Math.round(targetLayer.rotation || 0);
 
                   const onRotMove = (ev) => {
                     const dx = ev.clientX - screenCx;
@@ -995,9 +1007,11 @@
                   const onRotUp = () => {
                     window.removeEventListener('pointermove', onRotMove);
                     window.removeEventListener('pointerup', onRotUp);
+                    window.removeEventListener('pointercancel', onRotUp);
                     hideHud();
                     rotHandle.style.cursor = 'grab';
                     document.body.style.cursor = '';
+                    if (Math.round(targetLayer.rotation || 0) === startRot) return; // a plain click changes nothing
                     pushHistory();
                     render2DCanvas();
                     renderStepPanel();
@@ -1005,6 +1019,7 @@
 
                   window.addEventListener('pointermove', onRotMove);
                   window.addEventListener('pointerup', onRotUp);
+                  window.addEventListener('pointercancel', onRotUp);
                 });
               }
 
@@ -1083,9 +1098,13 @@
                     }
                   };
 
+                  const sizeNow = () => JSON.stringify(targetLayer[targetLayer.type]);
+                  const startSize = sizeNow();
                   const onScaleUp = () => {
                     window.removeEventListener('pointermove', onScaleMove);
                     window.removeEventListener('pointerup', onScaleUp);
+                    window.removeEventListener('pointercancel', onScaleUp);
+                    if (sizeNow() === startSize) { render2DCanvas(); return; } // a plain click changes nothing
                     pushHistory();
                     render2DCanvas();
                     renderStepPanel();
@@ -1093,6 +1112,7 @@
 
                   window.addEventListener('pointermove', onScaleMove);
                   window.addEventListener('pointerup', onScaleUp);
+                  window.addEventListener('pointercancel', onScaleUp);
                 });
               });
             }
@@ -1678,7 +1698,7 @@
               if (!root.isConnected || lyr.text.font !== font || !design.layers.includes(lyr)) return;
               refit(lyr);
               history[historyIdx] = CL.clone(design);
-              CL.store.saveDraft(design);
+              persistDraft();
               render2DCanvas();
             });
           };
@@ -1811,9 +1831,9 @@
           const styleBar = CL.h('div.fg-row', null,
             CL.h('div.fg-seg', { style: { flex: '1' } },
               [
-                { w: 400, label: 'Regular' },
-                { w: 600, label: 'SemiBold' },
-                { w: 700, label: 'Bold' },
+                { w: 400, label: t('ui.wRegular') },
+                { w: 600, label: t('ui.wSemiBold') },
+                { w: 700, label: t('ui.wBold') },
               ].map((wt) =>
                 CL.h('button.fg-seg-btn' + (curWeight === wt.w ? '.is-active' : ''), {
                   type: 'button',
@@ -1831,7 +1851,9 @@
             CL.h('div.fg-seg', { style: { width: '46px', flex: 'none' } },
               CL.h('button.fg-seg-btn' + (curItalic ? '.is-active' : ''), {
                 type: 'button',
-                title: 'Italic',
+                title: t('editor.text.italic'),
+                'aria-label': t('editor.text.italic'),
+                'aria-pressed': String(curItalic),
                 style: { fontStyle: 'italic', fontFamily: 'serif', fontSize: '15px' },
                 text: 'I',
                 onclick: () => {
@@ -1979,7 +2001,12 @@
                 pushHistory();
                 render2DCanvas();
                 renderStepPanel();
-              } catch (err) {}
+              } catch (err) {
+                console.error(err);
+                CL.toast(t('ui.uploadFailed'), 'info');
+              } finally {
+                fileIn.value = ''; // picking the same file again fires change again
+              }
             },
           });
 
@@ -1997,9 +2024,9 @@
             fileIn
           );
 
+          // Only a logo on the part being edited (the Cap tab never edits the Body's logo)
           const curGraphic = design.layers.find((l) => l.id === selectedLayerId && l.part === targetPart && l.type !== 'text')
-            || design.layers.find((l) => l.part === targetPart && (l.type === 'image' || l.type === 'shape'))
-            || design.layers.find((l) => l.type === 'image' || l.type === 'shape');
+            || design.layers.find((l) => l.part === targetPart && (l.type === 'image' || l.type === 'shape'));
 
           let graphicSection = null;
           if (curGraphic) {
@@ -2126,7 +2153,10 @@
                       curGraphic.image.src = await CL.removeWhiteBackground(curGraphic.image.src, 236, 20);
                       pushHistory();
                       render2DCanvas();
-                    } catch (err) {}
+                    } catch (err) {
+                      console.error(err);
+                      CL.toast(t('ui.removeBgFailed'), 'info');
+                    }
                   },
                 }) : null,
                 CL.h('button.btn.btn-outline', {
@@ -2235,7 +2265,9 @@
 
           if (isEditingInput) return;
 
-          if (e.code === 'Space' && !isSpaceDown) {
+          // Space on a focused button or link presses it; only elsewhere does it start panning
+          const onControl = !!ae?.closest?.('button, a[href], summary, [role="slider"], [role="radio"]');
+          if (e.code === 'Space' && !isSpaceDown && !onControl) {
             isSpaceDown = true;
             canvasContainer.style.cursor = 'grab';
             e.preventDefault();
