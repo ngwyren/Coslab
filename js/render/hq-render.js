@@ -394,7 +394,6 @@
       }
       view._resize();
       view._goHome();
-      view.dist = view.targetDist = view.dist * 1.18; // air around the container, like a product photo
       view._loop(0);
       cancelAnimationFrame(view._raf);
       const out = document.createElement('canvas');

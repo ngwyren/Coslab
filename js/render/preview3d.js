@@ -384,7 +384,7 @@
       const top = h > 120 && bar && bar.offsetHeight ? (bar.offsetTop + bar.offsetHeight + 14) / h : 0.05;
       const band = Math.max(0.5, 1 - below - top);
       const tan = Math.tan((this.camera.fov * Math.PI) / 360);
-      const dist = CL.clamp((TUBE_H * 1.06) / (band * 2 * tan), 8, 22);
+      const dist = CL.clamp((TUBE_H * 1.3) / (band * 2 * tan), 8, 26); // the container fills about three quarters of the free height
       const up = 0.5 - (top + band / 2); // the band's centre above the middle of the view, as a share of its height
       return { dist, panY: -up * 2 * dist * tan };
     }
