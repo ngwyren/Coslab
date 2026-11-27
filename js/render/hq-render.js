@@ -510,6 +510,18 @@
       { transform: 'none', opacity: 1 },
     ], Object.assign({ fill: 'backwards' }, timing));
   }
+  /** The dialog opens out of the button that was pressed. */
+  function growFrom(opener, el) {
+    if (!opener || !el || !el.animate || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const a = opener.getBoundingClientRect(), b = el.getBoundingClientRect();
+    if (!a.width || !b.width) return;
+    el.style.transformOrigin = '0 0';
+    el.animate([
+      { transform: `translate(${a.left - b.left}px, ${a.top - b.top}px) scale(${a.width / b.width}, ${a.height / b.height})`, opacity: 0, borderRadius: '999px' },
+      { opacity: 1, offset: 0.35 },
+      { transform: 'none', opacity: 1 },
+    ], { duration: 420, easing: 'cubic-bezier(0.22, 1, 0.36, 1)', fill: 'backwards' });
+  }
   /** Leave the dialog: a running or finished render goes on in the corner. */
   function toDock() {
     const from = dialogEl && dialogEl.querySelector('.hq-modal'), stage = from && from.querySelector('.hq-stage');
@@ -648,6 +660,7 @@
   /** Render dialog: pick a quality, watch the image clear up, then save the PNG. */
   CL.openRender = function (source, camera) {
     const design = CL.clone(source);
+    const pressed = document.activeElement && document.activeElement.closest && document.activeElement.closest('button, a');
     // Without a choice of their own: devices without a real GPU (or phones) send the work to the
     // render worker, devices with one render here.
     let q = CL.store.settings.renderPick;
@@ -656,5 +669,6 @@
     showDock(false);
     start(design, cam, q);
     showDialog(true);
+    growFrom(pressed, dialogEl && dialogEl.querySelector('.hq-modal'));
   };
 })(window.CL);
