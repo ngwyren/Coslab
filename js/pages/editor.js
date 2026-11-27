@@ -267,7 +267,7 @@
           CL.pantone.normalizeDesign(stored);
           Object.values(stored.parts || {}).forEach((p) => { if (p && p.surface === 'clear') p.surface = 'clear-gradient'; });
         }
-        let savedSnap = snap(stored || design); // a template opened and left untouched needs no question
+        let savedSnap = stored ? snap(stored) : null; // null: not in Saved yet, so leaving always asks
         const isDirty = () => snap(design) !== savedSnap;
         function saveNow() {
           const res = CL.store.saveDesign(design);
@@ -582,10 +582,21 @@
           renderStepPanel();
         }
 
+        let viewSeq = 0;
         async function switchView(view) {
+          const prev = activeView, seq = ++viewSeq;
           activeView = view;
           document.getElementById('btnView2D').classList.toggle('is-active', view === '2d');
           document.getElementById('btnView3D').classList.toggle('is-active', view === '3d');
+          // the view that leaves fades away first, then the other one comes in
+          const going = document.getElementById(view === '3d' ? 'canvasViewport' : 'preview3dHost');
+          if (prev !== view && going.style.display !== 'none' && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            going.classList.remove('view-in');
+            going.classList.add('view-out');
+            await new Promise((r) => setTimeout(r, 170));
+            going.classList.remove('view-out');
+            if (seq !== viewSeq || !going.isConnected) return; // switched again or left meanwhile
+          }
           document.getElementById('canvasFloatingControls').style.display = view === '2d' ? 'flex' : 'none';
           document.getElementById('canvasViewport').style.display = view === '2d' ? 'block' : 'none';
           syncPartChips();

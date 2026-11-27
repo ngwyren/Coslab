@@ -1525,8 +1525,10 @@
 @keyframes hq-modal-out { to { opacity: 0; transform: scale(0.97); } }
 @media (prefers-reduced-motion: reduce) { .hq-dock.is-leaving, .modal-backdrop.is-leaving, .modal-backdrop.is-leaving .modal { animation-duration: 1ms; } }
 /* 2D / 3D switch: the incoming view fades up */
-.view-in { animation: view-in 0.32s var(--ease-framer) both; }
-@keyframes view-in { from { opacity: 0; } } /* opacity only: the canvas has its own zoom transform */
-@media (prefers-reduced-motion: reduce) { .view-in { animation: none; } }
+.view-in { animation: view-in 0.4s var(--ease-framer) both; }
+.view-out { animation: view-out 0.17s ease forwards; pointer-events: none; }
+@keyframes view-out { to { opacity: 0; transform: scale(0.975); } }
+@keyframes view-in { from { opacity: 0; transform: scale(1.025); } }
+@media (prefers-reduced-motion: reduce) { .view-in, .view-out { animation: none; } }
 /* three answers in the leave dialog: they wrap instead of running past the edge */
 .leave-actions { flex-wrap: wrap; }
