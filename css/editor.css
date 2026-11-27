@@ -1540,3 +1540,37 @@
 /* colour dots have no colour of their own to change: a ring shows the one under the pointer */
 .studio-color-dot:not(.is-active):hover, .quick-color-dot:not(.is-active):hover, .dot:not(.is-active):hover { box-shadow: 0 0 0 2px var(--surface, #fff), 0 0 0 3.5px rgba(0, 0, 0, 0.28); }
 [data-theme="dark"] .studio-color-dot:not(.is-active):hover, [data-theme="dark"] .quick-color-dot:not(.is-active):hover, [data-theme="dark"] .dot:not(.is-active):hover { box-shadow: 0 0 0 2px #1c1c1e, 0 0 0 3.5px rgba(255, 255, 255, 0.45); }
+
+/* ---- 2D / 3D switch: larger and bolder than the other segmented controls, found at a glance ---- */
+.view-toggle { padding: 4px; }
+.view-toggle button { height: 36px; min-width: 56px; padding-inline: 16px; justify-content: center; font-size: 13px; font-weight: 600; letter-spacing: 0.02em; }
+.view-toggle button svg { width: 15px; height: 15px; }
+.view-toggle button.is-active { background: #111; color: #fff; box-shadow: none; }
+[data-theme="dark"] .view-toggle button.is-active { background: #fff; color: #000; }
+@media (max-width: 760px) { .view-toggle button { min-width: 46px; padding-inline: 12px; } }
+
+/* ---- First-visit hint: everything dims except the 2D / 3D switch, a card under it says why ---- */
+.tip-veil { position: fixed; inset: 0; z-index: 500; animation: tipIn 0.3s ease both; }
+.tip-veil.is-leaving { animation: tipOut 0.2s ease both; pointer-events: none; }
+.tip-hole { position: fixed; border-radius: 999px; pointer-events: none; box-shadow: 0 0 0 200vmax rgba(12, 12, 14, 0.52); }
+.tip-hole::after { content: ''; position: absolute; inset: -4px; border-radius: inherit; border: 2px solid #fff; animation: tipPulse 1.6s ease-out infinite; }
+.tip-card {
+  position: fixed;
+  width: min(300px, calc(100vw - 24px));
+  padding: 16px 16px 14px;
+  border-radius: 16px;
+  background: var(--surface, #fff);
+  color: var(--text);
+  box-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.45);
+  animation: tipRise 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.08s both;
+}
+.tip-card::before { content: ''; position: absolute; top: -6px; left: var(--arrow, 50%); width: 12px; height: 12px; margin-left: -6px; border-radius: 2px; background: inherit; transform: rotate(45deg); }
+.tip-card h4 { margin: 0 0 6px; font-size: 15px; font-weight: 600; letter-spacing: -0.01em; }
+.tip-card p { margin: 0 0 14px; font-size: 13px; line-height: 1.5; color: var(--muted); }
+.tip-actions { display: flex; justify-content: flex-end; gap: 8px; }
+.tip-actions .btn { height: 36px; padding: 0 14px; font-size: 13px; }
+@keyframes tipIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes tipOut { to { opacity: 0; } }
+@keyframes tipRise { from { opacity: 0; transform: translateY(10px) scale(0.97); } to { opacity: 1; transform: none; } }
+@keyframes tipPulse { 0% { opacity: 0.9; transform: scale(1); } 100% { opacity: 0; transform: scale(1.3, 1.55); } }
+@media (prefers-reduced-motion: reduce) { .tip-veil, .tip-card, .tip-hole::after { animation: none; } }

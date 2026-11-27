@@ -247,13 +247,13 @@
           )
         );
 
-        const viewToggle = CL.h('div.segmented', null,
+        const viewToggle = CL.h('div.segmented.view-toggle', { role: 'group', 'aria-label': '2D / 3D' },
           CL.h('button#btnView2D.is-active', {
             html: '<span>2D</span>',
             onclick: () => switchView('2d'),
           }),
           CL.h('button#btnView3D', {
-            html: '<span>3D</span>',
+            html: CL.icon('cube') + '<span>3D</span>',
             onclick: () => switchView('3d'),
           })
         );
@@ -584,6 +584,52 @@
           render2DCanvas();
           renderStepPanel();
         }
+
+        /* ---- First visit: point out the 3D view, once (like the first-time hint in a game) ---- */
+        function introduce3D() {
+          const btn3d = document.getElementById('btnView3D'), sw = btn3d && btn3d.parentElement;
+          if (!sw || !sw.isConnected || sw.offsetParent === null || activeView === '3d') return;
+          if (document.querySelector('.modal-backdrop, .tip-veil')) return; // something else has the stage: next visit
+          CL.store.saveSettings({ seen3dTip: true }); // shown once, whatever the visitor does with it
+          const r = sw.getBoundingClientRect(), pad = 6;
+          const hole = CL.h('div.tip-hole', { style: { left: `${r.left - pad}px`, top: `${r.top - pad}px`, width: `${r.width + pad * 2}px`, height: `${r.height + pad * 2}px` } });
+          const tryBtn = CL.h('button.btn.btn-primary', { type: 'button', text: t('ui.tip3dTry') });
+          const laterBtn = CL.h('button.btn.btn-ghost', { type: 'button', text: t('ui.tip3dLater') });
+          const card = CL.h('div.tip-card', { role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': 'tip3dTitle' },
+            CL.h('h4#tip3dTitle', { text: t('ui.tip3dTitle') }),
+            CL.h('p', { text: t('ui.tip3dBody') }),
+            CL.h('div.tip-actions', null, laterBtn, tryBtn));
+          const veil = CL.h('div.tip-veil', null, hole, card);
+          document.body.append(veil);
+          // the card hangs under the switch, kept inside the window, with its arrow under the switch
+          const cw = card.offsetWidth, left = CL.clamp(r.right + pad - cw, 12, Math.max(12, window.innerWidth - cw - 12));
+          card.style.left = `${left}px`;
+          card.style.top = `${r.bottom + pad + 14}px`;
+          card.style.setProperty('--arrow', `${CL.clamp(r.left + r.width / 2 - left, 20, cw - 20)}px`);
+          let shown = true;
+          const close = (go) => {
+            if (!shown) return;
+            shown = false;
+            window.removeEventListener('resize', gone);
+            window.removeEventListener('hashchange', gone);
+            veil.classList.add('is-leaving');
+            setTimeout(() => veil.remove(), 220);
+            if (go && sw.isConnected) switchView('3d');
+          };
+          const gone = () => close(false);
+          tryBtn.onclick = () => close(true);
+          laterBtn.onclick = () => close(false);
+          veil.addEventListener('click', (e) => {
+            if (e.target !== veil) return;
+            // a click on the lit switch itself is the answer the hint hopes for
+            close(e.clientX >= r.left - pad && e.clientX <= r.right + pad && e.clientY >= r.top - pad && e.clientY <= r.bottom + pad);
+          });
+          veil.addEventListener('keydown', (e) => { if (e.key === 'Escape') { e.stopPropagation(); close(false); } });
+          window.addEventListener('resize', gone);
+          window.addEventListener('hashchange', gone);
+          tryBtn.focus({ preventScroll: true });
+        }
+        if (!(CL.store.settings || {}).seen3dTip) setTimeout(introduce3D, 1200);
 
         let viewSeq = 0;
         async function switchView(view) {

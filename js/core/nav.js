@@ -9,8 +9,8 @@
 (function (CL) {
   const LINKS = [
     { href: '#/', route: 'home', key: 'nav.home' },
-    { href: '#/design', route: 'design', key: 'nav.design' },
     { href: '#/gallery', route: 'gallery', key: 'nav.gallery' },
+    { href: '#/design', route: 'design', key: 'nav.design' },
     { href: '#/my-designs', route: 'my-designs', key: 'nav.myDesigns' },
   ];
 
@@ -27,6 +27,7 @@
     }
     const navBox = nav.getBoundingClientRect();
     const box = el.getBoundingClientRect();
+    if (indicator.style.opacity !== '1') instant = true; // it was hidden: appear in place, do not slide in from where it last was
     if (instant) indicator.classList.add('no-anim');
     indicator.style.opacity = '1';
     indicator.style.width = box.width + 'px';

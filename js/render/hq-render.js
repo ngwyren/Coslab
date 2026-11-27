@@ -71,25 +71,36 @@
     return hdris.get(file);
   };
 
+  /** How much light a panorama throws on a level floor (1 = an even sky of brightness 1). The
+   *  renderer reads the rows from the ground (first) up to straight overhead (last). */
+  const floorLight = (data, W, H) => {
+    let s = 0;
+    for (let y = H >> 1; y < H; y++) {
+      const up = ((y + 0.5) / H - 0.5) * Math.PI, k = Math.sin(up) * Math.cos(up);
+      for (let x = 0; x < W; x++) { const i = (y * W + x) * 4; s += (0.2126 * data[i] + 0.7152 * data[i + 1] + 0.0722 * data[i + 2]) * k; }
+    }
+    return (s * 2 * Math.PI) / (W * H);
+  };
+
   const panorama = (T, data, W, H) => {
     const tex = new T.DataTexture(data, W, H, T.RGBAFormat, T.FloatType);
     tex.mapping = T.EquirectangularReflectionMapping;
     tex.minFilter = tex.magFilter = T.LinearFilter;
     tex.needsUpdate = true;
+    tex.userData.floor = floorLight(data, W, H);
     return tex;
   };
 
-  /** Plain studio light (no file needed): even surround and one big soft key from above. Used when
+  /** Plain studio light (no file needed): an even, soft sky, a little brighter overhead. Used when
    *  the studio picture cannot be loaded. */
-  function plainEnv(T, facing) {
-    const W = 512, H = 256, data = new Float32Array(W * H * 4), front = Math.PI / 2 - facing;
+  function plainEnv(T) {
+    const W = 128, H = 64, data = new Float32Array(W * H * 4);
     for (let y = 0; y < H; y++) {
-      const el = (0.5 - (y + 0.5) / H) * Math.PI;
+      const up = ((y + 0.5) / H - 0.5) * Math.PI; // rows run from the ground to straight overhead
+      const l = 1.12 + 0.12 * Math.sin(Math.max(up, 0));
       for (let x = 0; x < W; x++) {
-        const rel = ((x + 0.5) / W) * Math.PI * 2 - Math.PI - front;
-        const kd = Math.cos(el) * Math.cos(1.0) * Math.cos(rel - 0.58) + Math.sin(el) * Math.sin(1.0);
         const i = (y * W + x) * 4;
-        data[i] = data[i + 1] = data[i + 2] = 1.14 * ((el > 0 ? 0.98 + 0.19 * Math.sin(el) : 0.98) + 4 * Math.pow(Math.max(0, kd), 3));
+        data[i] = data[i + 1] = data[i + 2] = l;
         data[i + 3] = 1;
       }
     }
@@ -98,10 +109,14 @@
 
   /** Studio light for one look, as an HDR panorama turned to keep its place relative to the camera.
    *  The picture is levelled to one overall brightness, its colour cast is mostly taken out (so
-   *  Pantone colours stay true) and bare lamps are capped (no sparkle noise). */
+   *  Pantone colours stay true) and bare lamps are capped (no sparkle noise).
+   *  It is hung upside down on purpose: the file's first row (the studio ceiling) goes in as the
+   *  renderer's ground row. The studio's floor, one broad and even bounce, becomes the light from
+   *  above, and the lamps end up below the set, where the floor hides them. That is what gives the
+   *  soft, streak-free light; the right way up, bare lamps mirror in every glossy cap. */
   async function studioEnv(T, look, facing = 0) {
     let src;
-    try { src = await loadHDR(LOOKS[look].file); } catch (e) { console.warn(e); return plainEnv(T, facing); }
+    try { src = await loadHDR(LOOKS[look].file); } catch (e) { console.warn(e); return plainEnv(T); }
     const { w, h, rgb } = src, data = new Float32Array(w * h * 4);
     const lum = new Float32Array(w * h);
     let sum = 0, wt = 0;
@@ -145,6 +160,35 @@
   const ENV_LEVEL = 0.95; // first rough levelling of a studio picture (sets where lamps are capped)
   const ENV_TONE = 1.0; // average light every look is scaled to: the shared, bright tone
   const ENV_GREY = 0.75; // how much of the studio's own colour cast is removed (a little warmth stays)
+
+  // Backdrop paper gives off its own even light, so wall and floor show exactly one colour under
+  // any studio (a sweep that is only lit goes darker up the wall and to one side). PAPER_TONE: its
+  // brightness, as a share of the paper colour. PAPER_SHADOW: round the product the floor takes
+  // this share of its light from the studio instead, which is what draws the real, soft shadow.
+  const PAPER_TONE = 1, PAPER_SHADOW = 0.4;
+
+  /** Two round maps for the floor: how much studio light it takes (all of its share near the
+   *  middle, none towards the rim) and how much it glows by itself (the rest, so that open floor
+   *  keeps one tone from the product out to the wall). */
+  function floorMaps(T, albedo, share) {
+    const n = 256;
+    const srgb = (v) => Math.round(255 * (v <= 0.0031308 ? v * 12.92 : 1.055 * Math.pow(v, 1 / 2.4) - 0.055));
+    const make = (value) => {
+      const c = document.createElement('canvas');
+      c.width = c.height = n;
+      const ctx = c.getContext('2d'), img = ctx.createImageData(n, n);
+      for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+        const r = Math.hypot(x + 0.5 - n / 2, y + 0.5 - n / 2) / (n / 2); // 0 at the product, 1 at the rim
+        const t = CL.clamp((r - 0.25) / 0.6, 0, 1), v = srgb(value(1 - t * t * (3 - 2 * t)));
+        img.data.set([v, v, v, 255], (y * n + x) * 4);
+      }
+      ctx.putImageData(img, 0, 0);
+      const map = new T.CanvasTexture(c);
+      map.colorSpace = T.SRGBColorSpace;
+      return map;
+    };
+    return [make((lit) => albedo * lit), make((lit) => PAPER_TONE - share * lit)];
+  }
 
   const ACRYLIC = { transmission: 1, ior: 1.49, roughness: 0.03, metalness: 0, thickness: 0.3 };
   const FINISH = {
@@ -197,7 +241,7 @@
     return tex;
   }
 
-  async function buildScene(T, design, backdrop, facing = 0) {
+  async function buildScene(T, design, backdrop, facing = 0, sky = 1, size = 1) {
     const I = CL.Preview3D.internals;
     const L = CL.models.layout(design.model);
     const m = L.model;
@@ -206,7 +250,7 @@
     const P = design.parts;
     const scene = new T.Scene();
     const tube = new T.Group();
-    tube.scale.setScalar(I.TUBE_H / m.h);
+    tube.scale.setScalar((I.TUBE_H / m.h) * size); // size 1: the container fills the frame height it is given
     scene.add(tube);
     const mat = (o) => new T.MeshPhysicalMaterial(Object.assign({ color: 0xffffff }, o));
     const add = (geo, material) => { const mesh = new T.Mesh(geo, material); tube.add(mesh); return mesh; };
@@ -257,11 +301,17 @@
       prof2.push(new T.Vector2(rad - cove + Math.sin(a) * cove, cove - Math.cos(a) * cove));
     }
     prof2.push(new T.Vector2(rad, wallH));
-    const paper = mat({ color: new T.Color(backdrop || '#f0f0f0'), roughness: 0.95, side: T.DoubleSide });
+    const tone = new T.Color(backdrop || '#f0f0f0');
+    const wall = mat({ color: 0x000000, emissive: tone, emissiveIntensity: PAPER_TONE, roughness: 1, side: T.DoubleSide });
     const span = Math.PI * 1.1; // a little more than the back half
-    scene.add(new T.Mesh(new T.LatheGeometry(prof2, 64, facing + Math.PI - span / 2, span), paper));
-    scene.add(new T.Mesh(new T.RingGeometry(rad - cove, rad * 4, 64, 1, facing + Math.PI / 2 + span / 2, Math.PI * 2 - span).rotateX(-Math.PI / 2), paper));
-    scene.add(new T.Mesh(new T.CircleGeometry(rad - cove, 96).rotateX(-Math.PI / 2), paper));
+    scene.add(new T.Mesh(new T.LatheGeometry(prof2, 64, facing + Math.PI - span / 2, span), wall));
+    scene.add(new T.Mesh(new T.RingGeometry(rad - cove, rad * 4, 64, 1, facing + Math.PI / 2 + span / 2, Math.PI * 2 - span).rotateX(-Math.PI / 2), wall));
+    // the floor round the product: `sky` is the studio light that reaches open floor, so there
+    // the lit share and the glow add up to exactly the wall's tone
+    const albedo = Math.min(0.9, (PAPER_SHADOW * PAPER_TONE) / Math.max(sky, 0.05));
+    [tex.__lit, tex.__glow] = floorMaps(T, albedo, albedo * sky);
+    scene.add(new T.Mesh(new T.CircleGeometry(rad - cove, 96).rotateX(-Math.PI / 2),
+      mat({ color: tone, map: tex.__lit, emissive: tone, emissiveMap: tex.__glow, roughness: 0.95, side: T.DoubleSide })));
     return { scene, textures: Object.values(tex) };
   }
 
@@ -283,7 +333,7 @@
       });
     });
     if (top < 0.1) return '#ebe8e3';
-    return CL.color.rgbToHex(CL.color.hsvToRgb({ h: hue, s: Math.min(0.04, 0.012 + sat * 0.045), v: 0.93 }));
+    return CL.color.rgbToHex(CL.color.hsvToRgb({ h: hue, s: Math.min(0.07, 0.02 + sat * 0.08), v: 0.93 }));
   }
 
   /** Phones, tablets and low-memory devices: the render is sized down so their GPU can finish it. */
@@ -309,7 +359,11 @@
 
   /**
    * Render a design. opts: { width, height, samples, camera ({position, quaternion, fov}),
-   * onProgress(samples, total, canvas), signal }. Resolves with a 2D canvas of the finished image.
+   * onProgress(samples, total, canvas), signal, look (a studio from LOOKS, else one at random),
+   * onLook(id), backdrop (paper colour, else chosen from the product), fill (share of the frame
+   * height the container takes), lift (raise it by this share of the frame), size (0..1: its
+   * height as a share of the tallest container, for pictures that are compared side by side) }.
+   * Resolves with a 2D canvas of the finished image.
    */
   /** The product angle (radians) a printed design is shot from: the print just right of the middle, like the archive pictures. */
   const PRINT_YAW = -0.28, PRINT_PLAY = 0.04;
@@ -361,11 +415,12 @@
     camera.updateProjectionMatrix();
 
     const look = pickLook(opts.look);
+    if (opts.onLook) opts.onLook(look);
     const backdrop = opts.backdrop || backdropOf(design);
-    const { scene, textures } = await buildScene(T, design, backdrop, Math.atan2(dir.x, dir.z));
     const env = await studioEnv(T, look, Math.atan2(dir.x, dir.z));
+    const { scene, textures } = await buildScene(T, design, backdrop, Math.atan2(dir.x, dir.z), env.userData.floor, opts.size || 1);
     scene.environment = env;
-    scene.background = new T.Color(backdrop);
+    scene.background = new T.Color(backdrop).multiplyScalar(PAPER_TONE); // same as the wall, should the frame ever look past it
 
     const pt = new PT.WebGLPathTracer(renderer);
     // phones and other small GPUs: smaller textures and fewer light bounces
@@ -568,11 +623,11 @@
   }
 
   /** wait: ms to leave the page alone first (an opening animation), before the heavy set-up starts. */
-  async function start(design, cam, q, wait = 0) {
+  async function start(design, cam, q, wait = 0, look = null) {
     if (job && job.ctrl) job.ctrl.abort();
     const [, , W, H, total] = QUALITIES().find(([id]) => id === q);
     const ctrl = new AbortController();
-    const me = (job = { design, cam, q, ctrl, W, H, canvas: null, result: null, n: 0, all: total, t0: performance.now(), state: 'running' });
+    const me = (job = { design, cam, q, ctrl, W, H, look, canvas: null, result: null, n: 0, all: total, t0: performance.now(), state: 'running' });
     emit();
     try {
       if (wait) { await new Promise((r) => setTimeout(r, wait)); if (job !== me) return; }
@@ -588,6 +643,7 @@
       } else {
         out = await renderHQ(design, {
           width: W, height: H, samples: total, camera: cam, signal: ctrl.signal,
+          look: look || undefined, onLook: (name) => { me.look = name; },
           // in the corner card (or a hidden tab) the render gives way to the rest of the page
           light: () => mode !== 'dialog' || document.hidden,
           pause: () => performance.now() < busyUntil,
@@ -711,7 +767,7 @@
         onclick: () => {
           if (!job || job.q === id) return;
           CL.store.saveSettings({ renderPick: id }); // the visitor's own choice wins over the automatic one
-          start(job.design, job.cam, id);
+          start(job.design, job.cam, id, 0, job.look); // same studio, only the quality changes
         },
       }, label)));
     const modal = CL.h('div.modal.ex-modal.hq-modal', { role: 'dialog', 'aria-modal': 'true', 'aria-label': t('ui.renderTitle') },
@@ -734,7 +790,8 @@
       if (job.canvas && job.canvas.parentNode !== stage) stage.replaceChildren(job.canvas);
       if (!job.canvas) stage.replaceChildren();
       bar.style.width = `${progress()}%`;
-      status.textContent = statusText();
+      // which studio lit this picture (one is picked at random for every render)
+      status.textContent = statusText() + (job.look && job.q !== 'ai' ? ' · ' + job.look.replace('studio', 'Studio ') : '');
       saveBtn.hidden = job.state !== 'done'; // running: Cancel + Run in background; done: Close + Save
       bgBtn.hidden = job.state !== 'running';
       stopBtn.textContent = job.state === 'running' ? t('common.cancel') : t('common.close');

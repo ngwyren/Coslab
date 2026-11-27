@@ -104,7 +104,15 @@
 
   // Page change: fade the old page out, then build the new one and let it rise in
   let leaving = 0;
+  // The menu answers at once: its pill slides to the new page while the old one fades out, so the
+  // slide is over before the work of building the new page begins (that work would stall it).
+  function markNav(route) {
+    document.querySelectorAll('.main-nav a').forEach((a) => a.classList.toggle('is-active', a.dataset.route === route.nav));
+    if (CL.nav) { CL.nav.close(); CL.nav.sync(); }
+  }
+
   function navigate() {
+    markNav(ROUTES[parse().key] || ROUTES['']);
     const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (reduce || !app.firstChild) { render(); return; }
     const id = ++leaving;
@@ -127,14 +135,13 @@
     CL.closeMenu();
     app.innerHTML = '';
     document.body.classList.toggle('app-mode', !!page.appMode);
-    document.querySelectorAll('.main-nav a').forEach((a) => a.classList.toggle('is-active', a.dataset.route === route.nav));
-    if (CL.nav) { CL.nav.close(); CL.nav.sync(); }
+    markNav(route);
     current = { route, r };
     cleanup = page.render(app, { query: r.query, sub: r.sub, anchor: route.anchor, rerender: !!opts.rerender });
     I18N.apply(document);
     CL.rollLetters();
     // place the black pill again once the new page is laid out
-    requestAnimationFrame(() => { if (CL.nav) CL.nav.sync(true); if (CL.paceFooter) CL.paceFooter(); });
+    requestAnimationFrame(() => { if (CL.nav) CL.nav.sync(); if (CL.paceFooter) CL.paceFooter(); });
     document.title = route.page === 'home' ? 'CosLab' : `${t(page.titleKey || 'nav.home')} — CosLab`;
     if (!opts.rerender) {
       if (route.anchor) setTimeout(() => { const el = document.getElementById(route.anchor); el && el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 60);
