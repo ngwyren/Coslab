@@ -937,3 +937,8 @@
 .gallery-card:hover .gallery-shot { transform: translateY(-6px) scale(1.02); }
 .gallery-actions { display: flex; align-items: center; gap: 2px; flex-shrink: 0; }
 .gallery-actions > div { display: contents; }
+
+/* Full-width pages: the card grid gains columns on wide screens so cards keep a sensible size */
+@media (min-width: 1500px) { .gallery-grid.grid-4 { grid-template-columns: repeat(5, 1fr); } }
+@media (min-width: 1900px) { .gallery-grid.grid-4 { grid-template-columns: repeat(6, 1fr); } }
+@media (min-width: 2500px) { .gallery-grid.grid-4 { grid-template-columns: repeat(8, 1fr); } }

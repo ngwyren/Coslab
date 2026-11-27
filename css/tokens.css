@@ -53,7 +53,8 @@
   --font-serif: "Italiana", "Cinzel", Georgia, serif;
 
   /* Layout */
-  --container: 1280px;
+  --container: none; /* pages run the full width of the screen; the gutter below scales with it */
+  --gutter: clamp(16px, 2.6vw, 56px);
   --header-h: 68px;
 
   /* Framer Luxury Motion System (Orchard & Framer Motion Curves) */
