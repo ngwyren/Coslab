@@ -1337,7 +1337,7 @@
 .color-note-mini p { margin: 4px 0 0; line-height: 1.5; }
 
 /* Scrolling font list */
-.font-current { font-size: 12.5px; color: var(--fg-text-2); }
+.font-current { font-size: 15px; font-weight: 600; letter-spacing: 0.02em; color: var(--fg-text); }
 .font-search { width: 100%; height: 38px; padding: 0 12px; border: 1px solid var(--fg-border); border-radius: 10px; background: var(--fg-bg); font: inherit; font-size: 13.5px; color: var(--fg-text); }
 .font-search:focus { outline: none; border-color: var(--fg-text); }
 .font-list { position: relative; height: 264px; overflow-y: auto; overscroll-behavior: contain; border: 1px solid var(--fg-border); border-radius: 10px; scrollbar-width: thin; }
@@ -1427,7 +1427,7 @@
 
 /* Fewer words: no panel header, code shown quietly */
 .studio-step-header { padding: 0; border: 0; min-height: 0; }
-.fg-section-head:has(> .font-current:only-child) { justify-content: flex-end; min-height: 0; }
+.fg-section-head:has(> .font-current:only-child) { justify-content: center; min-height: 0; }
 .fg-section-head:empty { display: none; }
 .fg-section-head:has(> .is-danger:only-child) { justify-content: flex-end; }
 .fg-section-head .is-danger { margin-inline-start: auto; }
@@ -1510,3 +1510,9 @@
 .hq-modal .modal-actions { flex-wrap: wrap; }
 .hq-modal .modal-actions .btn { min-width: 0; white-space: nowrap; }
 .hq-dock { cursor: pointer; }
+/* 3D toolbar: a pill */
+.preview-3d-hud { border-radius: 999px; }
+.preview-3d-hud .hud-reset { border-radius: 999px; padding: 0 12px; }
+/* Studio controls are pills, like the top bar */
+.fg-seg, .fg-seg .fg-seg-btn { border-radius: 999px; }
+.studio-step-footer .btn, .studio-back-link { border-radius: 999px; }
