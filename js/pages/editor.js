@@ -767,8 +767,8 @@
             const partRect = layout[targetLayer.part];
             if (partRect) {
               const safe = partRect.safe || { minX: 0.16, maxX: 0.84, minY: 0.14, maxY: 0.86 };
-              const curX = CL.clamp(targetLayer.x ?? 0.5, 0, 1);
-              const curY = CL.clamp(targetLayer.y ?? 0.5, 0, 1);
+              const curX = CL.clamp(targetLayer.x ?? 0.5, safe.minX, safe.maxX);
+              const curY = CL.clamp(targetLayer.y ?? 0.5, safe.minY, safe.maxY);
               const cx = partRect.x + curX * partRect.w;
               const cy = partRect.y + curY * partRect.h;
               const rot = targetLayer.rotation || 0;
@@ -910,8 +910,8 @@
                     moved = true;
                     const dx = (ev.clientX - startX) / scaleX;
                     const dy = (ev.clientY - startY) / scaleY;
-                    let nx = CL.clamp(origX + dx / partRect.w, 0, 1);
-                    let ny = CL.clamp(origY + dy / partRect.h, 0, 1);
+                    let nx = CL.clamp(origX + dx / partRect.w, safe.minX, safe.maxX);
+                    let ny = CL.clamp(origY + dy / partRect.h, safe.minY, safe.maxY);
 
                     // Smart snap to center (50%)
                     const snapV = Math.abs(nx - 0.5) < 0.02;
@@ -1586,8 +1586,8 @@
             prefix: 'X',
             title: t('ui.hPos'),
             value: curPctX,
-            min: 0,
-            max: 100,
+            min: 15,
+            max: 85,
             step: 1,
             unit: '%',
             scrubScale: 0.35,
@@ -1604,8 +1604,8 @@
             prefix: 'Y',
             title: t('ui.vPos'),
             value: curPctY,
-            min: 0,
-            max: 100,
+            min: 12,
+            max: 88,
             step: 1,
             unit: '%',
             scrubScale: 0.35,
@@ -2074,8 +2074,8 @@
               id: 'fgInputX',
               prefix: 'X',
               value: curPctX,
-              min: 0,
-              max: 100,
+              min: 15,
+              max: 85,
               unit: '%',
               scrubScale: 0.35,
               onInput: (v) => { curGraphic.x = v / 100; render2DCanvas(); },
@@ -2085,8 +2085,8 @@
               id: 'fgInputY',
               prefix: 'Y',
               value: curPctY,
-              min: 0,
-              max: 100,
+              min: 12,
+              max: 88,
               unit: '%',
               scrubScale: 0.35,
               onInput: (v) => { curGraphic.y = v / 100; render2DCanvas(); },
@@ -2309,11 +2309,12 @@
             const lyr = getActiveTargetLayer();
             if (lyr && !lyr.locked) {
               const step = e.shiftKey ? 0.04 : 0.01;
-              // the dashed safe zone is a guide: layers may move to the edge of the print band
-              if (e.key === 'ArrowLeft') lyr.x = CL.clamp((lyr.x ?? 0.5) - step, 0, 1);
-              if (e.key === 'ArrowRight') lyr.x = CL.clamp((lyr.x ?? 0.5) + step, 0, 1);
-              if (e.key === 'ArrowUp') lyr.y = CL.clamp((lyr.y ?? 0.5) - step, 0, 1);
-              if (e.key === 'ArrowDown') lyr.y = CL.clamp((lyr.y ?? 0.5) + step, 0, 1);
+              const layout = CL.models.layout(design.model);
+              const safe = layout[lyr.part]?.safe || { minX: 0.16, maxX: 0.84, minY: 0.14, maxY: 0.86 };
+              if (e.key === 'ArrowLeft') lyr.x = CL.clamp((lyr.x ?? 0.5) - step, safe.minX, safe.maxX);
+              if (e.key === 'ArrowRight') lyr.x = CL.clamp((lyr.x ?? 0.5) + step, safe.minX, safe.maxX);
+              if (e.key === 'ArrowUp') lyr.y = CL.clamp((lyr.y ?? 0.5) - step, safe.minY, safe.maxY);
+              if (e.key === 'ArrowDown') lyr.y = CL.clamp((lyr.y ?? 0.5) + step, safe.minY, safe.maxY);
               e.preventDefault();
               nudgePending = true;
               render2DCanvas();
