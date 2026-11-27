@@ -622,6 +622,7 @@
 
         function applyLevel(lyr, level) {
           lyr.fit = level;
+          delete lyr.free; // a size level fits the safe zone again
           const k = maxFit(lyr) * LEVELS[level];
           if (lyr.type === 'text') {
             lyr.text.size = Math.max(8, Math.floor(k));
@@ -808,7 +809,7 @@
               let offX = 0, offY = 0; // centre of the box in the layer's own coordinates
               let pad = 8;
               if (targetLayer.type === 'text') {
-                const ink = CL.render.textInk(targetLayer.text, partRect, targetLayer.rotation);
+                const ink = CL.render.textInk(targetLayer.text, partRect, targetLayer.rotation, !!targetLayer.free);
                 if (ink && ink.w > 0 && ink.h > 0) {
                   bW = ink.w; bH = ink.h;
                   offX = ink.x + ink.w / 2; offY = ink.y + ink.h / 2;
@@ -1065,6 +1066,7 @@
                       if (nextSz !== targetLayer.text.size) {
                         targetLayer.text.size = nextSz;
                         delete targetLayer.fit;
+                        targetLayer.free = true; // sized by hand: no auto-fit, may fill the print band
                         const szIn = document.getElementById('fgInputSize');
                         const szSl = document.getElementById('studioLayerSizeSlider');
                         if (szIn) szIn.value = String(nextSz);
@@ -1077,6 +1079,7 @@
                       if (nextW !== targetLayer.image.w) {
                         targetLayer.image.w = nextW;
                         delete targetLayer.fit;
+                        targetLayer.free = true; // sized by hand: no auto-fit, may fill the print band
                         targetLayer.image.h = Math.round(nextW * origRatio);
                         const wIn = document.getElementById('fgInputGraphicW');
                         if (wIn) wIn.value = String(nextW);
@@ -1088,6 +1091,7 @@
                       if (nextW !== targetLayer.shape.w) {
                         targetLayer.shape.w = nextW;
                         delete targetLayer.fit;
+                        targetLayer.free = true; // sized by hand: no auto-fit, may fill the print band
                         if (targetLayer.shape.kind !== 'line') targetLayer.shape.h = nextW;
                         const wIn = document.getElementById('fgInputGraphicW');
                         if (wIn) wIn.value = String(nextW);
@@ -1521,6 +1525,7 @@
 
           /** Keep the chosen size level; text sized by hand only shrinks when it no longer fits. */
           function refit(lyr) {
+            if (lyr.free) return; // sized by hand: keep exactly that size
             if (lyr.fit) applyLevel(lyr, lyr.fit);
             else if (lyr.text.size > maxFit(lyr)) applyLevel(lyr, 'l');
             else keepInside(lyr);
@@ -1793,6 +1798,7 @@
               const val = parseInt(sizeSlider.value, 10);
               lyr.text.size = val;
               delete lyr.fit;
+              lyr.free = true;
               sizeField.input.value = String(val);
               render2DCanvas();
             },
@@ -1814,6 +1820,7 @@
               const lyr = ensureTextLayer(textInput.value || 'COSLAB');
               lyr.text.size = v;
               delete lyr.fit;
+              lyr.free = true;
               sizeSlider.value = String(v);
               render2DCanvas();
             },
@@ -2051,6 +2058,7 @@
 
             const applyScale = (v) => {
               delete curGraphic.fit;
+              curGraphic.free = true;
               if (isImg) {
                 const ratio = (curGraphic.image.h || v) / (curGraphic.image.w || v);
                 curGraphic.image.w = v;

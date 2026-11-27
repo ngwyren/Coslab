@@ -85,10 +85,7 @@
     const tex = {};
     for (const p of ['cap', 'base']) {
       if (!(design.layers || []).some((l) => l.part === p && l.visible !== false)) continue;
-      const flat = await CL.exporter.renderFlatCanvas(design, p, { scale: 6, fonts, layersOnly: true });
-      const c = flat.canvas, r = L[p], k = c.width / r.w, ctx = c.getContext('2d');
-      ctx.globalCompositeOperation = 'destination-in';
-      ctx.fillRect((r.safe.x - r.x) * k, (r.safe.y - r.y) * k, r.safe.w * k, r.safe.h * k);
+      const c = await CL.exporter.renderArtCanvas(design, p, { scale: 6, fonts });
       const t = new T.CanvasTexture(c);
       t.colorSpace = T.SRGBColorSpace;
       tex[p] = t;

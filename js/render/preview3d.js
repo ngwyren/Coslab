@@ -574,11 +574,8 @@
       const tex = {};
       for (const p of ['cap', 'base']) {
         if (!(design.layers || []).some((l) => l.part === p && l.visible !== false)) continue;
-        const flat = await CL.exporter.renderFlatCanvas(design, p, { scale: 5, fonts, layersOnly: true });
-        // same safe-zone clipping as the 2D view
-        const c = flat.canvas, r = L[p], k = c.width / r.w, ctx = c.getContext('2d');
-        ctx.globalCompositeOperation = 'destination-in';
-        ctx.fillRect((r.safe.x - r.x) * k, (r.safe.y - r.y) * k, r.safe.w * k, r.safe.h * k);
+        // same clipping as the 2D view
+        const c = await CL.exporter.renderArtCanvas(design, p, { scale: 5, fonts });
         const tx = new THREE.CanvasTexture(c);
         tx.encoding = THREE.sRGBEncoding;
         tx.anisotropy = this.renderer.capabilities.getMaxAnisotropy();

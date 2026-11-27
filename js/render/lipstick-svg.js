@@ -101,7 +101,7 @@
   }
 
   /** Size, spacing and line positions of a text block, exactly as textMarkup draws it. */
-  function textLayout(tx, rect, rotation = 0) {
+  function textLayout(tx, rect, rotation = 0, free = false) {
     const lines = String(tx.content || '').split('\n');
     const maxChars = Math.max(1, ...lines.map((l) => l.length));
     const safe = rect && rect.safe ? rect.safe : { w: (rect?.w || 110) * 0.72, h: (rect?.h || 220) * 0.74 };
@@ -114,7 +114,8 @@
     let size = tx.size || 13;
     let spacing = tx.spacing || 0;
     const estWidth = maxChars * (size * 0.62) + Math.max(0, maxChars - 1) * spacing;
-    if (estWidth > maxSpan && estWidth > 0) {
+    // sized by hand ("free"): drawn at exactly the size chosen, cut only at the edge of the print band
+    if (!free && estWidth > maxSpan && estWidth > 0) {
       const ratio = maxSpan / estWidth;
       size = Math.max(7, CL.round(size * ratio, 1));
       spacing = CL.round(spacing * ratio, 1);
@@ -137,8 +138,8 @@
    * Box around the letters themselves (not the font's em box), in the layer's own
    * coordinates (before its rotation): { x, y, w, h }. Used for the selection frame.
    */
-  function textInk(tx, rect, rotation = 0) {
-    const { lines, spacing, lh, anchor, font, y0, dx } = textLayout(tx, rect, rotation);
+  function textInk(tx, rect, rotation = 0, free = false) {
+    const { lines, spacing, lh, anchor, font, y0, dx } = textLayout(tx, rect, rotation, free);
     inkCtx.font = font;
     const canSpace = 'letterSpacing' in inkCtx;
     if (canSpace) inkCtx.letterSpacing = `${spacing}px`;
@@ -161,8 +162,8 @@
     return { x: left, y: top, w: right - left, h: bottom - top };
   }
 
-  function textMarkup(tx, rect, rotation = 0) {
-    const { lines, size, spacing, lh, anchor, fam, y0, dx } = textLayout(tx, rect, rotation);
+  function textMarkup(tx, rect, rotation = 0, free = false) {
+    const { lines, size, spacing, lh, anchor, fam, y0, dx } = textLayout(tx, rect, rotation, free);
     const spans = lines.map((ln, i) => `<tspan x="${CL.round(dx, 2)}" y="${CL.round(y0 + i * lh, 2)}">${CL.esc(ln) || ' '}</tspan>`).join('');
     return `<text text-anchor="${anchor}" dominant-baseline="alphabetic" font-family="${fam}" font-size="${size}" font-weight="${tx.weight || 400}" font-style="${tx.italic ? 'italic' : 'normal'}" letter-spacing="${spacing}" fill="${tx.color || '#171615'}" xml:space="preserve">${spans}</text>`;
   }
@@ -184,12 +185,12 @@
   function layerMarkup(layer, rect, interactive) {
     if (!layer.visible) return '';
     let inner = '';
-    if (layer.type === 'text') inner = textMarkup(layer.text, rect, layer.rotation);
+    if (layer.type === 'text') inner = textMarkup(layer.text, rect, layer.rotation, !!layer.free);
     else if (layer.type === 'image') {
       const im = layer.image;
       const safe = rect.safe || { w: rect.w * 0.7, h: rect.h * 0.7 };
       const maxW = safe.w - 4, maxH = safe.h - 4;
-      const scale = Math.min(1, maxW / (im.w || 40), maxH / (im.h || 40));
+      const scale = layer.free ? 1 : Math.min(1, maxW / (im.w || 40), maxH / (im.h || 40));
       const w = CL.round(im.w * scale, 1), h = CL.round(im.h * scale, 1);
       inner = `<image href="${im.src}" xlink:href="${im.src}" x="${-w / 2}" y="${-h / 2}" width="${w}" height="${h}" preserveAspectRatio="xMidYMid meet"/>`;
     } else if (layer.type === 'shape') {
@@ -333,8 +334,19 @@
     defs.push(`<clipPath id="${u}-clip-base">${partShape(L.baseShell, '#000')}</clipPath>`);
     defs.push(`<clipPath id="${u}-safe-cap"><rect x="${L.cap.safe.x}" y="${L.cap.safe.y}" width="${L.cap.safe.w}" height="${L.cap.safe.h}" rx="4"/></clipPath>`);
     defs.push(`<clipPath id="${u}-safe-base"><rect x="${L.base.safe.x}" y="${L.base.safe.y}" width="${L.base.safe.w}" height="${L.base.safe.h}" rx="4"/></clipPath>`);
+    // layers sized by hand may fill the whole print band (the band the 3D view prints on)
+    defs.push(`<clipPath id="${u}-print-cap"><rect x="${L.cap.x}" y="${L.cap.y}" width="${L.cap.w}" height="${L.cap.h}"/></clipPath>`);
+    defs.push(`<clipPath id="${u}-print-base"><rect x="${L.base.x}" y="${L.base.y}" width="${L.base.w}" height="${L.base.h}"/></clipPath>`);
 
-    const layersOf = (part) => (design.layers || []).filter((l) => l.part === part).map((l) => layerMarkup(l, L[part], inter)).join('');
+    const layersOf = (part, free) => (design.layers || [])
+      .filter((l) => l.part === part && !!l.free === free)
+      .map((l) => layerMarkup(l, L[part], inter)).join('');
+    /** Artwork on a part: fitted layers stay in the safe zone; hand-sized ones may fill the print band, never past the outline. */
+    const artwork = (part) => {
+      const tag = inter ? ` data-layers="${part}"` : '';
+      return `<g clip-path="url(#${u}-safe-${part})"${tag}>${layersOf(part, false)}</g>`
+        + `<g clip-path="url(#${u}-clip-${part})"><g clip-path="url(#${u}-print-${part})"${tag}>${layersOf(part, true)}</g></g>`;
+    };
 
     let body = '';
     if (opts.background) {
@@ -405,7 +417,7 @@
     body += `</g>`;
 
     // Artwork on Base (Strictly inside Safe Zone)
-    body += `<g clip-path="url(#${u}-safe-base)"${inter ? ' data-layers="base"' : ''}>${layersOf('base')}</g>`;
+    body += artwork('base');
 
     if (shading) {
       body += `<g pointer-events="none" clip-path="url(#${u}-clip-base)">`;
@@ -421,7 +433,7 @@
     body += `</g>`;
 
     // Artwork on Cap (Strictly inside Safe Zone)
-    body += `<g clip-path="url(#${u}-safe-cap)"${inter ? ' data-layers="cap"' : ''}>${layersOf('cap')}</g>`;
+    body += artwork('cap');
 
     if (shading) {
       body += `<g pointer-events="none" clip-path="url(#${u}-clip-cap)">`;
