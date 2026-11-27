@@ -171,6 +171,9 @@
     return { scene, textures: Object.values(tex) };
   }
 
+  /** Phones, tablets and low-memory devices: the render is sized down so their GPU can finish it. */
+  const weakDevice = () => matchMedia('(hover: none) and (pointer: coarse)').matches || (navigator.deviceMemory || 8) <= 2;
+
   /**
    * Render a design. opts: { width, height, samples, camera ({position, quaternion, fov}),
    * onProgress(samples, total, canvas), signal }. Resolves with a 2D canvas of the finished image.
@@ -215,15 +218,20 @@
     scene.background = new T.Color(opts.backdrop || '#f2f2f2');
 
     const pt = new PT.WebGLPathTracer(renderer);
-    pt.tiles.set(4, 4); // small pieces of GPU work, so the screen keeps drawing between them
-    pt.bounces = 6;
-    pt.transmissiveBounces = 10;
+    // phones and other small GPUs: smaller textures and fewer light bounces
+    const weak = weakDevice();
+    let tiles = weak ? 16 : 12, lost = false; // starts in tiny pieces, then sized by measured speed (see the loop)
+    canvas.addEventListener('webglcontextlost', () => { lost = true; });
+    pt.tiles.set(tiles, tiles);
+    pt.bounces = weak ? 5 : 6;
+    pt.transmissiveBounces = weak ? 8 : 10;
     pt.filterGlossyFactor = 0.4;
     pt.renderDelay = 0;
     pt.minSamples = 0;
     pt.fadeDuration = 0;
     pt.rasterizeScene = false;
-    pt.textureSize.set(2048, 2048);
+    pt.textureSize.set(weak ? 1024 : 2048, weak ? 1024 : 2048);
+    pt.renderToCanvas = false; // the denoise pass below draws the frame
     pt.setScene(scene, camera);
 
     const stop = () => opts.signal && opts.signal.aborted;
@@ -239,23 +247,60 @@
       dn.render(renderer);
     };
     try {
-      // timers rather than animation frames, so a background tab keeps rendering
-      await new Promise((resolve, reject) => {
-        let last = -1, ticks = 0;
-        const tick = () => {
-          if (stop()) return reject(new DOMException('cancelled', 'AbortError'));
-          // light: the render runs in the corner while people keep working, so it leaves the
-          // GPU more room between pieces and denoises the shown frame less often
-          const light = !!(opts.light && opts.light());
-          pt.renderSample();
-          ticks++;
-          if (!light || ticks % 6 === 0) denoise();
-          const n = Math.floor(pt.samples);
-          if (opts.onProgress && n !== last) { last = n; opts.onProgress(Math.min(n, total), total, canvas); }
-          if (n >= total) resolve(); else setTimeout(tick, light ? 45 : 12);
-        };
-        setTimeout(tick, 0);
-      });
+      // The picture is traced in small pieces. A batch of pieces goes to the GPU only after the
+      // batch before it is really finished (a fence tells us when), with a pause in between, so
+      // the GPU never has a queue of render work in front of the page itself. The fence answers
+      // about once per screen frame: a batch that fits in one frame grows, one that takes several
+      // shrinks. A GPU where even a single piece is too slow (phones) gets smaller pieces.
+      // Timers rather than animation frames, so a background tab keeps rendering.
+      const gl = renderer.getContext();
+      const now = () => performance.now();
+      const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+      const gpuDone = async () => {
+        const sync = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0);
+        gl.flush();
+        for (const t0 = now(); !lost && !stop() && now() - t0 < 8000;) {
+          await sleep(3);
+          if (gl.clientWaitSync(sync, 0, 0) !== gl.TIMEOUT_EXPIRED) break;
+        }
+        gl.deleteSync(sync);
+      };
+      let last = -1, shown = 0, batch = 1, slow = 0;
+      while (true) {
+        if (stop()) throw new DOMException('cancelled', 'AbortError');
+        if (lost) throw new Error('WebGL context lost');
+        // light: the render runs in the corner while people keep working, so it rests longer
+        // between batches and refreshes the shown frame less often
+        const light = !!(opts.light && opts.light());
+        // a hidden tab only gets a timer about once a second and nobody is looking at it, so
+        // there the pieces go out back to back for a quarter of a second, each waited for in place
+        const hidden = document.hidden;
+        const before = pt.samples, t0 = now();
+        let pieces = 0;
+        do {
+          pt.renderSample(); pieces++;
+          if (hidden) gl.finish();
+        } while (pt.samples !== before && !Number.isInteger(pt.samples) && (hidden ? now() - t0 < 250 : pieces < batch));
+        if (!hidden) await gpuDone();
+        const dt = now() - t0;
+        const traced = pt.samples !== before; // false while the shader is still compiling
+        if (traced && hidden) { if (dt / pieces > 70) slow++; }
+        else if (traced) {
+          if (dt < 24) batch = Math.min(Math.ceil(batch * 1.5), tiles * tiles);
+          else if (dt > 45) batch = Math.max(1, Math.floor(batch * 0.6));
+          if (pieces === 1 && dt > 70) slow++;
+        }
+        const passDone = traced && Number.isInteger(pt.samples);
+        if (passDone) {
+          if (slow > 2 && tiles < 32) { tiles = Math.min(32, tiles * 2); pt.tiles.set(tiles, tiles); batch = 1; }
+          slow = 0;
+        }
+        if (passDone || now() - shown > (light ? 1500 : 350)) { denoise(); shown = now(); }
+        const n = Math.floor(pt.samples);
+        if (opts.onProgress && n !== last) { last = n; opts.onProgress(Math.min(n, total), total, canvas); }
+        if (n >= total) break;
+        await sleep(hidden ? 0 : light ? Math.max(40, dt * 2) : dt * 0.3);
+      }
       denoise();
       const out = document.createElement('canvas');
       out.width = W; out.height = H;
@@ -282,11 +327,9 @@
   /* ---------- Render: one job at a time, shown in a dialog or as a small card in a corner ----------
      Leaving the dialog (outside click, Esc, another page, "Run in background") keeps the render
      going in the corner card; only Cancel stops it. */
-  const QUALITIES = () => [
-    ['draft', t('ui.draft'), 640, 800, 64],
-    ['good', t('ui.good'), 1080, 1350, 256],
-    ['studio', 'Studio', 2160, 2700, 512],
-  ];
+  const QUALITIES = () => (weakDevice()
+    ? [['draft', t('ui.draft'), 480, 600, 48], ['good', t('ui.good'), 800, 1000, 160], ['studio', 'Studio', 1280, 1600, 320]]
+    : [['draft', t('ui.draft'), 640, 800, 64], ['good', t('ui.good'), 1080, 1350, 256], ['studio', 'Studio', 2160, 2700, 512]]);
   let job = null; // { design, cam, q, ctrl, W, H, canvas, result, n, all, t0, state: 'running' | 'done' | 'failed' }
   let mode = null; // 'dialog' | 'dock' | null
   const views = new Set();
