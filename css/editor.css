@@ -1451,7 +1451,9 @@
 .blend-handle:focus-visible { outline: 2px solid var(--fg-accent); outline-offset: 2px; }
 
 /* 3D bar: drag hint + reset view */
-.preview-3d-hud { padding: 4px 4px 4px 14px; gap: 6px; }
+.preview-3d-hud { padding: 4px; gap: 4px; }
+/* a hint text in front of the buttons gets room on its side */
+.preview-3d-hud:has(.hud-hint) { padding-left: 14px; gap: 6px; }
 .preview-3d-hud .hud-hint { display: inline-flex; align-items: center; gap: 6px; }
 .preview-3d-hud svg { width: 14px; height: 14px; }
 .hud-reset { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; border-radius: 8px; font-size: 12px; font-weight: 600; color: var(--fg-text); background: var(--fg-field, #f2f2f4); transition: background 0.15s ease; }
