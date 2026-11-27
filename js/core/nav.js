@@ -1,7 +1,8 @@
 /* ==========================================================
    COSLAB — Navigation
    Desktop: floating pill nav with a sliding black indicator
-            (follows hover, settles back on the active route).
+            (stays on the active route; hover only changes the text colour,
+            keyboard focus still moves it so the focused item is visible).
    Mobile:  "Menu" button opens a full-screen overlay with
             large numbered links and a language row.
    ========================================================== */
@@ -108,10 +109,8 @@
     indicator = CL.h('span.nav-indicator', { 'aria-hidden': 'true' });
     nav.prepend(indicator);
     nav.querySelectorAll('a').forEach((a) => {
-      a.addEventListener('mouseenter', () => moveIndicatorTo(a));
       a.addEventListener('focus', () => moveIndicatorTo(a));
     });
-    nav.addEventListener('mouseleave', () => sync());
     nav.addEventListener('focusout', (e) => { if (!nav.contains(e.relatedTarget)) sync(); });
 
     toggle.innerHTML = '<span class="nav-toggle-label">Menu</span><span class="nav-toggle-bars"><i></i><i></i></span>';
