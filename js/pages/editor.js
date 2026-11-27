@@ -308,6 +308,14 @@
             setTimeout(() => saveB.focus(), 30);
           });
         }
+        // The way back leads to the page the Studio was opened from (the shape picker when unknown).
+        const origin = (() => {
+          let o = CL.studioOrigin;
+          if (!o) { try { o = JSON.parse(sessionStorage.getItem('coslab.studioOrigin')); } catch (e) { o = null; } }
+          const names = { home: 'nav.home', design: 'nav.design', gallery: 'nav.gallery', 'my-designs': 'nav.myDesigns' };
+          const ok = o && names[o.nav] && /^#\/[a-z-]*$/.test(o.hash || '');
+          return ok ? { hash: o.hash, label: t(names[o.nav]) } : { hash: '#/design', label: t('nav.design') };
+        })();
         async function leaveStudio(e) {
           if (!isDirty()) return; // nothing to lose: the link works as usual
           e.preventDefault();
@@ -317,7 +325,7 @@
             if (!saveNow()) { CL.toast(t('editor.quotaWarning'), 'info'); return; }
             CL.toast(t('editor.saved'));
           }
-          location.hash = '#/design';
+          location.hash = origin.hash;
         }
 
         const saveBtn = CL.h('button.btn.btn-sm.btn-outline', {
@@ -341,9 +349,9 @@
         const topbar = CL.h('header.editor-topbar', null,
           CL.h('div.editor-topbar-left', null,
             CL.h('a.studio-back-link', {
-              href: '#/design',
+              href: origin.hash,
               onclick: leaveStudio,
-              html: CL.icon('arrowLeft') + `<span>${t('nav.design')}</span>`,
+              html: CL.icon('arrowLeft') + `<span>${origin.label}</span>`,
             }),
             CL.h('div.editor-title-wrap', null, titleInput),
             CL.h('span.topbar-sep'),

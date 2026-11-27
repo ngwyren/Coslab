@@ -136,6 +136,11 @@
     app.innerHTML = '';
     document.body.classList.toggle('app-mode', !!page.appMode);
     markNav(route);
+    // the Studio remembers which page it was opened from: its way back leads there
+    if (route.page === 'editor' && current && current.route.page !== 'editor') {
+      CL.studioOrigin = { hash: ROUTES[current.r.key] ? '#/' + current.r.key : '#/', nav: current.route.nav };
+      try { sessionStorage.setItem('coslab.studioOrigin', JSON.stringify(CL.studioOrigin)); } catch (e) { /* no storage: this visit's own memory is enough */ }
+    }
     current = { route, r };
     cleanup = page.render(app, { query: r.query, sub: r.sub, anchor: route.anchor, rerender: !!opts.rerender });
     I18N.apply(document);

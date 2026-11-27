@@ -82,6 +82,34 @@
     return (s * 2 * Math.PI) / (W * H);
   };
 
+  /** One soft light from above, on the camera's left: it is what throws the light, soft-edged
+   *  shadow beside the product. It stands high, so the sides of a container never mirror it.
+   *  Its strength is a set share of the light the panorama itself throws on the floor. */
+  const KEY_UP = 0.96, KEY_SIDE = 1.0, KEY_SOFT = [0.2, 0.5], KEY_SHARE = 0.35; // radians, and its share
+  function addKey(data, W, H, facing) {
+    const front = Math.PI / 2 - facing, sky = floorLight(data, W, H);
+    const cE = Math.cos(KEY_UP), sE = Math.sin(KEY_UP), c0 = Math.cos(KEY_SOFT[0]), c1 = Math.cos(KEY_SOFT[1]);
+    const lobe = new Float32Array(W * H);
+    let own = 0;
+    for (let y = H >> 1; y < H; y++) { // the half that is overhead (rows run from the ground up)
+      const up = ((y + 0.5) / H - 0.5) * Math.PI, cu = Math.cos(up), su = Math.sin(up);
+      for (let x = 0; x < W; x++) {
+        const rel = ((x + 0.5) / W) * Math.PI * 2 - Math.PI - front; // angle from the camera, positive = left
+        const t = CL.clamp((cu * cE * Math.cos(rel - KEY_SIDE) + su * sE - c1) / (c0 - c1), 0, 1);
+        if (!t) continue;
+        lobe[y * W + x] = t * t * (3 - 2 * t); // full in the middle, fading to nothing at its edge
+        own += lobe[y * W + x] * su * cu;
+      }
+    }
+    own *= (2 * Math.PI) / (W * H); // what the lobe throws on the floor at strength 1
+    const k = own > 0 ? (KEY_SHARE * sky) / own : 0;
+    for (let i = 0; i < lobe.length; i++) {
+      if (!lobe[i]) continue;
+      const v = lobe[i] * k, j = i * 4;
+      data[j] += v; data[j + 1] += v; data[j + 2] += v;
+    }
+  }
+
   const panorama = (T, data, W, H) => {
     const tex = new T.DataTexture(data, W, H, T.RGBAFormat, T.FloatType);
     tex.mapping = T.EquirectangularReflectionMapping;
@@ -93,7 +121,7 @@
 
   /** Plain studio light (no file needed): an even, soft sky, a little brighter overhead. Used when
    *  the studio picture cannot be loaded. */
-  function plainEnv(T) {
+  function plainEnv(T, facing) {
     const W = 128, H = 64, data = new Float32Array(W * H * 4);
     for (let y = 0; y < H; y++) {
       const up = ((y + 0.5) / H - 0.5) * Math.PI; // rows run from the ground to straight overhead
@@ -104,6 +132,7 @@
         data[i + 3] = 1;
       }
     }
+    addKey(data, W, H, facing);
     return panorama(T, data, W, H);
   }
 
@@ -116,7 +145,7 @@
    *  soft, streak-free light; the right way up, bare lamps mirror in every glossy cap. */
   async function studioEnv(T, look, facing = 0) {
     let src;
-    try { src = await loadHDR(LOOKS[look].file); } catch (e) { console.warn(e); return plainEnv(T); }
+    try { src = await loadHDR(LOOKS[look].file); } catch (e) { console.warn(e); return plainEnv(T, facing); }
     const { w, h, rgb } = src, data = new Float32Array(w * h * 4);
     const lum = new Float32Array(w * h);
     let sum = 0, wt = 0;
@@ -155,6 +184,7 @@
     }
     const tone = (ENV_TONE * (LOOKS[look].level || 1)) / (fl / fw || 1);
     for (let i = 0; i < data.length; i += 4) { data[i] *= tone; data[i + 1] *= tone; data[i + 2] *= tone; }
+    addKey(data, w, h, facing);
     return panorama(T, data, w, h);
   }
   const ENV_LEVEL = 0.95; // first rough levelling of a studio picture (sets where lamps are capped)
@@ -163,9 +193,10 @@
 
   // Backdrop paper gives off its own even light, so wall and floor show exactly one colour under
   // any studio (a sweep that is only lit goes darker up the wall and to one side). PAPER_TONE: its
-  // brightness, as a share of the paper colour. PAPER_SHADOW: round the product the floor takes
-  // this share of its light from the studio instead, which is what draws the real, soft shadow.
-  const PAPER_TONE = 1, PAPER_SHADOW = 0.4;
+  // brightness, as a multiple of the paper colour (above 1: the tone mapping holds bright whites
+  // back). PAPER_SHADOW: round the product the floor takes this share of its light from the studio
+  // instead, which is what draws the real, soft shadow.
+  const PAPER_TONE = 1.2, PAPER_SHADOW = 0.75;
 
   /** Two round maps for the floor: how much studio light it takes (all of its share near the
    *  middle, none towards the rim) and how much it glows by itself (the rest, so that open floor
@@ -315,10 +346,10 @@
     return { scene, textures: Object.values(tex) };
   }
 
-  /** Backdrop paper chosen from the product: a pale wash of its most colourful part (cap or body),
-   *  or the tint inside a clear body), so the set suits the lipstick without competing with it.
-   *  Products with next to no colour
-   *  (clear, white, black, grey) get a warm neutral. */
+  /** Backdrop paper chosen from the product: nearly white, with only a breath of the colour of its
+   *  most colourful part (cap, body, or the tint inside a clear body), so the set suits the
+   *  lipstick without competing with it. Products with next to no colour (clear, white, black,
+   *  grey) get a warm white. */
   function backdropOf(design) {
     const I = CL.Preview3D.internals;
     let hue = 0, sat = 0, top = 0;
@@ -332,8 +363,8 @@
         if (score > top) { top = score; hue = h; sat = s; }
       });
     });
-    if (top < 0.1) return '#ebe8e3';
-    return CL.color.rgbToHex(CL.color.hsvToRgb({ h: hue, s: Math.min(0.07, 0.02 + sat * 0.08), v: 0.93 }));
+    if (top < 0.1) return '#f8f6f3';
+    return CL.color.rgbToHex(CL.color.hsvToRgb({ h: hue, s: Math.min(0.035, 0.01 + sat * 0.04), v: 0.98 }));
   }
 
   /** Phones, tablets and low-memory devices: the render is sized down so their GPU can finish it. */

@@ -24,7 +24,7 @@ commit.
 
 ```js
 // ids to render; leave empty to render every card
-const only = ['butter-cream', 'ruby-glass', 'seoul-blossom', 'graphite-red', 'champagne-toast'];
+const only = [];
 
 const T = CL.templates, seq = ['studioA', 'studioB', 'studioC', 'studioD'];
 const tallest = Math.max(...CL.models.MODELS.map((m) => m.h));
@@ -47,6 +47,8 @@ for (let i = 0; i < T.TEMPLATES.length; i++) {
 
 ## Status
 
-27 November 2026: 31 of the 36 cards follow this recipe. Still on older pictures (different
-framing and light): `butter-cream`, `ruby-glass`, `seoul-blossom`, `graphite-red`,
-`champagne-toast`. They are the ids listed in `only` above.
+27 November 2026: all 36 cards were rendered with this recipe. Right after that the renderer
+changed: the backdrop is now nearly white with only a breath of the product's colour, and a soft
+light from above throws a faint shadow. The pictures in `assets/archive/` still show the earlier,
+pinker backdrop without that shadow, so **all 36 need to be rendered again** (leave `only` empty).
+One test of the new look (Rouge 03) was checked; no full set has been made with it yet.
