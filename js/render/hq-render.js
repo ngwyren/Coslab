@@ -16,20 +16,22 @@
 
   const smooth = (a, b, x) => { const t = CL.clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
 
-  /** Studio light as an HDR panorama: soft surround, an overhead panel and two tall front softboxes. */
+  /** Studio light as an HDR panorama: soft surround, an overhead panel and two tall front softboxes.
+   *  The softboxes are wide and mild with feathered edges, so gloss surfaces catch a soft band of
+   *  light rather than a hard white streak. */
   function studioEnv(T) {
     const W = 1024, H = 512;
     const data = new Float32Array(W * H * 4);
     const box = (az, el, a0, w, e0, e1, k) => {
       let da = Math.abs(az - a0); if (da > Math.PI) da = Math.PI * 2 - da;
-      return k * (1 - smooth(w * 0.55, w, da)) * smooth(e0 - 0.1, e0, el) * (1 - smooth(e1, e1 + 0.1, el));
+      return k * (1 - smooth(w * 0.2, w, da)) * smooth(e0 - 0.25, e0, el) * (1 - smooth(e1, e1 + 0.25, el));
     };
     for (let y = 0; y < H; y++) {
       const el = (0.5 - (y + 0.5) / H) * Math.PI;
       for (let x = 0; x < W; x++) {
         const az = ((x + 0.5) / W) * Math.PI * 2 - Math.PI;
-        let l = el > 0 ? 0.85 + 0.2 * Math.sin(el) : 0.85 + 0.1 * Math.sin(el);
-        l += box(az, el, -0.95, 0.22, -0.3, 0.9, 6) + box(az, el, 1.1, 0.14, -0.2, 0.75, 3.5) + (el > 1.05 ? 3 * smooth(1.05, 1.2, el) : 0);
+        let l = el > 0 ? 0.95 + 0.2 * Math.sin(el) : 0.95 + 0.1 * Math.sin(el);
+        l += box(az, el, -0.95, 0.62, -0.3, 0.9, 1.9) + box(az, el, 1.1, 0.45, -0.2, 0.75, 1.1) + (el > 1.05 ? 3 * smooth(1.05, 1.2, el) : 0);
         const i = (y * W + x) * 4;
         data[i] = data[i + 1] = data[i + 2] = l;
         data[i + 3] = 1;
