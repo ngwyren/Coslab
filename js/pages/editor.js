@@ -258,11 +258,70 @@
           })
         );
 
+        /* ---- Unsaved changes: leaving the Studio asks whether to save first ---- */
+        const snap = (d) => JSON.stringify(Object.assign({}, d, { updatedAt: 0, createdAt: 0 }));
+        // the saved copy goes through the same clean-up as the draft, so only real edits count
+        const stored = design.id && CL.clone(CL.store.getDesign(design.id));
+        if (stored) {
+          stored.model = CL.models.getModel(stored.model).id;
+          CL.pantone.normalizeDesign(stored);
+          Object.values(stored.parts || {}).forEach((p) => { if (p && p.surface === 'clear') p.surface = 'clear-gradient'; });
+        }
+        let savedSnap = snap(stored || design); // a template opened and left untouched needs no question
+        const isDirty = () => snap(design) !== savedSnap;
+        function saveNow() {
+          const res = CL.store.saveDesign(design);
+          if (res) {
+            // keep the saved copy's identity, so saving again updates it instead of adding another
+            design.id = res.id;
+            design.createdAt = res.createdAt;
+            persistDraft();
+            savedSnap = snap(design);
+          }
+          return res;
+        }
+        /** Resolves 'save', 'discard' or 'stay'. */
+        function askLeave() {
+          return new Promise((resolve) => {
+            const host = document.getElementById('modalHost');
+            const close = (v) => {
+              document.removeEventListener('keydown', onKey, true);
+              bd.classList.add('is-leaving');
+              setTimeout(() => bd.remove(), 180);
+              resolve(v);
+            };
+            const onKey = (e) => { if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close('stay'); } };
+            const saveB = CL.h('button.btn.btn-primary', { type: 'button', text: t('editor.save'), onclick: () => close('save') });
+            const bd = CL.h('div.modal-backdrop', { onclick: (e) => { if (e.target === bd) close('stay'); } },
+              CL.h('div.modal', { role: 'dialog', 'aria-modal': 'true', 'aria-label': t('ui.leaveTitle') },
+                CL.h('h3', { text: t('ui.leaveTitle') }),
+                CL.h('p', { text: t('ui.leaveMsg') }),
+                CL.h('div.modal-actions.leave-actions', null,
+                  CL.h('button.btn.btn-ghost', { type: 'button', text: t('ui.leaveStay'), onclick: () => close('stay') }),
+                  CL.h('button.btn.btn-outline', { type: 'button', text: t('ui.leaveDiscard'), onclick: () => close('discard') }),
+                  saveB)));
+            host.replaceChildren(bd);
+            document.addEventListener('keydown', onKey, true);
+            setTimeout(() => saveB.focus(), 30);
+          });
+        }
+        async function leaveStudio(e) {
+          if (!isDirty()) return; // nothing to lose: the link works as usual
+          e.preventDefault();
+          const answer = await askLeave();
+          if (answer === 'stay') return;
+          if (answer === 'save') {
+            if (!saveNow()) { CL.toast(t('editor.quotaWarning'), 'info'); return; }
+            CL.toast(t('editor.saved'));
+          }
+          location.hash = '#/design';
+        }
+
         const saveBtn = CL.h('button.btn.btn-sm.btn-outline', {
           html: CL.icon('save') + `<span>${t('editor.save')}</span>`,
           'aria-label': t('editor.save'),
           onclick: () => {
-            const res = CL.store.saveDesign(design);
+            const res = saveNow();
             if (res) CL.toast(t('editor.saved'));
             else CL.toast(t('editor.quotaWarning'), 'info');
           },
@@ -280,6 +339,7 @@
           CL.h('div.editor-topbar-left', null,
             CL.h('a.studio-back-link', {
               href: '#/design',
+              onclick: leaveStudio,
               html: CL.icon('arrowLeft') + `<span>${t('nav.design')}</span>`,
             }),
             CL.h('div.editor-title-wrap', null, titleInput),
@@ -532,6 +592,11 @@
 
           const p3d = document.getElementById('preview3dHost');
           p3d.style.display = view === '3d' ? 'block' : 'none';
+          // the view that comes in fades up instead of popping
+          const shown = view === '3d' ? p3d : document.getElementById('canvasViewport');
+          shown.classList.remove('view-in');
+          void shown.offsetWidth;
+          shown.classList.add('view-in');
 
           if (view === '3d') {
             p3d.classList.toggle('is-loading', !window.THREE);
@@ -1221,7 +1286,7 @@
             nextBtn = CL.h('button.btn.btn-primary.studio-next-btn', {
               html: CL.icon('download') + `<span>${t('ui.exportDesign')}</span>`,
               onclick: () => {
-                CL.store.saveDesign(design);
+                saveNow();
                 CL.openExport(design);
               },
             });

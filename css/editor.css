@@ -1516,3 +1516,17 @@
 /* Studio controls are pills, like the top bar */
 .fg-seg, .fg-seg .fg-seg-btn { border-radius: 999px; }
 .studio-step-footer .btn, .studio-back-link { border-radius: 999px; }
+/* Render dialog and corner card leave as softly as they arrive */
+.hq-dock.is-leaving { animation: hq-dock-out 0.2s var(--ease-framer) forwards; pointer-events: none; }
+@keyframes hq-dock-out { to { opacity: 0; transform: translateY(12px) scale(0.96); } }
+.modal-backdrop.is-leaving { animation: hq-fade-out 0.18s ease forwards; pointer-events: none; }
+.modal-backdrop.is-leaving .modal { animation: hq-modal-out 0.18s ease forwards; }
+@keyframes hq-fade-out { to { opacity: 0; } }
+@keyframes hq-modal-out { to { opacity: 0; transform: scale(0.97); } }
+@media (prefers-reduced-motion: reduce) { .hq-dock.is-leaving, .modal-backdrop.is-leaving, .modal-backdrop.is-leaving .modal { animation-duration: 1ms; } }
+/* 2D / 3D switch: the incoming view fades up */
+.view-in { animation: view-in 0.32s var(--ease-framer) both; }
+@keyframes view-in { from { opacity: 0; } } /* opacity only: the canvas has its own zoom transform */
+@media (prefers-reduced-motion: reduce) { .view-in { animation: none; } }
+/* three answers in the leave dialog: they wrap instead of running past the edge */
+.leave-actions { flex-wrap: wrap; }

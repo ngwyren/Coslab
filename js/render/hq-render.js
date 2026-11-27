@@ -196,6 +196,9 @@
    * Render a design. opts: { width, height, samples, camera ({position, quaternion, fov}),
    * onProgress(samples, total, canvas), signal }. Resolves with a 2D canvas of the finished image.
    */
+  /** How far (radians) a printed design may be turned away from the camera in a render. */
+  const PRINT_YAW = 0.45;
+
   async function renderHQ(design, opts = {}) {
     const { T, PT, Pass } = await load();
     const W = opts.width || 1080, H = opts.height || 1350, total = opts.samples || 256;
@@ -220,6 +223,13 @@
       // keep the eye close to level, like a product photo
       dir.y = CL.clamp(dir.y, -0.05 * dir.length(), 0.25 * dir.length());
       dir.normalize();
+    }
+    // The live view turns by itself, so the moment of the click could show the print from the
+    // side or the back: a design with print is always shot with the printed face to the camera.
+    if ((design.layers || []).some((l) => l.visible !== false)) {
+      const yaw = CL.clamp(Math.atan2(dir.x, dir.z), -PRINT_YAW, PRINT_YAW), flat = Math.hypot(dir.x, dir.z);
+      dir.x = Math.sin(yaw) * flat;
+      dir.z = Math.cos(yaw) * flat;
     }
     const fill = opts.fill || 0.66;
     const D = (I.TUBE_H / fill) / (2 * Math.tan((camera.fov * Math.PI) / 360));
@@ -389,7 +399,9 @@
       cancelAnimationFrame(view._raf); // frames are drawn by hand below, so a hidden tab works too
       if (cam) {
         const d = cam.position.clone().sub(view.target);
-        view.rotY = view.targetRotY = Math.atan2(d.x, d.z);
+        const printed = (design.layers || []).some((l) => l.visible !== false);
+        const yaw = Math.atan2(d.x, d.z);
+        view.rotY = view.targetRotY = printed ? CL.clamp(yaw, -PRINT_YAW, PRINT_YAW) : yaw;
         view.rotX = view.targetRotX = CL.clamp(Math.asin(CL.clamp(d.y / (d.length() || 1), -1, 1)), -0.05, 0.25);
       }
       view._resize();
@@ -490,7 +502,9 @@
     if (!on) {
       if (dialogEl) {
         views.delete(dialogEl._sync);
-        if (dialogEl.isConnected) host.replaceChildren();
+        const gone = dialogEl;
+        gone.classList.add('is-leaving'); // fades out, then goes
+        setTimeout(() => gone.remove(), 180);
         dialogEl = null;
         window.removeEventListener('hashchange', toDock);
         if (dialogOpener && dialogOpener.isConnected) dialogOpener.focus();
@@ -553,7 +567,13 @@
   let dockEl = null;
   function showDock(on) {
     if (!on) {
-      if (dockEl) { views.delete(dockEl._sync); dockEl.remove(); dockEl = null; }
+      if (dockEl) {
+        const gone = dockEl;
+        views.delete(gone._sync);
+        gone.classList.add('is-leaving'); // slides out, then goes
+        setTimeout(() => gone.remove(), 200);
+        dockEl = null;
+      }
       if (mode === 'dock') mode = null;
       return;
     }
