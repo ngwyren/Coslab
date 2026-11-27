@@ -1482,3 +1482,23 @@
 .dots { gap: 12px; row-gap: 14px; }
 .fg-section .pp-trigger, .fg-section .color-note-mini { margin-top: 2px; }
 @media (max-width: 760px) { .fg-section { padding: 20px 16px; gap: 18px; } .dots { gap: 10px; } }
+
+/* Render running in a corner card while people keep working */
+.hq-dock {
+  position: fixed; z-index: 150; left: 16px; bottom: 76px;
+  display: flex; gap: 10px; align-items: stretch; width: 330px; max-width: calc(100vw - 32px); padding: 8px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-md);
+  box-shadow: var(--shadow-lg); color: var(--text);
+  animation: hq-dock-in 0.28s var(--ease-framer);
+}
+@keyframes hq-dock-in { from { opacity: 0; transform: translateY(12px) scale(0.96); } }
+[dir="rtl"] .hq-dock { left: auto; right: 16px; }
+.hq-dock-thumb { flex: none; width: 76px; height: 95px; padding: 0; border: 0; border-radius: var(--r-sm); overflow: hidden; background: #f0f0f0; cursor: zoom-in; }
+.hq-dock-thumb canvas { display: block; width: 100%; height: 100%; object-fit: cover; }
+.hq-dock-body { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 8px; }
+.hq-dock-head { display: flex; align-items: center; gap: 2px; }
+.hq-dock-head strong { flex: 1; min-width: 0; font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hq-dock-status { font-size: 12px; color: var(--muted); }
+.hq-dock.is-done .hq-dock-status { color: var(--text); }
+@media (prefers-reduced-motion: reduce) { .hq-dock { animation: none; } }
+.hq-dock [hidden], .hq-modal [hidden] { display: none !important; }

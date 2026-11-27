@@ -246,6 +246,8 @@
       uploadHint: "PNG, SVG, JPG · 인쇄 영역에 자동 맞춤",
       logoSize: "로고 크기",
       removeBg: "흰 배경 제거",
+      runInBackground: "백그라운드에서 실행",
+      openRender: "렌더 열기",
       removeBgFailed: "이 이미지의 배경을 제거할 수 없습니다.",
       uploadFailed: "이미지를 읽을 수 없습니다. PNG, JPG 또는 SVG 파일을 사용해 주세요.",
       draftNotSaved: "브라우저 저장 공간이 가득 차 이 변경 사항이 저장되지 않았습니다. 큰 로고를 빼거나 저장함의 이전 디자인을 삭제해 주세요.",

@@ -246,6 +246,8 @@
       uploadHint: "PNG、SVG、JPG · 自动适配印刷区域",
       logoSize: "标志大小",
       removeBg: "去除白色背景",
+      runInBackground: "后台运行",
+      openRender: "打开渲染",
       removeBgFailed: "无法去除此图片的背景。",
       uploadFailed: "无法读取此图片，请尝试 PNG、JPG 或 SVG 文件。",
       draftNotSaved: "浏览器存储已满，此更改未保存。请移除较大的标志或在“已保存”中删除旧设计。",

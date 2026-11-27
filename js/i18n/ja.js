@@ -246,6 +246,8 @@
       uploadHint: "PNG・SVG・JPG · 印刷エリアに自動で合わせます",
       logoSize: "ロゴサイズ",
       removeBg: "白背景を削除",
+      runInBackground: "バックグラウンドで実行",
+      openRender: "レンダーを開く",
       removeBgFailed: "この画像の背景を削除できませんでした。",
       uploadFailed: "画像を読み込めませんでした。PNG、JPG、SVG ファイルをお試しください。",
       draftNotSaved: "ブラウザの保存容量がいっぱいのため、この変更は保存されていません。大きなロゴを外すか、保存済みの古いデザインを削除してください。",

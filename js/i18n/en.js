@@ -256,6 +256,8 @@
       uploadHint: "PNG, SVG, JPG · Auto-fits the print area",
       logoSize: "Logo size",
       removeBg: "Remove background",
+      runInBackground: "Run in background",
+      openRender: "Open render",
       removeBgFailed: "Could not remove the background from this image.",
       uploadFailed: "Could not read this image. Try a PNG, JPG or SVG file.",
       draftNotSaved: "Browser storage is full, so this change is not saved. Remove a large logo or delete old designs in Saved.",

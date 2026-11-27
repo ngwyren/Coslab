@@ -241,14 +241,18 @@
     try {
       // timers rather than animation frames, so a background tab keeps rendering
       await new Promise((resolve, reject) => {
-        let last = -1;
+        let last = -1, ticks = 0;
         const tick = () => {
           if (stop()) return reject(new DOMException('cancelled', 'AbortError'));
+          // light: the render runs in the corner while people keep working, so it leaves the
+          // GPU more room between pieces and denoises the shown frame less often
+          const light = !!(opts.light && opts.light());
           pt.renderSample();
-          denoise();
+          ticks++;
+          if (!light || ticks % 6 === 0) denoise();
           const n = Math.floor(pt.samples);
           if (opts.onProgress && n !== last) { last = n; opts.onProgress(Math.min(n, total), total, canvas); }
-          if (n >= total) resolve(); else setTimeout(tick, 12);
+          if (n >= total) resolve(); else setTimeout(tick, light ? 45 : 12);
         };
         setTimeout(tick, 0);
       });
@@ -258,6 +262,10 @@
       out.getContext('2d').drawImage(canvas, 0, 0);
       return out;
     } finally {
+      // The path tracer compiles its shader in the background (three.js polls the program
+      // every 10 ms). Disposing in the middle of that leaves the poll with no program
+      // ("reading 'isReady'"), so let a pending compile settle first (bounded wait).
+      for (let i = 0; i < 300 && pt.isCompiling; i++) await new Promise((r) => setTimeout(r, 20));
       const safe = (fn) => { try { fn(); } catch (e) { /* the library's own clean-up can trip on parts it never built */ } };
       safe(() => dn.material.dispose());
       safe(() => pt.dispose());
@@ -271,103 +279,193 @@
 
   CL.renderHQ = renderHQ;
 
-  /** Render dialog: pick a quality, watch the image clear up, then save the PNG. */
-  CL.openRender = function (source, camera) {
-    const design = CL.clone(source);
-    const QUALITY = [
-      ['draft', t('ui.draft'), 640, 800, 64],
-      ['good', t('ui.good'), 1080, 1350, 256],
-      ['studio', 'Studio', 2160, 2700, 512],
-    ];
-    let q = CL.store.settings.renderQuality || 'good';
-    if (!QUALITY.some(([id]) => id === q)) q = 'good';
-    const cam = camera ? { position: camera.position.clone(), quaternion: camera.quaternion.clone(), fov: camera.fov } : null;
+  /* ---------- Render: one job at a time, shown in a dialog or as a small card in a corner ----------
+     Leaving the dialog (outside click, Esc, another page, "Run in background") keeps the render
+     going in the corner card; only Cancel stops it. */
+  const QUALITIES = () => [
+    ['draft', t('ui.draft'), 640, 800, 64],
+    ['good', t('ui.good'), 1080, 1350, 256],
+    ['studio', 'Studio', 2160, 2700, 512],
+  ];
+  let job = null; // { design, cam, q, ctrl, W, H, canvas, result, n, all, t0, state: 'running' | 'done' | 'failed' }
+  let mode = null; // 'dialog' | 'dock' | null
+  const views = new Set();
+  const emit = () => views.forEach((fn) => fn());
 
+  function savePng() {
+    if (!job || !job.result) return;
+    const a = document.createElement('a');
+    a.download = `${(job.design.name || 'COSLAB').replace(/[\\/:*?"<>|]+/g, ' ').trim()} - render.png`;
+    a.href = job.result.toDataURL('image/png');
+    a.click();
+  }
+
+  function statusText() {
+    if (!job) return '';
+    if (job.state === 'failed') return t('ui.renderFail');
+    if (job.state === 'done') return `${t('ui.done')} · ${job.W} × ${job.H}px`;
+    if (!job.n) return t('ui.preparing');
+    const left = job.n > 2 ? Math.round((((performance.now() - job.t0) / job.n) * (job.all - job.n)) / 1000) : null;
+    return t('ui.pass', { n: job.n, all: job.all }) + (left != null ? ' · ' + t('ui.left', { s: left }) : '');
+  }
+  const progress = () => (!job ? 0 : job.state === 'done' ? 100 : (job.n / job.all) * 100);
+
+  async function start(design, cam, q) {
+    if (job && job.ctrl) job.ctrl.abort();
+    const [, , W, H, total] = QUALITIES().find(([id]) => id === q);
+    const ctrl = new AbortController();
+    const me = (job = { design, cam, q, ctrl, W, H, canvas: null, result: null, n: 0, all: total, t0: performance.now(), state: 'running' });
+    emit();
+    try {
+      const out = await renderHQ(design, {
+        width: W, height: H, samples: total, camera: cam, signal: ctrl.signal,
+        // in the corner card (or a hidden tab) the render gives way to the rest of the page
+        light: () => mode !== 'dialog' || document.hidden,
+        onProgress: (n, all, canvas) => {
+          if (job !== me) return;
+          me.n = n; me.all = all; me.canvas = canvas;
+          emit();
+        },
+      });
+      if (job !== me) return;
+      Object.assign(me, { result: out, canvas: out, state: 'done', ctrl: null });
+      emit();
+    } catch (e) {
+      if (e && e.name === 'AbortError') return;
+      console.error(e);
+      if (job === me) { Object.assign(me, { state: 'failed', ctrl: null }); emit(); }
+    }
+  }
+
+  /** Stop (or dismiss) the render and close whatever shows it. */
+  function cancel() {
+    if (job && job.ctrl) job.ctrl.abort();
+    job = null;
+    showDialog(false);
+    showDock(false);
+  }
+  /** Leave the dialog: a running or finished render goes on in the corner. */
+  function toDock() {
+    showDialog(false);
+    if (job && job.state !== 'failed') showDock(true);
+    else job = null;
+  }
+  function toDialog() {
+    showDock(false);
+    showDialog(true);
+  }
+
+  /* ---- dialog ---- */
+  let dialogEl = null, dialogOpener = null;
+  function showDialog(on) {
     const host = document.getElementById('modalHost');
-    const opener = document.activeElement;
-    let job = null, result = null, open = true;
-
+    if (!on) {
+      if (dialogEl) {
+        views.delete(dialogEl._sync);
+        if (dialogEl.isConnected) host.replaceChildren();
+        dialogEl = null;
+        window.removeEventListener('hashchange', toDock);
+        if (dialogOpener && dialogOpener.isConnected) dialogOpener.focus();
+      }
+      if (mode === 'dialog') mode = null;
+      return;
+    }
+    mode = 'dialog';
+    dialogOpener = document.activeElement;
     const stage = CL.h('div.ex-preview.hq-stage');
     const bar = CL.h('i.hq-bar-fill');
     const status = CL.h('p.hq-status', { 'aria-live': 'polite' });
-    const saveBtn = CL.h('button.btn.btn-primary', {
-      type: 'button', disabled: true,
-      html: CL.icon('download') + `<span>${t('ui.savePng')}</span>`,
-      onclick: () => {
-        if (!result) return;
-        const a = document.createElement('a');
-        a.download = `${(design.name || 'COSLAB').replace(/[\\/:*?"<>|]+/g, ' ').trim()} - render.png`;
-        a.href = result.toDataURL('image/png');
-        a.click();
-      },
-    });
+    const saveBtn = CL.h('button.btn.btn-primary', { type: 'button', html: CL.icon('download') + `<span>${t('ui.savePng')}</span>`, onclick: savePng });
+    const bgBtn = CL.h('button.btn.btn-outline', { type: 'button', text: t('ui.runInBackground'), onclick: toDock });
+    const stopBtn = CL.h('button.btn.btn-ghost', { type: 'button', onclick: cancel });
     const pick = CL.h('div.segmented.block.hq-quality', { role: 'radiogroup', 'aria-label': t('ui.quality') },
-      ...QUALITY.map(([id, label, w, h]) => CL.h('button', {
+      ...QUALITIES().map(([id, label, w, h]) => CL.h('button', {
         type: 'button', role: 'radio', 'data-id': id, title: `${w} × ${h}px`,
-        onclick: () => { if (q !== id) { q = id; CL.store.saveSettings({ renderQuality: q }); start(); } },
+        onclick: () => {
+          if (!job || job.q === id) return;
+          CL.store.saveSettings({ renderQuality: id });
+          start(job.design, job.cam, id);
+        },
       }, label)));
-
-    const close = () => {
-      open = false;
-      if (job) job.abort();
-      host.replaceChildren();
-      window.removeEventListener('hashchange', close);
-      if (opener && opener.isConnected) opener.focus();
-    };
-
-    async function start() {
-      if (job) job.abort();
-      const ctrl = (job = new AbortController());
-      const [, , W, H, total] = QUALITY.find(([id]) => id === q);
-      pick.querySelectorAll('button').forEach((b) => { const on = b.dataset.id === q; b.classList.toggle('is-active', on); b.setAttribute('aria-checked', String(on)); });
-      result = null;
-      saveBtn.disabled = true;
-      bar.style.width = '0%';
-      status.textContent = t('ui.preparing');
-      const t0 = performance.now();
-      try {
-        const out = await renderHQ(design, {
-          width: W, height: H, samples: total, camera: cam, signal: ctrl.signal,
-          onProgress: (n, all, canvas) => {
-            if (ctrl !== job || !open) return;
-            if (canvas.parentNode !== stage) stage.replaceChildren(canvas);
-            bar.style.width = `${(n / all) * 100}%`;
-            const left = n > 2 ? Math.round(((performance.now() - t0) / n) * (all - n) / 1000) : null;
-            status.textContent = t('ui.pass', { n, all }) + (left != null ? ' · ' + t('ui.left', { s: left }) : '');
-          },
-        });
-        if (ctrl !== job || !open) return;
-        result = out;
-        stage.replaceChildren(out);
-        bar.style.width = '100%';
-        status.textContent = `${t('ui.done')} · ${W} × ${H}px`;
-        saveBtn.disabled = false;
-        saveBtn.focus();
-      } catch (e) {
-        if (e && e.name === 'AbortError') return;
-        console.error(e);
-        if (ctrl === job && open) status.textContent = t('ui.renderFail');
-      }
-    }
-
     const modal = CL.h('div.modal.ex-modal.hq-modal', { role: 'dialog', 'aria-modal': 'true', 'aria-label': t('ui.renderTitle') },
       stage,
       CL.h('div.ex-side', null,
         CL.h('div.ex-head', null,
           CL.h('h3', { text: t('ui.renderTitle') }),
-          CL.h('button.icon-btn.sm', { type: 'button', 'aria-label': t('common.close'), html: CL.icon('close'), onclick: close })),
+          CL.h('button.icon-btn.sm', { type: 'button', 'aria-label': t('common.close'), title: t('common.close'), html: CL.icon('close'), onclick: toDock })),
         CL.h('p.hq-note', { text: t('ui.renderNote') }),
         pick,
         CL.h('div.hq-bar', null, bar),
         status,
-        CL.h('div.modal-actions', null,
-          CL.h('button.btn.btn-ghost', { type: 'button', text: t('common.close'), onclick: close }),
-          saveBtn))
-    );
-    const bd = CL.h('div.modal-backdrop', { onclick: (e) => { if (e.target === bd) close(); } }, modal);
-    bd.addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Escape') { e.preventDefault(); close(); } });
-    window.addEventListener('hashchange', close);
+        CL.h('div.modal-actions', null, stopBtn, bgBtn, saveBtn)));
+    const bd = CL.h('div.modal-backdrop', { onclick: (e) => { if (e.target === bd) toDock(); } }, modal);
+    bd.addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Escape') { e.preventDefault(); toDock(); } });
+    bd._sync = () => {
+      if (!job) return;
+      pick.querySelectorAll('button').forEach((b) => { const on = b.dataset.id === job.q; b.classList.toggle('is-active', on); b.setAttribute('aria-checked', String(on)); });
+      if (job.canvas && job.canvas.parentNode !== stage) stage.replaceChildren(job.canvas);
+      if (!job.canvas) stage.replaceChildren();
+      bar.style.width = `${progress()}%`;
+      status.textContent = statusText();
+      saveBtn.disabled = job.state !== 'done';
+      bgBtn.hidden = job.state !== 'running';
+      stopBtn.textContent = job.state === 'running' ? t('common.cancel') : t('common.close');
+    };
+    dialogEl = bd;
+    views.add(bd._sync);
+    window.addEventListener('hashchange', toDock);
     host.replaceChildren(bd);
-    start();
+    bd._sync();
+    (job && job.state === 'done' ? saveBtn : bgBtn).focus();
+  }
+
+  /* ---- corner card ---- */
+  let dockEl = null;
+  function showDock(on) {
+    if (!on) {
+      if (dockEl) { views.delete(dockEl._sync); dockEl.remove(); dockEl = null; }
+      if (mode === 'dock') mode = null;
+      return;
+    }
+    mode = 'dock';
+    if (dockEl) { dockEl._sync(); return; }
+    const thumb = CL.h('button.hq-dock-thumb', { type: 'button', title: t('ui.openRender'), 'aria-label': t('ui.openRender'), onclick: toDialog });
+    const bar = CL.h('i.hq-bar-fill');
+    const status = CL.h('span.hq-dock-status', { 'aria-live': 'polite' });
+    const saveBtn = CL.h('button.icon-btn.sm', { type: 'button', title: t('ui.savePng'), 'aria-label': t('ui.savePng'), html: CL.icon('download'), onclick: savePng });
+    const openBtn = CL.h('button.icon-btn.sm', { type: 'button', title: t('ui.openRender'), 'aria-label': t('ui.openRender'), html: CL.icon('image'), onclick: toDialog });
+    const closeBtn = CL.h('button.icon-btn.sm', { type: 'button', html: CL.icon('close'), onclick: cancel });
+    const el = CL.h('aside.hq-dock', { 'aria-label': t('ui.renderTitle') },
+      thumb,
+      CL.h('div.hq-dock-body', null,
+        CL.h('div.hq-dock-head', null, CL.h('strong', { text: t('ui.renderTitle') }), openBtn, saveBtn, closeBtn),
+        CL.h('div.hq-bar', null, bar),
+        status));
+    el._sync = () => {
+      if (!job) return;
+      if (job.canvas && job.canvas.parentNode !== thumb) thumb.replaceChildren(job.canvas);
+      bar.style.width = `${progress()}%`;
+      status.textContent = statusText();
+      saveBtn.hidden = job.state !== 'done';
+      const stopLabel = job.state === 'running' ? t('common.cancel') : t('common.close');
+      closeBtn.title = stopLabel;
+      closeBtn.setAttribute('aria-label', stopLabel);
+      el.classList.toggle('is-done', job.state === 'done');
+    };
+    dockEl = el;
+    views.add(el._sync);
+    document.body.append(el);
+    el._sync();
+  }
+
+  /** Render dialog: pick a quality, watch the image clear up, then save the PNG. */
+  CL.openRender = function (source, camera) {
+    const design = CL.clone(source);
+    let q = CL.store.settings.renderQuality || 'good';
+    if (!QUALITIES().some(([id]) => id === q)) q = 'good';
+    const cam = camera ? { position: camera.position.clone(), quaternion: camera.quaternion.clone(), fov: camera.fov } : null;
+    showDock(false);
+    start(design, cam, q);
+    showDialog(true);
   };
 })(window.CL);

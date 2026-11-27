@@ -246,6 +246,8 @@
       uploadHint: "PNG, SVG, JPG · Tự động căn vào vùng in",
       logoSize: "Cỡ logo",
       removeBg: "Xóa nền trắng",
+      runInBackground: "Chạy nền",
+      openRender: "Mở bản render",
       removeBgFailed: "Không xóa được nền của ảnh này.",
       uploadFailed: "Không đọc được ảnh này. Hãy thử file PNG, JPG hoặc SVG.",
       draftNotSaved: "Bộ nhớ trình duyệt đã đầy nên thay đổi này chưa được lưu. Hãy bỏ bớt logo lớn hoặc xóa thiết kế cũ trong mục Đã lưu.",

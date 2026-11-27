@@ -246,6 +246,8 @@
       uploadHint: "PNG, SVG, JPG · S'ajuste automatiquement à la zone d'impression",
       logoSize: "Taille du logo",
       removeBg: "Retirer le fond blanc",
+      runInBackground: "Continuer en arrière-plan",
+      openRender: "Ouvrir le rendu",
       removeBgFailed: "Impossible de retirer le fond de cette image.",
       uploadFailed: "Impossible de lire cette image. Essayez un fichier PNG, JPG ou SVG.",
       draftNotSaved: "Le stockage du navigateur est plein : cette modification n’est pas enregistrée. Retirez un grand logo ou supprimez d’anciens designs dans Enregistrés.",
