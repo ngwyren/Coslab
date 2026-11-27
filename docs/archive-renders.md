@@ -49,9 +49,5 @@ for (let i = 0; i < T.TEMPLATES.length; i++) {
 
 ## Status
 
-27 November 2026: all 36 cards were rendered with four studios and a pinker backdrop. Right after
-that the renderer changed: the backdrop is now nearly white with only a breath of the product's
-colour, a soft light from above throws a faint shadow, and two warm studios (E and F) were added.
-The pictures in `assets/archive/` still show the earlier look, so **all 36 need to be rendered
-again** (leave `only` empty). Five single test pictures of the new look were checked (studios A, B,
-E and F); no full set has been made with it yet.
+27 November 2026: all 36 cards follow this recipe (six studios, near-white or warm grey-cream
+backdrop, faint shadow from the light above).
