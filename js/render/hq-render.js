@@ -327,9 +327,15 @@
   /* ---------- Render: one job at a time, shown in a dialog or as a small card in a corner ----------
      Leaving the dialog (outside click, Esc, another page, "Run in background") keeps the render
      going in the corner card; only Cancel stops it. */
-  const QUALITIES = () => (weakDevice()
-    ? [['draft', t('ui.draft'), 480, 600, 48], ['good', t('ui.good'), 800, 1000, 160], ['studio', 'Studio', 1280, 1600, 320]]
-    : [['draft', t('ui.draft'), 640, 800, 64], ['good', t('ui.good'), 1080, 1350, 256], ['studio', 'Studio', 2160, 2700, 512]]);
+  /** Address of the render worker (js/core/config.js); empty when the site has none. */
+  const aiUrl = () => ((window.COSLAB_CONFIG || {}).renderApi || '').trim();
+  const QUALITIES = () => [
+    // AI: a quick 3D picture from this device, finished (light, reflections, clean-up) by the render worker
+    ...(aiUrl() ? [['ai', 'AI', 1024, 1280, 1]] : []),
+    ...(weakDevice()
+      ? [['draft', t('ui.draft'), 480, 600, 48], ['good', t('ui.good'), 800, 1000, 160], ['studio', 'Studio', 1280, 1600, 320]]
+      : [['draft', t('ui.draft'), 640, 800, 64], ['good', t('ui.good'), 1080, 1350, 256], ['studio', 'Studio', 2160, 2700, 512]]),
+  ];
   let job = null; // { design, cam, q, ctrl, W, H, canvas, result, n, all, t0, state: 'running' | 'done' | 'failed' }
   let mode = null; // 'dialog' | 'dock' | null
   const views = new Set();
@@ -338,20 +344,71 @@
   function savePng() {
     if (!job || !job.result) return;
     const a = document.createElement('a');
-    a.download = `${(job.design.name || 'COSLAB').replace(/[\\/:*?"<>|]+/g, ' ').trim()} - render.png`;
+    a.download = `${(job.design.name || 'COSLAB').replace(/[\/:*?"<>|]+/g, ' ').trim()} - render.png`;
     a.href = job.result.toDataURL('image/png');
     a.click();
   }
 
   function statusText() {
     if (!job) return '';
-    if (job.state === 'failed') return t('ui.renderFail');
+    if (job.state === 'failed') return t(job.q === 'ai' ? 'ui.aiFail' : 'ui.renderFail');
     if (job.state === 'done') return `${t('ui.done')} · ${job.W} × ${job.H}px`;
+    if (job.q === 'ai') return t('ui.aiWorking');
     if (!job.n) return t('ui.preparing');
     const left = job.n > 2 ? Math.round((((performance.now() - job.t0) / job.n) * (job.all - job.n)) / 1000) : null;
     return t('ui.pass', { n: job.n, all: job.all }) + (left != null ? ' · ' + t('ui.left', { s: left }) : '');
   }
-  const progress = () => (!job ? 0 : job.state === 'done' ? 100 : (job.n / job.all) * 100);
+  const progress = () => (!job ? 0 : job.state === 'done' ? 100 : job.q === 'ai' ? (job.canvas ? 60 : 15) : (job.n / job.all) * 100);
+
+  /** A quick picture of the design from the ordinary (not path traced) 3D view, at the given camera angle. */
+  async function snapshot(design, cam, W, H) {
+    await CL.loadThree();
+    const host = CL.h('div', { 'aria-hidden': 'true', style: { position: 'fixed', left: '-10000px', top: '0', width: `${W / 2}px`, height: `${H / 2}px`, pointerEvents: 'none' } });
+    document.body.append(host);
+    const view = new CL.Preview3D(host, { autoRotate: false, interactive: false });
+    try {
+      if (!view.ok || !(await view.setDesign(design))) throw new Error('3D view unavailable');
+      cancelAnimationFrame(view._raf); // frames are drawn by hand below, so a hidden tab works too
+      if (cam) {
+        const d = cam.position.clone().sub(view.target);
+        view.rotY = view.targetRotY = Math.atan2(d.x, d.z);
+        view.rotX = view.targetRotX = CL.clamp(Math.asin(CL.clamp(d.y / (d.length() || 1), -1, 1)), -0.05, 0.25);
+      }
+      view._resize();
+      view._goHome();
+      view.dist = view.targetDist = view.dist * 1.18; // air around the container, like a product photo
+      view._loop(0);
+      cancelAnimationFrame(view._raf);
+      const out = document.createElement('canvas');
+      out.width = W; out.height = H;
+      const ctx = out.getContext('2d');
+      ctx.fillStyle = '#f2f2f2';
+      ctx.fillRect(0, 0, W, H);
+      ctx.drawImage(view.renderer.domElement, 0, 0, W, H);
+      return out;
+    } finally {
+      view.dispose();
+      host.remove();
+    }
+  }
+
+  /** The finished picture for a quick one, from the render worker. */
+  async function aiFinish(base, signal) {
+    const res = await fetch(aiUrl(), {
+      method: 'POST', signal,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image: base.toDataURL('image/jpeg', 0.9) }),
+    });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok || !body.image) throw new Error(body.error || `render service ${res.status}`);
+    const img = new Image();
+    img.src = body.image;
+    await img.decode();
+    const out = document.createElement('canvas');
+    out.width = img.naturalWidth; out.height = img.naturalHeight;
+    out.getContext('2d').drawImage(img, 0, 0);
+    return out;
+  }
 
   async function start(design, cam, q) {
     if (job && job.ctrl) job.ctrl.abort();
@@ -360,17 +417,28 @@
     const me = (job = { design, cam, q, ctrl, W, H, canvas: null, result: null, n: 0, all: total, t0: performance.now(), state: 'running' });
     emit();
     try {
-      const out = await renderHQ(design, {
-        width: W, height: H, samples: total, camera: cam, signal: ctrl.signal,
-        // in the corner card (or a hidden tab) the render gives way to the rest of the page
-        light: () => mode !== 'dialog' || document.hidden,
-        onProgress: (n, all, canvas) => {
-          if (job !== me) return;
-          me.n = n; me.all = all; me.canvas = canvas;
-          emit();
-        },
-      });
-      if (job !== me) return;
+      let out;
+      if (q === 'ai') {
+        const base = await snapshot(design, cam, W, H);
+        if (job !== me) return;
+        me.canvas = base; // shown while the worker is busy
+        emit();
+        out = await aiFinish(base, ctrl.signal);
+        if (job !== me) return;
+        me.W = out.width; me.H = out.height;
+      } else {
+        out = await renderHQ(design, {
+          width: W, height: H, samples: total, camera: cam, signal: ctrl.signal,
+          // in the corner card (or a hidden tab) the render gives way to the rest of the page
+          light: () => mode !== 'dialog' || document.hidden,
+          onProgress: (n, all, canvas) => {
+            if (job !== me) return;
+            me.n = n; me.all = all; me.canvas = canvas;
+            emit();
+          },
+        });
+        if (job !== me) return;
+      }
       Object.assign(me, { result: out, canvas: out, state: 'done', ctrl: null });
       emit();
     } catch (e) {
@@ -419,6 +487,7 @@
     const bar = CL.h('i.hq-bar-fill');
     const status = CL.h('p.hq-status', { 'aria-live': 'polite' });
     const saveBtn = CL.h('button.btn.btn-primary', { type: 'button', html: CL.icon('download') + `<span>${t('ui.savePng')}</span>`, onclick: savePng });
+    const note = CL.h('p.hq-note');
     const bgBtn = CL.h('button.btn.btn-outline', { type: 'button', text: t('ui.runInBackground'), onclick: toDock });
     const stopBtn = CL.h('button.btn.btn-ghost', { type: 'button', onclick: cancel });
     const pick = CL.h('div.segmented.block.hq-quality', { role: 'radiogroup', 'aria-label': t('ui.quality') },
@@ -436,7 +505,7 @@
         CL.h('div.ex-head', null,
           CL.h('h3', { text: t('ui.renderTitle') }),
           CL.h('button.icon-btn.sm', { type: 'button', 'aria-label': t('common.close'), title: t('common.close'), html: CL.icon('close'), onclick: toDock })),
-        CL.h('p.hq-note', { text: t('ui.renderNote') }),
+        note,
         pick,
         CL.h('div.hq-bar', null, bar),
         status,
@@ -445,6 +514,7 @@
     bd.addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Escape') { e.preventDefault(); toDock(); } });
     bd._sync = () => {
       if (!job) return;
+      note.textContent = t(job.q === 'ai' ? 'ui.aiNote' : 'ui.renderNote');
       pick.querySelectorAll('button').forEach((b) => { const on = b.dataset.id === job.q; b.classList.toggle('is-active', on); b.setAttribute('aria-checked', String(on)); });
       if (job.canvas && job.canvas.parentNode !== stage) stage.replaceChildren(job.canvas);
       if (!job.canvas) stage.replaceChildren();
@@ -506,7 +576,9 @@
   /** Render dialog: pick a quality, watch the image clear up, then save the PNG. */
   CL.openRender = function (source, camera) {
     const design = CL.clone(source);
-    let q = CL.store.settings.renderQuality || 'good';
+    // a site with a render worker starts on AI (light on any device) until the visitor picks another
+    let q = CL.store.settings.renderQuality || (aiUrl() ? 'ai' : 'good');
+    if (aiUrl() && !CL.store.settings.renderAiOffered) { q = 'ai'; CL.store.saveSettings({ renderAiOffered: true, renderQuality: 'ai' }); }
     if (!QUALITIES().some(([id]) => id === q)) q = 'good';
     const cam = camera ? { position: camera.position.clone(), quaternion: camera.quaternion.clone(), fov: camera.fov } : null;
     showDock(false);
