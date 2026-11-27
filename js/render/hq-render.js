@@ -196,8 +196,8 @@
    * Render a design. opts: { width, height, samples, camera ({position, quaternion, fov}),
    * onProgress(samples, total, canvas), signal }. Resolves with a 2D canvas of the finished image.
    */
-  /** How far (radians) a printed design may be turned away from the camera in a render. */
-  const PRINT_YAW = 0.45;
+  /** The product angle (radians) a printed design is shot from: the print just right of the middle, like the archive pictures. */
+  const PRINT_YAW = -0.28, PRINT_PLAY = 0.04;
 
   async function renderHQ(design, opts = {}) {
     const { T, PT, Pass } = await load();
@@ -227,7 +227,7 @@
     // The live view turns by itself, so the moment of the click could show the print from the
     // side or the back: a design with print is always shot with the printed face to the camera.
     if ((design.layers || []).some((l) => l.visible !== false)) {
-      const yaw = CL.clamp(Math.atan2(dir.x, dir.z), -PRINT_YAW, PRINT_YAW), flat = Math.hypot(dir.x, dir.z);
+      const yaw = CL.clamp(Math.atan2(dir.x, dir.z), PRINT_YAW - PRINT_PLAY, PRINT_YAW + PRINT_PLAY), flat = Math.hypot(dir.x, dir.z);
       dir.x = Math.sin(yaw) * flat;
       dir.z = Math.cos(yaw) * flat;
     }
@@ -401,7 +401,7 @@
         const d = cam.position.clone().sub(view.target);
         const printed = (design.layers || []).some((l) => l.visible !== false);
         const yaw = Math.atan2(d.x, d.z);
-        view.rotY = view.targetRotY = printed ? CL.clamp(yaw, -PRINT_YAW, PRINT_YAW) : yaw;
+        view.rotY = view.targetRotY = printed ? CL.clamp(yaw, PRINT_YAW - PRINT_PLAY, PRINT_YAW + PRINT_PLAY) : yaw;
         view.rotX = view.targetRotX = CL.clamp(Math.asin(CL.clamp(d.y / (d.length() || 1), -1, 1)), -0.05, 0.25);
       }
       view._resize();

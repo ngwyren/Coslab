@@ -719,3 +719,14 @@ html::-webkit-scrollbar, body::-webkit-scrollbar, *::-webkit-scrollbar { width: 
   .ex-formats button { padding: 8px 10px; gap: 8px; }
   .ex-side .modal-actions { position: sticky; bottom: -16px; margin-bottom: -16px; padding-block: 10px; background: var(--surface); }
 }
+
+/* ---------- Leaving: dialogs and menus go as softly as they come ---------- */
+.modal-backdrop.is-leaving { animation: leaveFade 0.18s ease forwards; }
+.modal-backdrop.is-leaving .modal { animation: leaveModal 0.18s ease forwards; }
+.menu.is-leaving { animation: leaveMenu 0.12s ease forwards; }
+@keyframes leaveFade { to { opacity: 0; } }
+@keyframes leaveModal { to { opacity: 0; transform: scale(0.97); } }
+@keyframes leaveMenu { to { opacity: 0; transform: scale(0.97) translateY(-4px); } }
+@media (prefers-reduced-motion: reduce) {
+  .modal-backdrop.is-leaving, .modal-backdrop.is-leaving .modal, .menu.is-leaving { animation-duration: 1ms; }
+}

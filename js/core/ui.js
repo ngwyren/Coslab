@@ -10,10 +10,18 @@
     setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 260); }, 2600);
   };
 
+  /** Take an element away with its leave animation (CSS: .is-leaving) instead of at once. */
+  CL.fadeOut = function (el, ms = 180) {
+    if (!el || !el.isConnected) return;
+    el.classList.add('is-leaving');
+    el.style.pointerEvents = 'none';
+    setTimeout(() => el.remove(), matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : ms);
+  };
+
   CL.confirm = function ({ title, message, body, okText, cancelText, danger }) {
     return new Promise((resolve) => {
       const host = document.getElementById('modalHost');
-      const close = (v) => { host.innerHTML = ''; document.removeEventListener('keydown', onKey); resolve(v); };
+      const close = (v) => { CL.fadeOut(bd); document.removeEventListener('keydown', onKey); resolve(v); };
       const onKey = (e) => {
         if (e.key === 'Escape') { e.preventDefault(); close(false); return; }
         if (e.key === 'Enter') {
@@ -102,7 +110,7 @@
     }
     if (openMenu) {
       document.removeEventListener('pointerdown', openMenu._outside);
-      openMenu.remove();
+      CL.fadeOut(openMenu, 120);
       openMenu = null;
     }
   };
@@ -123,7 +131,7 @@
     let open = true;
     const close = () => {
       open = false;
-      host.replaceChildren();
+      [...host.children].forEach((el) => CL.fadeOut(el));
       window.removeEventListener('hashchange', close);
       if (opener && opener.isConnected) opener.focus();
     };
