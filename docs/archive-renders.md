@@ -11,8 +11,8 @@ to each other.
   every container stands on the same line, clear of the name bar on the card
 - `size`: the container's height divided by the tallest container's height
 - `look`: the six studios in turn, `seq[(i + (i >> 2)) % 6]`, so neighbours differ (A to D have
-  neutral light and a near-white backdrop; E and F have warm light and a warm grey-cream backdrop)
-- backdrop: left to the renderer (near white with a breath of the product's colour, or the warm
+  neutral light and a warm-white backdrop; E and F have warm light and a warm grey-cream backdrop)
+- backdrop: left to the renderer (a warm white, or the warm
   grey-cream of the two warm studios)
 - `blank-liptint` has no card and is skipped
 
@@ -49,5 +49,6 @@ for (let i = 0; i < T.TEMPLATES.length; i++) {
 
 ## Status
 
-27 November 2026: all 36 cards follow this recipe (six studios, near-white or warm grey-cream
-backdrop, faint shadow from the light above).
+27 November 2026: all 36 cards follow this recipe (six studios, warm-white or warm grey-cream
+backdrop that no longer takes the product's colour, faint shadow from the light above, clear
+plastic with a slight absorption so it reads against the light backdrop).

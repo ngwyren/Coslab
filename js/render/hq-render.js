@@ -231,8 +231,8 @@
     return new T.Color(c[0] + 0.04, c[1] + 0.04, c[2] + 0.04); // the mapping takes 0.04 off first
   }
   // Warm looks: how much each colour of the light is turned (its brightness stays), and the warm,
-  // soft grey-cream the backdrop is shown in.
-  const WARM_LIGHT = [1.02, 1, 0.95], WARM_PAPER = '#e6e3de';
+  // soft grey-cream the backdrop is shown in. PLAIN_PAPER: the warm white of the other looks.
+  const WARM_LIGHT = [1.02, 1, 0.95], WARM_PAPER = '#e6e3de', PLAIN_PAPER = '#f2f0ed';
 
   /** Two round maps for the floor: how much studio light it takes (all of its share near the
    *  middle, none towards the rim) and how much it glows by itself (the rest, so that open floor
@@ -257,7 +257,10 @@
     return [make((lit) => albedo * lit), make((lit) => 1 - share * lit)];
   }
 
-  const ACRYLIC = { transmission: 1, ior: 1.49, roughness: 0.03, metalness: 0, thickness: 0.3 };
+  // Clear plastic. It soaks up a little light on the way through, so where the light has the longest
+  // way inside it, along the edges, it turns a shade darker: that edge is what lets a clear part be
+  // read against a light backdrop. (The distance is in scene units, for a container at full size.)
+  const ACRYLIC = { transmission: 1, ior: 1.49, roughness: 0.03, metalness: 0, thickness: 0.3, attenuationColor: '#c4cbd1', attenuationDistance: 2.6 };
   const FINISH = {
     gloss: { roughness: 0.2, clearcoat: 1, clearcoatRoughness: 0.03 },
     satin: { roughness: 0.42, clearcoat: 0.3, clearcoatRoughness: 0.25 },
@@ -322,7 +325,8 @@
     const mat = (o) => new T.MeshPhysicalMaterial(Object.assign({ color: 0xffffff }, o));
     const add = (geo, material) => { const mesh = new T.Mesh(geo, material); tube.add(mesh); return mesh; };
 
-    add(geometry(T, raw.wand), mat(Object.assign({}, ACRYLIC, { color: 0xf2f5f9 })));
+    const acrylic = Object.assign({}, ACRYLIC, { attenuationDistance: ACRYLIC.attenuationDistance * size }); // the same look at any drawn size
+    add(geometry(T, raw.wand), mat(Object.assign({}, acrylic, { color: 0xf2f5f9 })));
     add(geometry(T, raw.foot), mat({ color: new T.Color('#efe5d2'), roughness: 0.95, sheen: 1, sheenRoughness: 0.6, sheenColor: new T.Color('#ffffff') }));
     add(geometry(T, raw.wiper), mat({ color: new T.Color('#f6f4ee'), roughness: 0.42, sheen: 0.3, sheenColor: new T.Color('#ffffff') })); // milky-white stopper (R04)
 
@@ -336,7 +340,7 @@
       const geo = geometry(T, raw[key]);
       const clear = I.isClear(part);
       paint(T, geo, part, y0, y1, clear);
-      const f = clear ? ACRYLIC : FINISH[(part && part.finish) || 'gloss'] || FINISH.gloss;
+      const f = clear ? acrylic : FINISH[(part && part.finish) || 'gloss'] || FINISH.gloss;
       add(geo, mat(Object.assign({ vertexColors: true }, f)));
       if (tex[texKey]) {
         const src = raw['art_' + key];
@@ -386,27 +390,9 @@
     return { scene, textures: Object.values(tex) };
   }
 
-  /** Backdrop paper chosen from the product: nearly white, with only a breath of the colour of its
-   *  most colourful part (cap, body, or the tint inside a clear body), so the set suits the
-   *  lipstick without competing with it. Products with next to no colour (clear, white, black,
-   *  grey) get a warm white. */
-  function backdropOf(design, warm) {
-    const I = CL.Preview3D.internals;
-    let hue = 0, sat = 0, top = 0;
-    ['cap', 'base'].forEach((k) => {
-      const part = design && design.parts && design.parts[k];
-      const cols = I.colorsOf(part && part.fill);
-      if (part && part.product && part.product.color) cols.push(part.product.color);
-      cols.forEach((c) => {
-        const { h, s, v } = CL.color.rgbToHsv(CL.color.hexToRgb(c));
-        const score = s * v; // colourful and not dark (a black cap has no say)
-        if (score > top) { top = score; hue = h; sat = s; }
-      });
-    });
-    const pale = top < 0.1 ? '#f2f0ed'
-      : CL.color.rgbToHex(CL.color.hsvToRgb({ h: hue, s: Math.min(0.037, 0.011 + sat * 0.042), v: 0.957 }));
-    return warm ? WARM_PAPER : pale; // a warm look has its own backdrop
-  }
+  /** Backdrop paper: a warm white, or the warm grey-cream of a warm look. It does not take its
+   *  colour from the product (a pink product on pink paper was not wanted). */
+  const backdropOf = (warm) => (warm ? WARM_PAPER : PLAIN_PAPER);
 
   /** Phones, tablets and low-memory devices: the render is sized down so their GPU can finish it. */
   const weakDevice = () => matchMedia('(hover: none) and (pointer: coarse)').matches || (navigator.deviceMemory || 8) <= 2;
@@ -432,7 +418,7 @@
   /**
    * Render a design. opts: { width, height, samples, camera ({position, quaternion, fov}),
    * onProgress(samples, total, canvas), signal, look (a studio from LOOKS, else one at random),
-   * onLook(id), backdrop (paper colour, else chosen from the product), fill (share of the frame
+   * onLook(id), backdrop (paper colour, else the look's own), fill (share of the frame
    * height the container takes), lift (raise it by this share of the frame), size (0..1: its
    * height as a share of the tallest container, for pictures that are compared side by side) }.
    * Resolves with a 2D canvas of the finished image.
@@ -488,7 +474,7 @@
 
     const look = pickLook(opts.look);
     if (opts.onLook) opts.onLook(look);
-    const backdrop = opts.backdrop || backdropOf(design, LOOKS[look].warm);
+    const backdrop = opts.backdrop || backdropOf(LOOKS[look].warm);
     const env = await studioEnv(T, look, Math.atan2(dir.x, dir.z));
     const { scene, textures } = await buildScene(T, design, backdrop, Math.atan2(dir.x, dir.z), env.userData.floor, opts.size || 1);
     scene.environment = env;
@@ -605,7 +591,6 @@
   }
 
   CL.renderHQ = renderHQ;
-  CL.renderBackdrop = backdropOf;
 
   /* ---------- Render: one job at a time, shown in a dialog or as a small card in a corner ----------
      Leaving the dialog (outside click, Esc, another page, "Run in background") keeps the render
