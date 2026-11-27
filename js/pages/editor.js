@@ -351,7 +351,7 @@
             redoBtn
           ),
           CL.h('div.editor-topbar-center', null, stepperBar),
-          CL.h('div.editor-topbar-right', null, viewToggle, saveBtn, exportBtn)
+          CL.h('div.editor-topbar-right', null, saveBtn, exportBtn)
         );
 
         // --- 2. Split Workspace: Interactive Stage (Left) + Figma Inspector (Right) ---
@@ -383,6 +383,7 @@
         );
 
         const canvasContainer = CL.h('div.editor-canvas-container', null,
+          viewToggle, // floats in the top corner of the stage, right next to the view it switches
           partQuickBar,
           canvasViewport,
           CL.h('div.preview-3d-host#preview3dHost', { style: { display: 'none' } },

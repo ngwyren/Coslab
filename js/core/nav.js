@@ -30,8 +30,12 @@
     if (indicator.style.opacity !== '1') instant = true; // it was hidden: appear in place, do not slide in from where it last was
     if (instant) indicator.classList.add('no-anim');
     indicator.style.opacity = '1';
-    indicator.style.width = box.width + 'px';
-    indicator.style.transform = `translateX(${box.left - navBox.left - nav.clientLeft}px)`;
+    const [mid, endA, endB] = indicator.children;
+    const h = indicator.offsetHeight, x = box.left - navBox.left - nav.clientLeft, w = box.width;
+    endA.style.width = endB.style.width = h + 'px';
+    endA.style.transform = `translateX(${x}px)`;
+    endB.style.transform = `translateX(${x + w - h}px)`;
+    mid.style.transform = `translateX(${x + h / 2}px) scaleX(${Math.max(w - h, 0) / 100})`; // from one end's middle to the other's
     if (instant) { void indicator.offsetWidth; indicator.classList.remove('no-anim'); }
     nav.querySelectorAll('a').forEach((a) => a.classList.toggle('is-lit', a === el));
   }
@@ -107,7 +111,8 @@
     toggle = document.getElementById('navToggle');
     if (!nav || !toggle) return;
 
-    indicator = CL.h('span.nav-indicator', { 'aria-hidden': 'true' });
+    // a stretching middle and two round ends (see the stylesheet for why it is in pieces)
+    indicator = CL.h('span.nav-indicator', { 'aria-hidden': 'true' }, CL.h('i.ni-mid'), CL.h('i.ni-end'), CL.h('i.ni-end'));
     nav.prepend(indicator);
     nav.querySelectorAll('a').forEach((a) => {
       a.addEventListener('focus', () => moveIndicatorTo(a));

@@ -4,7 +4,8 @@
 [data-theme="dark"] body { background: var(--bg); color: var(--text); }
 [data-theme="dark"] .site-header,
 [data-theme="dark"] .site-header.scrolled { background: rgba(11, 11, 11, 0.86); border-bottom-color: var(--border); }
-[data-theme="dark"] .nav-indicator { background: #fff; box-shadow: none; }
+[data-theme="dark"] .nav-indicator { filter: none; }
+[data-theme="dark"] .nav-indicator i { background: #fff; }
 [data-theme="dark"] .main-nav a.is-lit { color: #000; }
 [data-theme="dark"] .nav-toggle-bars { background: #fff; }
 [data-theme="dark"] .nav-toggle-bars i { background: #000; }
@@ -47,7 +48,8 @@
 [data-theme="dark"] .editor-canvas-container { background: #0b0b0b; }
 [data-theme="dark"] .editor-canvas-container::before { background-image: radial-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px); }
 [data-theme="dark"] .canvas-part-Quickbar,
-[data-theme="dark"] .canvas-floating-controls { background: rgba(28, 28, 28, 0.96); }
+[data-theme="dark"] .canvas-floating-controls,
+[data-theme="dark"] .view-toggle { background: rgba(28, 28, 28, 0.96); }
 [data-theme="dark"] .studio-step-pill.is-active,
 [data-theme="dark"] .canvas-part-chip.is-active,
 [data-theme="dark"] .studio-font-card.is-active { background: #fff; color: #000; }

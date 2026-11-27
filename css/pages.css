@@ -632,6 +632,7 @@
 }
 .gallery-grid.grid-4 {
   grid-template-columns: repeat(4, 1fr);
+  gap: 10px; /* the Archive cards sit close together */
 }
 .gallery-card {
   display: grid;
@@ -778,7 +779,7 @@
 /* ---------- Archive: showcase cards (expand in place) ---------- */
 #galleryGrid { align-items: start; }
 .sc-card {
-  border-radius: var(--r-lg);
+  border-radius: 12px; /* lightly rounded */
   background: var(--surface);
   border: 1px solid transparent;
   overflow: hidden;
@@ -792,7 +793,7 @@
 .sc-media {
   position: relative;
   aspect-ratio: 4 / 5;
-  border-radius: var(--r-lg);
+  border-radius: 12px;
   background: var(--tint, var(--surface-2));
   overflow: hidden;
   cursor: pointer;
