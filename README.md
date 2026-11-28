@@ -1,189 +1,52 @@
-# COSLAB ATELIER — Bespoke Korean Lip Tint Design Studio
+# COSLAB ATELIER
 
-<p align="center">
-  <strong>Bespoke Korean Lip Tint Packaging Design & Prototyping Platform (OEM / ODM)</strong>
-</p>
+**Design your lip tint. We make it.**
 
-<p align="center">
-  <a href="https://ngwyren.github.io/Coslab/">
-    <img src="https://img.shields.io/badge/Live%20Demo-GitHub%20Pages-black?style=for-the-badge&logo=github" alt="Live Demo" />
-  </a>
-  <img src="https://img.shields.io/badge/Languages-8%20Supported-black?style=for-the-badge" alt="8 Languages" />
-  <img src="https://img.shields.io/badge/Build-Vanilla%20ES6%20%2B%20CSS3-black?style=for-the-badge" alt="Vanilla JS & CSS" />
-  <img src="https://img.shields.io/badge/Precision-0.1mm%20Moulding-black?style=for-the-badge" alt="Precision" />
-</p>
+An online studio for designing Korean lip tint packaging (OEM / ODM): pick a container, colour it, add your name and logo, then export files a factory can work from.
 
----
+**Live site: [ngwyren.github.io/Coslab](https://ngwyren.github.io/Coslab/)**
 
-## ✦ Overview
+## What you can do
 
-**COSLAB ATELIER** is a high-precision, interactive design studio and digital prototyping suite purpose-built for Korean **Liptint (son tint)** OEM / ODM packaging.
+- **Choose a shape** — 12 containers with real dimensions: six round (CL-SC01–06) and six square (CL-SS01–06).
+- **Colour it** — cap and body separately, as solid, gradient, shimmer or clear plastic with the tint showing inside. Pantone codes included.
+- **Add type and a logo** — set your brand name, or upload a PNG, SVG or JPG that fits itself to the print area.
+- **Check it in 2D and 3D** — flat print layout, a 3D view you can turn, and a high-quality studio render.
+- **Export** — PNG (transparent), JPG, editable SVG artwork, and a PDF production spec sheet.
+- **Start from the Archive** — 36 finished designs you can open and customise.
+- **Save your work** — designs stay in your browser, with backup and restore.
 
-Drawing inspiration from Seoul's architectural minimalism and luxury K-Beauty ateliers (Tamburins, Gentle Monster, Orchard Studio), COSLAB allows cosmetic founders, brand directors, and packaging engineers to rapidly conceive, customize, and export manufacturing-ready lip tint packaging silhouettes in real-time.
+Available in Vietnamese, English, Korean, Japanese, Chinese, French, Spanish and Arabic, with light and dark themes.
 
-🔗 **Live Experience:** [https://ngwyren.github.io/Coslab/](https://ngwyren.github.io/Coslab/)
+On-screen colours are a reference only; confirm the final colour against a physical swatch or sample before production.
 
----
+## Run it locally
 
-## ✦ Key Features
+No install and no build step. Serve the folder with any static server:
 
-- **💄 Specialized Lip Tint Silhouettes**
-  - Designed exclusively for lip tint packaging (Caps, Applicator Rods, Reservoir Body, and Dividing Snap Rings).
-  - Presets include *Velvet Round*, *Dewy Oval*, *Luxury Square*, *Cold Chrome*, *Porcelain Gold*, and *Dual Chamber*.
-
-- **🎨 Multi-Part & Multi-Finish Customization**
-  - Independent surface rendering for **Body (Thân)**, **Cap (Nắp)**, and **Divider Ring (Khớp viền)**.
-  - Realistic material finishes: **Velvet Matte** (Nhung lì), **Satin** (Bóng nhẹ), **Dewy Glass** (Pha lê trong suốt), and **Cold Chrome** (Mạ gương lạnh).
-  - Solid fills and customizable multi-stop gradients with real-time hue/spectrum pickers.
-
-- **🌸 Curated K-Beauty MLBB Palettes**
-  - Handcrafted MLBB (My Lips But Better) color harmonies (Muted Fig, Chilled Mauve, Rosewater, Warm Cinnamon, Brick Red, etc.).
-  - Packaging material swatches including warm ivory ceramic, frosted glass, midnight obsidian, and cold anodized chrome.
-
-- **🔤 Vector Typography & AI Logo Processing**
-  - Multi-layer text engine with typography tracking, leading, font scaling, and alignment.
-  - High-res vector and raster logo upload (SVG, PNG, JPG, AI).
-  - Built-in white background isolation for instant transparency.
-
-- **📐 Engineering-Grade Exports**
-  - **Vector SVG (AI Ready)**: 1:1 scale unwrapped packaging vector files with trim guides for silk-screen printing, hot stamping, and UV coating.
-  - **Bespoke Specification PDF**: Comprehensive factory spec sheets featuring Pantone references, finish tags, and dimensional breakdowns.
-  - **High-Res PNG & JPG**: Studio lighting renders on transparent or clean backdrops.
-
-- **🌐 8-Language Internationalization (i18n) & RTL**
-  - Fully reactive language switcher supporting **Tiếng Việt**, **English**, **한국어**, **日本語**, **中文**, **Français**, **Español**, and **العربية**.
-  - Dynamic bidirectional text rendering (LTR & RTL) with specialized typography hierarchies.
-
-- **⚡ Zero-Framework High-Performance Architecture**
-  - 100% Vanilla ES6 and modern CSS custom properties.
-  - Ultra-fast first paint, zero build step required, instant deployment, and zero bloat.
-
----
-
-## ✦ Project Structure
-
-```text
-coslab/
-├── index.html                 # Main entry point & semantic layout shell
-├── README.md                  # Project documentation & release guide
-├── css/
-│   ├── base.css               # Design tokens, typography, CSS resets, utility classes
-│   ├── layout.css             # Floating pill header, dead-center nav, minimal footer
-│   ├── pages.css              # Home, Design setup, Gallery, Vault, Settings
-│   └── editor.css             # 2D/3D studio workbench, tool panels, layer stack
-├── js/
-│   ├── app.js                 # SPA client-side router, header bootstrap, i18n binder
-│   ├── components/
-│   │   └── color-picker.js    # Segmented cosmetic pans, hue bar, and eyedropper
-│   ├── core/
-│   │   ├── icons.js           # Lightweight SVG icon system
-│   │   ├── store.js           # LocalStorage reactive persistence & drafts vault
-│   │   ├── ui.js              # Dropdown menus, toast notifications, modals
-│   │   └── utils.js           # Vector math, color conversions (HEX/RGB/HSL), canvas helpers
-│   ├── data/
-│   │   ├── models.js          # Lip tint packaging 3D/2D geometry models
-│   │   └── templates.js       # Curated aesthetic starting styles & presets
-│   ├── i18n/
-│   │   ├── i18n.js            # Core internationalization engine
-│   │   ├── vi.js              # Vietnamese (Tiếng Việt)
-│   │   ├── en.js              # English
-│   │   ├── ko.js              # Korean (한국어)
-│   │   ├── ja.js              # Japanese (日本語)
-│   │   ├── zh.js              # Chinese (中文)
-│   │   ├── fr.js              # French (Français)
-│   │   ├── es.js              # Spanish (Español)
-│   │   └── ar.js              # Arabic (العربية - RTL)
-│   ├── pages/
-│   │   ├── home.js            # Editorial home showcase & marquee
-│   │   ├── design.js          # Packaging silhouette & template starter
-│   │   ├── editor.js          # Studio editor workbench & layer composition
-│   │   ├── gallery.js         # Curated packaging library & filter archive
-│   │   ├── my-designs.js      # Saved designs vault with local backups
-│   │   └── settings.js        # Brand information, author, and locale settings
-│   └── render/
-│       ├── lipstick-svg.js    # Parametric SVG lip tint packaging renderer
-│       ├── preview3d.js       # Canvas PBR lighting, reflection, and material shaders
-│       └── exporter.js        # Vector SVG, hi-res canvas, and PDF spec engine
-└── vendor/
-    └── jspdf.umd.min.js       # Client-side technical specification PDF generator
-```
-
----
-
-## ✦ Getting Started & Local Development
-
-No package manager, compiler, or build step is required! COSLAB runs natively in all modern web browsers.
-
-### 1. Clone or Pull the Repository
 ```bash
 git clone https://github.com/ngwyren/Coslab.git
 cd Coslab
+python3 -m http.server 8000
 ```
 
-### 2. Run Locally
-You can serve the project using any static file server:
+Then open `http://localhost:8000`.
 
-- **VS Code Live Server**: Right-click `index.html` and click **"Open with Live Server"**.
-- **Python 3**:
-  ```bash
-  python -m http.server 8000
-  ```
-  Open `http://localhost:8000` in your browser.
-- **Node.js**:
-  ```bash
-  npx serve .
-  ```
-- **PHP**:
-  ```bash
-  php -S localhost:8000
-  ```
+## What's in the repo
 
----
+| Path | Contents |
+| :--- | :--- |
+| `index.html` | The single page the site loads |
+| `css/` | Styles, including the dark theme |
+| `js/pages/` | Home, Design, Studio editor, Archive, Saved |
+| `js/render/` | 2D artwork, 3D preview, high-quality render, exports |
+| `js/data/` | Containers, templates, fonts, Pantone colours |
+| `js/i18n/` | The eight languages |
+| `assets/` | 3D models, lighting, Archive and home images |
+| `server/render-worker/` | Optional AI render service (see its README) |
 
-## ✦ Development Workflow & Git Collaboration
+## Contact
 
-### Pulling the Latest Code
-```bash
-git checkout main
-git pull origin main
-```
+COSLAB (주식회사 코스랩) — Incheon, South Korea · CGMP (ISO 22716)
 
-### Creating Feature Branches
-```bash
-git checkout -b feature/your-feature-name
-# Make your edits...
-git add -A
-git commit -m "feat: describe your change"
-git push origin feature/your-feature-name
-```
-
----
-
-## ✦ Packaging & Manufacturing Specifications
-
-| Parameter | Specification | Notes |
-| :--- | :--- | :--- |
-| **Product Target** | Lip Tint (Son tint, 틴트) | Liquid & water-gel emulsions |
-| **Tooling Tolerance** | ±0.1mm | Precision snap cap closure |
-| **Materials** | Acrylic, ABS, PCTG, Aluminum | Cold chrome, frosted & glass effects |
-| **Artwork Format** | Unwrapped 1:1 Vector SVG / PDF | AI, CorelDraw, & CAD compatible |
-| **Colour Model** | RGB (Canvas preview) / CMYK & Pantone ready | Export-ready color profiles |
-
----
-
-## ✦ Factory & Laboratory Information
-
-- **Company:** COSLAB (주식회사 코스랩)
-- **Official Slogan:** *"Of the lips by the people for the beauty"* — Korea's One and Only Lip Color Lab
-- **Facility Address:** 20, 423 Cheongcheon-dong, Bupyeong District, Incheon, South Korea (인천광역시 부평구 청천동 423)
-- **Business Registration:** 337-88-03756
-- **Contact:** +82-32-715-4277 | coslabkorea@gmail.com
-- **Official Portal:** [coslabkorea.com](https://coslabkorea.com/default/en/index.php)
-- **Certifications:** CGMP (ISO 22716), ISO 9001, ISO 14001, Cleanroom Automated Manufacturing
-
----
-
-## ✦ License & Credits
-
-Developed for **COSLAB ATELIER®** — Seoul Bespoke Packaging Studio.  
-All brand concepts, packaging models, and vector assets are maintained under the project repository.
+[coslabkorea@gmail.com](mailto:coslabkorea@gmail.com) · +82-32-715-4277 · [coslabkorea.com](https://coslabkorea.com/default/en/index.php)
